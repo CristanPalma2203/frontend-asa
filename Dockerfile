@@ -4,11 +4,8 @@
 FROM node:22-alpine AS build
 WORKDIR /app
 
-# El lockfile se generó con npm 11; el npm 10 que trae node:22 lo rechaza por dependencias
-# opcionales de Linux (@emnapi/*). Uso la misma versión mayor para que `npm ci` sea reproducible.
-RUN npm install -g npm@11.6.1 --no-fund --no-audit
-
-COPY package.json package-lock.json ./
+# .npmrc (legacy-peer-deps) hace que npm 10 y 11 validen el mismo árbol del lockfile.
+COPY package.json package-lock.json .npmrc ./
 RUN npm ci --no-fund --no-audit
 
 COPY . .

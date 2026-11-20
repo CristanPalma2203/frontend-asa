@@ -56,7 +56,9 @@ Primero levanto el backend, ya sea en Visual Studio (`https://localhost:44358`) 
 
 ### Con npm
 
-Requiere Node 22.12 o superior.
+Requiere Node 22.12 o superior (`engines` en `package.json`). `npm ci` funciona tanto con npm 10 (el que trae Node 22) como con npm 11.
+
+`.npmrc` activa `legacy-peer-deps`. npm 10 y 11 resuelven distinto algunas peer dependencies opcionales y cada uno rechazaba el lockfile del otro. Con esta opción ambos validan el mismo árbol. A cambio, npm ya no instala peers automáticamente: las obligatorias van declaradas en `package.json` (por eso está `@testing-library/dom`).
 
 ```bash
 cp .env.example .env    # ajusto VITE_API_URL según dónde corre la API
@@ -74,7 +76,7 @@ docker run --rm -p 5173:80 --name frontend-asa frontend-asa
 # http://localhost:5173
 ```
 
-- La imagen es multi-stage: `node:22-alpine` compila y `nginx:alpine` sirve `dist/`.
+- La imagen es multi-stage: `node:22-alpine` compila con su npm 10 (`npm ci` con el mismo `.npmrc`) y `nginx:alpine` sirve `dist/`.
 - `nginx.conf` hace fallback a `index.html` para que funcionen los deep links (`/libros/1`, `/admin/...`). Los assets con hash se cachean como `immutable` y `index.html` va con `no-cache`.
 - Si falta `VITE_API_URL`, el build falla con un mensaje claro.
 
