@@ -112,7 +112,7 @@ export function MisReservasPage() {
         error={cancelar.error}
         onConfirmar={(reserva) =>
           cancelar.mutate(
-            { idReserva: reserva.idReserva, libroId: reserva.idLibro },
+            { idReserva: reserva.idReserva },
             { onSuccess: () => setElegida(null) },
           )
         }

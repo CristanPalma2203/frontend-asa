@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 
 import { queryKeys } from '@/features/biblioteca/queryKeys'
 import type { EjemplarForm } from '@/features/biblioteca/schemas/ejemplar.schema'
@@ -29,11 +29,22 @@ export function useCrearEjemplar(
     mutationFn: (values: EjemplarForm) => crearEjemplar(idLibro, values),
     onSuccess: async () => {
       opciones.onSuccess?.()
-      await queryClient.invalidateQueries({ queryKey: queryKeys.ejemplares.list(idLibro) })
-      await queryClient.invalidateQueries({ queryKey: queryKeys.libros.detail(idLibro) })
+      await invalidarDisponibilidad(queryClient, idLibro)
     },
     onError: (error) => opciones.onError?.(error),
   })
+}
+
+/**
+ * Crear un ejemplar o cambiar su estado cambia "disponibles" del libro. Invalida la lista de
+ * ejemplares, el detalle del libro (ficha y admin) y todas las listas de libros (catálogo y admin).
+ */
+async function invalidarDisponibilidad(queryClient: QueryClient, idLibro: number) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.ejemplares.list(idLibro) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.libros.detail(idLibro) }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.libros.lists() }),
+  ])
 }
 
 export type CambioEstadoEjemplar = EjemplarLista & { siguiente: EstadoEjemplarEditable }
@@ -52,7 +63,7 @@ export function useCambiarEstadoEjemplar(
     mutationFn: (item: CambioEstadoEjemplar) =>
       cambiarEstadoEjemplar(idLibro, item.idEjemplar, item.siguiente, item.rowVersion),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.ejemplares.list(idLibro) })
+      await invalidarDisponibilidad(queryClient, idLibro)
     },
     onError: async (error) => {
       if (error instanceof ApiError && error.code === 'conflicto-concurrencia') {

@@ -145,5 +145,5 @@ export function LibroPage() {
 
 function avisar(codigo: string, cerrar: (open: boolean) => void) {
   cerrar(false)
-  toast.success(`Ejemplar asignado: ${codigo}`)
+  toast.success(`Tu ejemplar: ${codigo}`)
 }

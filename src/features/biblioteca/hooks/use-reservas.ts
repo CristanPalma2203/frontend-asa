@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 
 import { useAuthStore } from '@/features/auth/store'
 import { queryKeys } from '@/features/biblioteca/queryKeys'
@@ -22,12 +22,8 @@ export function useReservar() {
 
   return useMutation({
     mutationFn: reservar,
-    onSuccess: async (_reserva, variables) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.libros.all })
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.libros.detail(variables.libroId),
-      })
-      await queryClient.invalidateQueries({ queryKey: queryKeys.reservas.mias() })
+    onSuccess: async () => {
+      await invalidarTrasReserva(queryClient)
     },
   })
 }
@@ -37,8 +33,7 @@ export function useCancelarReserva() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ idReserva }: { idReserva: number; libroId: number }) =>
-      cancelarReserva(idReserva),
+    mutationFn: ({ idReserva }: { idReserva: number }) => cancelarReserva(idReserva),
     onMutate: async ({ idReserva }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.reservas.mias() })
       const previas = queryClient.getQueriesData<PagedResponse<Reserva>>({
@@ -66,12 +61,20 @@ export function useCancelarReserva() {
         queryClient.setQueryData(key, data)
       }
     },
-    onSettled: async (_data, _error, variables) => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.reservas.mias() })
-      await queryClient.invalidateQueries({ queryKey: queryKeys.libros.all })
-      await queryClient.invalidateQueries({
-        queryKey: queryKeys.libros.detail(variables.libroId),
-      })
+    onSettled: async () => {
+      await invalidarTrasReserva(queryClient)
     },
   })
+}
+
+/**
+ * Reservar o cancelar cambia "disponibles" y las reservas del lector. `libros.all` cubre por prefijo
+ * todas las listas y todos los detalles de libros (catálogo, ficha y admin), así que no hace falta
+ * invalidar `libros.detail(id)` aparte: hacerlo pedía el detalle dos veces.
+ */
+async function invalidarTrasReserva(queryClient: QueryClient) {
+  await Promise.all([
+    queryClient.invalidateQueries({ queryKey: queryKeys.libros.all }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.reservas.mias() }),
+  ])
 }

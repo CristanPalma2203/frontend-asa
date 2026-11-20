@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
+import { crearApiFake } from '@/test/api-fake'
 import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
 
@@ -12,17 +13,44 @@ describe('catálogo', () => {
     expect(await screen.findByRole('heading', { name: 'El Principito' })).toBeInTheDocument()
   })
 
-  it('la búsqueda debounced actualiza la URL', async () => {
+  it('buscar manda ?buscar= a GET /api/libros y muestra solo los resultados filtrados', async () => {
     const user = userEvent.setup()
+    const api = crearApiFake([{ titulo: 'El Principito' }, { titulo: 'El Hobbit' }, { titulo: 'Dune' }])
+    server.use(...api.handlers)
     const { router } = await renderEn('/catalogo?page=1&pageSize=12')
     await screen.findByRole('heading', { name: 'El Principito' })
+
     await user.type(screen.getByLabelText('Buscar'), 'hobbit')
-    await waitFor(
-      () => {
-        expect(router.state.location.href).toContain('buscar=hobbit')
-      },
-      { timeout: 4000 },
+
+    expect(await screen.findByRole('heading', { name: 'El Hobbit' })).toBeInTheDocument()
+    await waitFor(() =>
+      expect(screen.queryByRole('heading', { name: 'El Principito' })).not.toBeInTheDocument(),
     )
+    expect(screen.queryByRole('heading', { name: 'Dune' })).not.toBeInTheDocument()
+    const ultimo = api.pedidos('/api/libros').at(-1)
+    expect(ultimo?.searchParams.get('buscar')).toBe('hobbit')
+    expect(ultimo?.searchParams.get('page')).toBe('1')
+    expect(router.state.location.href).toContain('buscar=hobbit')
+  })
+
+  it('Siguiente manda ?page=2 y muestra los libros de esa página', async () => {
+    const user = userEvent.setup()
+    const titulos = Array.from({ length: 15 }, (_, i) => `Libro ${String(i + 1).padStart(2, '0')}`)
+    const api = crearApiFake(titulos.map((titulo) => ({ titulo })))
+    server.use(...api.handlers)
+    const { router } = await renderEn('/catalogo?page=1&pageSize=12')
+    expect(await screen.findByRole('heading', { name: 'Libro 12' })).toBeInTheDocument()
+    expect(screen.getByText('15 libros · página 1 de 2')).toBeInTheDocument()
+
+    await user.click(screen.getByRole('button', { name: 'Siguiente' }))
+
+    expect(await screen.findByRole('heading', { name: 'Libro 13' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Libro 15' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Libro 01' })).not.toBeInTheDocument()
+    expect(screen.getByText('15 libros · página 2 de 2')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled()
+    expect(api.pedidos('/api/libros').at(-1)?.searchParams.get('page')).toBe('2')
+    expect(router.state.location.search).toMatchObject({ page: 2 })
   })
 
   it('muestra el vacío', async () => {
