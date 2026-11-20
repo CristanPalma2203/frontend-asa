@@ -1,4 +1,5 @@
-import { createRootRoute, Outlet } from '@tanstack/react-router'
+import { createRootRoute, Outlet, useRouterState } from '@tanstack/react-router'
+import { useEffect } from 'react'
 
 import { AppShell } from '@/components/layout/app-shell'
 import { Card } from '@/components/ui/card'
@@ -11,9 +12,21 @@ export const Route = createRootRoute({
 function RootLayout() {
   return (
     <AppShell>
+      <Titulo />
       <Outlet />
     </AppShell>
   )
+}
+
+function Titulo() {
+  const matches = useRouterState({ select: (state) => state.matches })
+  const title = [...matches].reverse().find((match) => match.staticData.title)?.staticData.title
+
+  useEffect(() => {
+    document.title = title ?? 'ASA Biblioteca'
+  }, [title])
+
+  return null
 }
 
 function NotFoundPage() {

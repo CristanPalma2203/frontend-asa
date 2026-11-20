@@ -51,13 +51,23 @@ export type ReservaCreada = {
   fechaReserva: string
 }
 
-export type Lector = {
+export type EjemplarLista = {
+  idEjemplar: number
+  codigoInventario: string
+  estado: EstadoEjemplar
+  rowVersion: string
+}
+
+export type LectorLista = {
   idLector: number
   identificador: string
   nombre: string
   correo: string
   estado: EstadoLector
   tieneUsuario: boolean
+}
+
+export type Lector = LectorLista & {
   reservasActivas: number
 }
 

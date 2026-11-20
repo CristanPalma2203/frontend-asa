@@ -14,6 +14,7 @@ import { loginSchema, type LoginForm } from '@/features/biblioteca/schemas'
 import { ApiError } from '@/lib/api/client'
 
 export const Route = createFileRoute('/login')({
+  staticData: { title: 'Iniciar sesión · ASA Biblioteca' },
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => {
     if (typeof search.redirect !== 'string' || !search.redirect.startsWith('/')) return {}
     if (search.redirect.startsWith('//')) return {}
@@ -61,7 +62,13 @@ function LoginPage() {
         <form className="mt-4 flex flex-col gap-3" onSubmit={form.handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-1">
             <Label htmlFor="correo">Correo</Label>
-            <Input id="correo" type="email" autoComplete="username" {...form.register('correo')} />
+            <Input
+              id="correo"
+              type="email"
+              autoComplete="username"
+              aria-invalid={form.formState.errors.correo ? true : undefined}
+              {...form.register('correo')}
+            />
             {form.formState.errors.correo ? (
               <p className="text-sm text-destructive">{form.formState.errors.correo.message}</p>
             ) : null}
@@ -79,7 +86,9 @@ function LoginPage() {
             ) : null}
           </div>
           {form.formState.errors.root ? (
-            <p className="text-sm text-destructive">{form.formState.errors.root.message}</p>
+            <p role="alert" className="text-sm text-destructive">
+              {form.formState.errors.root.message}
+            </p>
           ) : null}
           <Button type="submit" disabled={form.formState.isSubmitting}>
             Entrar

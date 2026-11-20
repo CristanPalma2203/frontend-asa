@@ -33,7 +33,14 @@ export const lectorSchema = z.object({
   correo: requerido('El correo es obligatorio.')
     .max(150, { error: 'El correo no puede superar 150 caracteres.' })
     .pipe(z.email({ error: 'El correo no es válido.' })),
-  password: z.string().optional(),
+  password: z
+    .string()
+    .trim()
+    .optional()
+    .refine((value) => !value || value.length >= 8, {
+      error: 'La contraseña debe tener al menos 8 caracteres.',
+    }),
+  estado: z.enum(['Activo', 'Inactivo']).optional(),
 })
 
 export const loginSchema = z.object({

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import heroBlobs from '@/assets/hero-blobs.png'
@@ -16,7 +16,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { isSessionActive, selectIsAdmin, selectIsLector, useAuthStore } from '@/features/auth/store'
 import { mensajeDeError } from '@/features/biblioteca/errores'
-import { useLibro, useReservar } from '@/features/biblioteca/hooks'
+import { useLibro, useMisReservas, useReservar } from '@/features/biblioteca/hooks'
 import type { Ejemplar } from '@/features/biblioteca/types'
 import { ApiError } from '@/lib/api/client'
 import { Route } from '@/routes/libros.$idLibro'
@@ -26,11 +26,16 @@ export function LibroPage() {
   const id = Number(idLibro)
   const libro = useLibro(id)
   const reservar = useReservar()
+  const activas = useMisReservas('Activa', 1, 50)
   const [abierto, setAbierto] = useState(false)
   const isAdmin = useAuthStore(selectIsAdmin)
   const isLector = useAuthStore(selectIsLector)
   const sesion = useAuthStore(isSessionActive)
   const lectorId = useAuthStore((state) => state.lectorId)
+
+  useEffect(() => {
+    if (libro.data) document.title = `${libro.data.titulo} · ASA Biblioteca`
+  }, [libro.data])
 
   if (libro.isPending) {
     return (
@@ -64,6 +69,11 @@ export function LibroPage() {
   }
 
   const detalle = libro.data
+  const yaReservado =
+    isLector &&
+    activas.data?.items.some(
+      (reserva) => reserva.idLibro === detalle.idLibro && reserva.estado === 'Activa',
+    )
   const errorReserva = reservar.error instanceof ApiError ? reservar.error : null
   const sinStock = detalle.disponibles === 0
 
@@ -89,6 +99,13 @@ export function LibroPage() {
                 Reservar
               </Link>
             </Button>
+          ) : yaReservado ? (
+            <p className="text-sm">
+              Ya lo tienes reservado.{' '}
+              <Link to="/mis-reservas" className="font-semibold text-verde underline">
+                Mis reservas
+              </Link>
+            </p>
           ) : isLector ? (
             <Button type="button" onClick={() => setAbierto(true)}>
               Reservar

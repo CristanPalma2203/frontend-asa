@@ -60,7 +60,7 @@
   --destructive-foreground: var(--color-crema);
   --border: var(--color-tinta);
   --input: var(--color-tinta);
-  --ring: var(--color-verde);
+  --ring: var(--color-lima);
 }
 
 @layer base {
@@ -74,6 +74,11 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-lima);
+    outline-offset: 2px;
   }
 
   h1,

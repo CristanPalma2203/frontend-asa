@@ -14,7 +14,12 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as MisReservasRouteImport } from './routes/mis-reservas'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminLectoresRouteImport } from './routes/admin/lectores'
+import { Route as AdminLibrosRouteImport } from './routes/admin/libros'
 import { Route as LibrosIdLibroRouteImport } from './routes/libros.$idLibro'
+import { Route as AdminLibrosIndexRouteImport } from './routes/admin/libros.index'
+import { Route as AdminLibrosIdLibroRouteImport } from './routes/admin/libros.$idLibro'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -41,36 +46,74 @@ const MisReservasRoute = MisReservasRouteImport.update({
   path: '/mis-reservas',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLectoresRoute = AdminLectoresRouteImport.update({
+  id: '/lectores',
+  path: '/lectores',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminLibrosRoute = AdminLibrosRouteImport.update({
+  id: '/libros',
+  path: '/libros',
+  getParentRoute: () => AdminRoute,
+} as any)
 const LibrosIdLibroRoute = LibrosIdLibroRouteImport.update({
   id: '/libros/$idLibro',
   path: '/libros/$idLibro',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminLibrosIndexRoute = AdminLibrosIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminLibrosRoute,
+} as any)
+const AdminLibrosIdLibroRoute = AdminLibrosIdLibroRouteImport.update({
+  id: '/$idLibro',
+  path: '/$idLibro',
+  getParentRoute: () => AdminLibrosRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/catalogo': typeof CatalogoRoute
   '/login': typeof LoginRoute
   '/mis-reservas': typeof MisReservasRoute
+  '/admin/lectores': typeof AdminLectoresRoute
+  '/admin/libros': typeof AdminLibrosRouteWithChildren
   '/libros/$idLibro': typeof LibrosIdLibroRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/libros/$idLibro': typeof AdminLibrosIdLibroRoute
+  '/admin/libros/': typeof AdminLibrosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
   '/catalogo': typeof CatalogoRoute
   '/login': typeof LoginRoute
   '/mis-reservas': typeof MisReservasRoute
+  '/admin/lectores': typeof AdminLectoresRoute
   '/libros/$idLibro': typeof LibrosIdLibroRoute
+  '/admin': typeof AdminIndexRoute
+  '/admin/libros/$idLibro': typeof AdminLibrosIdLibroRoute
+  '/admin/libros': typeof AdminLibrosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin': typeof AdminRoute
+  '/admin': typeof AdminRouteWithChildren
   '/catalogo': typeof CatalogoRoute
   '/login': typeof LoginRoute
   '/mis-reservas': typeof MisReservasRoute
+  '/admin/lectores': typeof AdminLectoresRoute
+  '/admin/libros': typeof AdminLibrosRouteWithChildren
   '/libros/$idLibro': typeof LibrosIdLibroRoute
+  '/admin/': typeof AdminIndexRoute
+  '/admin/libros/$idLibro': typeof AdminLibrosIdLibroRoute
+  '/admin/libros/': typeof AdminLibrosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -80,15 +123,23 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/login'
     | '/mis-reservas'
+    | '/admin/lectores'
+    | '/admin/libros'
     | '/libros/$idLibro'
+    | '/admin/'
+    | '/admin/libros/$idLibro'
+    | '/admin/libros/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/admin'
     | '/catalogo'
     | '/login'
     | '/mis-reservas'
+    | '/admin/lectores'
     | '/libros/$idLibro'
+    | '/admin'
+    | '/admin/libros/$idLibro'
+    | '/admin/libros'
   id:
     | '__root__'
     | '/'
@@ -96,12 +147,17 @@ export interface FileRouteTypes {
     | '/catalogo'
     | '/login'
     | '/mis-reservas'
+    | '/admin/lectores'
+    | '/admin/libros'
     | '/libros/$idLibro'
+    | '/admin/'
+    | '/admin/libros/$idLibro'
+    | '/admin/libros/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminRoute: typeof AdminRoute
+  AdminRoute: typeof AdminRouteWithChildren
   CatalogoRoute: typeof CatalogoRoute
   LoginRoute: typeof LoginRoute
   MisReservasRoute: typeof MisReservasRoute
@@ -145,6 +201,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MisReservasRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/lectores': {
+      id: '/admin/lectores'
+      path: '/lectores'
+      fullPath: '/admin/lectores'
+      preLoaderRoute: typeof AdminLectoresRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/libros': {
+      id: '/admin/libros'
+      path: '/libros'
+      fullPath: '/admin/libros'
+      preLoaderRoute: typeof AdminLibrosRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/libros/$idLibro': {
       id: '/libros/$idLibro'
       path: '/libros/$idLibro'
@@ -152,12 +229,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LibrosIdLibroRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/libros/': {
+      id: '/admin/libros/'
+      path: '/'
+      fullPath: '/admin/libros/'
+      preLoaderRoute: typeof AdminLibrosIndexRouteImport
+      parentRoute: typeof AdminLibrosRoute
+    }
+    '/admin/libros/$idLibro': {
+      id: '/admin/libros/$idLibro'
+      path: '/$idLibro'
+      fullPath: '/admin/libros/$idLibro'
+      preLoaderRoute: typeof AdminLibrosIdLibroRouteImport
+      parentRoute: typeof AdminLibrosRoute
+    }
   }
 }
 
+interface AdminLibrosRouteChildren {
+  AdminLibrosIdLibroRoute: typeof AdminLibrosIdLibroRoute
+  AdminLibrosIndexRoute: typeof AdminLibrosIndexRoute
+}
+
+const AdminLibrosRouteChildren: AdminLibrosRouteChildren = {
+  AdminLibrosIdLibroRoute: AdminLibrosIdLibroRoute,
+  AdminLibrosIndexRoute: AdminLibrosIndexRoute,
+}
+
+const AdminLibrosRouteWithChildren = AdminLibrosRoute._addFileChildren(
+  AdminLibrosRouteChildren,
+)
+
+interface AdminRouteChildren {
+  AdminLectoresRoute: typeof AdminLectoresRoute
+  AdminLibrosRoute: typeof AdminLibrosRouteWithChildren
+  AdminIndexRoute: typeof AdminIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminLectoresRoute: AdminLectoresRoute,
+  AdminLibrosRoute: AdminLibrosRouteWithChildren,
+  AdminIndexRoute: AdminIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminRoute: AdminRoute,
+  AdminRoute: AdminRouteWithChildren,
   CatalogoRoute: CatalogoRoute,
   LoginRoute: LoginRoute,
   MisReservasRoute: MisReservasRoute,

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 
 export const Route = createFileRoute('/')({
+  staticData: { title: 'ASA Biblioteca' },
   component: HomePage,
 })
 

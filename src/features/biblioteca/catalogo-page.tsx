@@ -11,6 +11,7 @@ import heroBlobs from '@/assets/hero-blobs.png'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ApiError } from '@/lib/api/client'
 import { useLibros } from '@/features/biblioteca/hooks'
@@ -74,15 +75,15 @@ export function CatalogoPage() {
       const nextCategoria = categoria.trim() || undefined
       if (nextBuscar === search.buscar && nextCategoria === search.categoria) return
 
-      void navigate({
-        replace: true,
-        search: {
-          page: 1,
-          pageSize: search.pageSize,
-          buscar: nextBuscar,
-          categoria: nextCategoria,
-        },
-      })
+      const searchNext: {
+        page: number
+        pageSize: number
+        buscar?: string
+        categoria?: string
+      } = { page: 1, pageSize: search.pageSize }
+      if (nextBuscar) searchNext.buscar = nextBuscar
+      if (nextCategoria) searchNext.categoria = nextCategoria
+      void navigate({ replace: true, search: searchNext })
     }, 300)
 
     return () => window.clearTimeout(timer)
@@ -128,20 +129,26 @@ export function CatalogoPage() {
         className="grid gap-3 sm:grid-cols-[1fr_14rem]"
         onSubmit={(event) => event.preventDefault()}
       >
-        <Input
-          value={buscar}
-          onChange={(event) => setBuscar(event.target.value)}
-          placeholder="Título, autor o ISBN"
-          aria-label="Buscar libros"
-          className="h-12 rounded-2xl bg-white"
-        />
-        <Input
-          value={categoria}
-          onChange={(event) => setCategoria(event.target.value)}
-          placeholder="Categoría"
-          aria-label="Filtrar por categoría"
-          className="h-12 rounded-2xl bg-white"
-        />
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="buscar-libros">Buscar</Label>
+          <Input
+            id="buscar-libros"
+            value={buscar}
+            onChange={(event) => setBuscar(event.target.value)}
+            placeholder="Título, autor o ISBN"
+            className="h-12 rounded-2xl bg-white"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <Label htmlFor="filtro-categoria">Categoría</Label>
+          <Input
+            id="filtro-categoria"
+            value={categoria}
+            onChange={(event) => setCategoria(event.target.value)}
+            placeholder="Categoría"
+            className="h-12 rounded-2xl bg-white"
+          />
+        </div>
       </form>
 
       {libros.isPending ? <CatalogoSkeleton /> : null}

@@ -3,7 +3,7 @@ import { tanstackRouter } from '@tanstack/router-plugin/vite'
 import react from '@vitejs/plugin-react'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url))
 
@@ -14,6 +14,7 @@ export default defineConfig({
       autoCodeSplitting: true,
       quoteStyle: 'single',
       semicolons: false,
+      routeFileIgnorePattern: '\\.test\\.',
     }),
     react(),
     tailwindcss(),
@@ -21,6 +22,13 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(rootDir, 'src'),
+    },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    env: {
+      VITE_API_URL: 'http://api.test',
     },
   },
 })
