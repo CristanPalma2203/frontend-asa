@@ -1,4 +1,5 @@
-import { Link, useRouterState } from '@tanstack/react-router'
+import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 
 import { Button } from '@/components/ui/button'
@@ -17,10 +18,13 @@ const links = [
 export function SiteHeader() {
   const isAdmin = useAuthStore(selectIsAdmin)
   const isLector = useAuthStore(selectIsLector)
-  const nombre = useAuthStore((state) =>
-    isSessionVisible(state) ? state.nombre : null,
-  )
+  const nombre = useAuthStore((state) => {
+    if (!isSessionVisible(state)) return null
+    return state.nombre || state.correo
+  })
   const logout = useAuthStore((state) => state.logout)
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
 
   return (
@@ -52,7 +56,16 @@ export function SiteHeader() {
         {nombre ? (
           <div className="flex items-center gap-2">
             <span className="text-sm">{nombre}</span>
-            <Button type="button" variant="secondary" size="sm" onClick={() => logout()}>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                logout()
+                queryClient.clear()
+                void navigate({ to: '/' })
+              }}
+            >
               Salir
             </Button>
           </div>
@@ -70,8 +83,14 @@ function isSessionVisible(state: {
   token: string | null
   expiresAt: number | null
   nombre: string | null
+  correo: string | null
 }) {
-  return Boolean(state.token && state.nombre && state.expiresAt && state.expiresAt > Date.now())
+  return Boolean(
+    state.token &&
+      (state.nombre || state.correo) &&
+      state.expiresAt &&
+      state.expiresAt > Date.now(),
+  )
 }
 
 export function SiteFooter() {

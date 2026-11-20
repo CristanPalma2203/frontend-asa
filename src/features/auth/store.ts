@@ -7,6 +7,7 @@ export type AuthSession = {
   rol: string
   nombre: string
   lectorId: number | null
+  correo?: string | null
 }
 
 type AuthState = {
@@ -15,6 +16,7 @@ type AuthState = {
   rol: string | null
   nombre: string | null
   lectorId: number | null
+  correo: string | null
   login: (session: AuthSession) => void
   logout: () => void
 }
@@ -27,6 +29,7 @@ export const useAuthStore = create<AuthState>()(
       rol: null,
       nombre: null,
       lectorId: null,
+      correo: null,
       login: (session) =>
         set({
           token: session.token,
@@ -34,6 +37,7 @@ export const useAuthStore = create<AuthState>()(
           rol: session.rol,
           nombre: session.nombre,
           lectorId: session.lectorId,
+          correo: session.correo ?? null,
         }),
       logout: () =>
         set({
@@ -42,6 +46,7 @@ export const useAuthStore = create<AuthState>()(
           rol: null,
           nombre: null,
           lectorId: null,
+          correo: null,
         }),
     }),
     {
@@ -53,6 +58,7 @@ export const useAuthStore = create<AuthState>()(
         rol: state.rol,
         nombre: state.nombre,
         lectorId: state.lectorId,
+        correo: state.correo,
       }),
       onRehydrateStorage: () => (state) => {
         if (state && !isSessionActive(state)) {
