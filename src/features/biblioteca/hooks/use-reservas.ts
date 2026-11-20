@@ -1,30 +1,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
-import {
-  cancelarReserva,
-  listarLibros,
-  misReservas,
-  obtenerLibro,
-  reservar,
-  type FiltroReservas,
-  type ListarLibrosParams,
-} from '@/features/biblioteca/api'
-import { queryKeys } from '@/features/biblioteca/queryKeys'
 import { useAuthStore } from '@/features/auth/store'
-import type { PagedResponse, Reserva } from '@/features/biblioteca/types'
+import { queryKeys } from '@/features/biblioteca/queryKeys'
+import { cancelarReserva, reservar } from '@/features/biblioteca/services/reservas.mutation'
+import { listarReservasDeLector } from '@/features/biblioteca/services/reservas.read'
+import type { PagedResponse, Reserva } from '@/features/biblioteca/types/api'
+import type { FiltroReservas } from '@/features/biblioteca/types/estados'
 
-export function useLibros(params: ListarLibrosParams) {
+/** Reservas del lector de la sesión. No consulta si la sesión no tiene lector. */
+export function useMisReservas(filtro: FiltroReservas = 'Activa', page = 1, pageSize = 20) {
+  const lectorId = useAuthStore((state) => state.lectorId)
   return useQuery({
-    queryKey: queryKeys.libros.list(params),
-    queryFn: () => listarLibros(params),
-  })
-}
-
-export function useLibro(id: number) {
-  return useQuery({
-    queryKey: queryKeys.libros.detail(id),
-    queryFn: () => obtenerLibro(id),
-    enabled: Number.isInteger(id) && id > 0,
+    queryKey: queryKeys.reservas.list(filtro, page, pageSize),
+    queryFn: () => listarReservasDeLector(lectorId ?? 0, filtro, page, pageSize),
+    enabled: lectorId != null,
   })
 }
 
@@ -34,15 +23,16 @@ export function useReservar() {
   return useMutation({
     mutationFn: reservar,
     onSuccess: async (_reserva, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['libros'] })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.libros.all })
       await queryClient.invalidateQueries({
         queryKey: queryKeys.libros.detail(variables.libroId),
       })
-      await queryClient.invalidateQueries({ queryKey: ['reservas', 'mine'] })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.reservas.mias() })
     },
   })
 }
 
+/** Cancela con update optimista: marca la reserva como Cancelada y hace rollback si falla. */
 export function useCancelarReserva() {
   const queryClient = useQueryClient()
 
@@ -50,13 +40,13 @@ export function useCancelarReserva() {
     mutationFn: ({ idReserva }: { idReserva: number; libroId: number }) =>
       cancelarReserva(idReserva),
     onMutate: async ({ idReserva }) => {
-      await queryClient.cancelQueries({ queryKey: ['reservas', 'mine'] })
+      await queryClient.cancelQueries({ queryKey: queryKeys.reservas.mias() })
       const previas = queryClient.getQueriesData<PagedResponse<Reserva>>({
-        queryKey: ['reservas', 'mine'],
+        queryKey: queryKeys.reservas.mias(),
       })
       const ahora = new Date().toISOString()
       queryClient.setQueriesData<PagedResponse<Reserva>>(
-        { queryKey: ['reservas', 'mine'] },
+        { queryKey: queryKeys.reservas.mias() },
         (pagina) => {
           if (!pagina) return pagina
           return {
@@ -77,20 +67,11 @@ export function useCancelarReserva() {
       }
     },
     onSettled: async (_data, _error, variables) => {
-      await queryClient.invalidateQueries({ queryKey: ['reservas', 'mine'] })
-      await queryClient.invalidateQueries({ queryKey: ['libros'] })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.reservas.mias() })
+      await queryClient.invalidateQueries({ queryKey: queryKeys.libros.all })
       await queryClient.invalidateQueries({
         queryKey: queryKeys.libros.detail(variables.libroId),
       })
     },
-  })
-}
-
-export function useMisReservas(filtro: FiltroReservas = 'Activa', page = 1, pageSize = 20) {
-  const lectorId = useAuthStore((state) => state.lectorId)
-  return useQuery({
-    queryKey: queryKeys.reservas.mine(filtro, page, pageSize),
-    queryFn: () => misReservas(filtro, page, pageSize),
-    enabled: lectorId != null,
   })
 }

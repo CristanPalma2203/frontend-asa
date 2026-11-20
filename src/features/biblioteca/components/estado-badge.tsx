@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import type { EstiloBadge } from '@/features/biblioteca/estados'
+import type { EstiloBadge } from '@/features/biblioteca/components/estado-badge.styles'
 
 export function EstadoBadge({ estilo }: { estilo: EstiloBadge }) {
   return (

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { lectorSchema } from '@/features/biblioteca/schemas'
+import { lectorSchema } from '@/features/biblioteca/schemas/lector.schema'
 
 const base = {
   identificador: 'LEC-001',

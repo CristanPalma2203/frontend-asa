@@ -1,4 +1,4 @@
-import type { Libro, LibroDetalle } from '@/features/biblioteca/types'
+import type { Libro, LibroDetalle } from '@/features/biblioteca/types/api'
 
 export const libroEjemplo: Libro = {
   idLibro: 1,

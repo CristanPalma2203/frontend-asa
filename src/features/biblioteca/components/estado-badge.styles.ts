@@ -6,7 +6,7 @@ import type {
   EstadoLector,
   EstadoLibro,
   EstadoReserva,
-} from '@/features/biblioteca/types'
+} from '@/features/biblioteca/types/estados'
 
 export type EstiloBadge = {
   etiqueta: string

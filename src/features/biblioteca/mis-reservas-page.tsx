@@ -3,21 +3,13 @@ import { useState } from 'react'
 
 import heroBlobs from '@/assets/hero-blobs.png'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Skeleton } from '@/components/ui/skeleton'
+import { CancelarReservaDialog } from '@/features/biblioteca/components/cancelar-reserva-dialog'
+import { ReservaCard } from '@/features/biblioteca/components/reserva-card'
+import { ReservasSkeleton } from '@/features/biblioteca/components/skeletons'
 import { mensajeDeError } from '@/features/biblioteca/errores'
-import { EstadoBadge } from '@/features/biblioteca/estado-badge'
-import { badgeReserva } from '@/features/biblioteca/estados'
-import { useCancelarReserva, useLibro, useMisReservas } from '@/features/biblioteca/hooks'
-import type { FiltroReservas } from '@/features/biblioteca/api'
-import type { Reserva } from '@/features/biblioteca/types'
+import { useCancelarReserva, useMisReservas } from '@/features/biblioteca/hooks/use-reservas'
+import type { Reserva } from '@/features/biblioteca/types/api'
+import type { FiltroReservas } from '@/features/biblioteca/types/estados'
 import { ApiError } from '@/lib/api/client'
 
 const filtros: Array<{ id: FiltroReservas; label: string }> = [
@@ -25,8 +17,6 @@ const filtros: Array<{ id: FiltroReservas; label: string }> = [
   { id: 'Cancelada', label: 'Canceladas' },
   { id: 'Todas', label: 'Todas' },
 ]
-
-import { formatearFecha } from '@/lib/fechas'
 
 export function MisReservasPage() {
   const [filtro, setFiltro] = useState<FiltroReservas>('Activa')
@@ -60,7 +50,7 @@ export function MisReservasPage() {
         ))}
       </div>
 
-      {reservas.isPending ? <ListaSkeleton /> : null}
+      {reservas.isPending ? <ReservasSkeleton /> : null}
 
       {reservas.isError ? (
         <section className="rounded-2xl border-2 border-tinta bg-white p-6 shadow-cartoon">
@@ -115,104 +105,18 @@ export function MisReservasPage() {
         </div>
       ) : null}
 
-      <Dialog open={elegida !== null} onOpenChange={(open) => !open && setElegida(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Cancelar reserva</DialogTitle>
-            <DialogDescription>
-              Se libera {elegida?.titulo} ({elegida?.codigoInventario}).
-            </DialogDescription>
-          </DialogHeader>
-          {cancelar.error instanceof ApiError ? (
-            <p className="text-sm text-destructive">
-              {mensajeDeError(cancelar.error.code, cancelar.error.detail || cancelar.error.title)}
-            </p>
-          ) : null}
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setElegida(null)}>
-              Volver
-            </Button>
-            <Button
-              type="button"
-              disabled={cancelar.isPending || !elegida}
-              onClick={() => {
-                if (!elegida) return
-                cancelar.mutate(
-                  { idReserva: elegida.idReserva, libroId: elegida.idLibro },
-                  { onSuccess: () => setElegida(null) },
-                )
-              }}
-            >
-              Cancelar reserva
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CancelarReservaDialog
+        reserva={elegida}
+        onClose={() => setElegida(null)}
+        pending={cancelar.isPending}
+        error={cancelar.error}
+        onConfirmar={(reserva) =>
+          cancelar.mutate(
+            { idReserva: reserva.idReserva, libroId: reserva.idLibro },
+            { onSuccess: () => setElegida(null) },
+          )
+        }
+      />
     </main>
-  )
-}
-
-function ReservaCard({ reserva, onCancelar }: { reserva: Reserva; onCancelar: () => void }) {
-  return (
-    <article className="flex gap-3 rounded-2xl border-2 border-tinta bg-white p-3 shadow-cartoon">
-      <MiniPortada idLibro={reserva.idLibro} titulo={reserva.titulo} />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <Link
-          to="/libros/$idLibro"
-          params={{ idLibro: String(reserva.idLibro) }}
-          className="font-display text-xl text-verde hover:underline"
-        >
-          {reserva.titulo}
-        </Link>
-        <p className="text-sm">{reserva.codigoInventario}</p>
-        <p className="text-sm">Solicitud {formatearFecha(reserva.fechaSolicitud)}</p>
-        {reserva.fechaCancelacion ? (
-          <p className="text-sm">Cancelación {formatearFecha(reserva.fechaCancelacion)}</p>
-        ) : null}
-        <div className="mt-1 flex flex-wrap items-center gap-2">
-          <EstadoBadge estilo={badgeReserva[reserva.estado]} />
-          {reserva.estado === 'Activa' ? (
-            <Button type="button" size="sm" variant="outline" onClick={onCancelar}>
-              Cancelar reserva
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    </article>
-  )
-}
-
-function MiniPortada({ idLibro, titulo }: { idLibro: number; titulo: string }) {
-  const libro = useLibro(idLibro)
-  const [fallo, setFallo] = useState(false)
-  const isbn = libro.data?.isbn.replace(/[^0-9Xx]/g, '') ?? ''
-
-  if (!isbn || fallo) {
-    return (
-      <svg viewBox="0 0 64 96" role="img" aria-label={titulo} className="h-24 w-16 shrink-0 rounded-xl border-2 border-tinta">
-        <rect width="64" height="96" fill="#1E3D2E" />
-        <text x="32" y="50" textAnchor="middle" fill="#FEF8EC" fontFamily="Fredoka, sans-serif" fontSize="8">
-          {titulo.slice(0, 18)}
-        </text>
-      </svg>
-    )
-  }
-
-  return (
-    <img
-      src={`https://covers.openlibrary.org/b/isbn/${isbn}-S.jpg?default=false`}
-      alt=""
-      className="h-24 w-16 shrink-0 rounded-xl border-2 border-tinta object-cover"
-      onError={() => setFallo(true)}
-    />
-  )
-}
-
-function ListaSkeleton() {
-  return (
-    <div className="flex flex-col gap-3">
-      <Skeleton className="h-28 rounded-2xl border-2 border-tinta" />
-      <Skeleton className="h-28 rounded-2xl border-2 border-tinta" />
-    </div>
   )
 }

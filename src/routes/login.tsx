@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { iniciarSesion } from '@/features/auth/api'
 import { isSessionActive, useAuthStore } from '@/features/auth/store'
 import { mensajeDeError } from '@/features/biblioteca/errores'
-import { loginSchema, type LoginForm } from '@/features/biblioteca/schemas'
+import { loginSchema, type LoginForm } from '@/features/biblioteca/schemas/login.schema'
 import { ApiError } from '@/lib/api/client'
 
 export const Route = createFileRoute('/login')({

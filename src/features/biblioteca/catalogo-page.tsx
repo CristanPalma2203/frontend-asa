@@ -1,47 +1,20 @@
-import { Link } from '@tanstack/react-router'
-import { flexRender } from '@tanstack/react-table'
-import {
-  getCoreRowModel,
-  useLegacyTable,
-  type LegacyColumnDef,
-} from '@tanstack/react-table/legacy'
+import { getRouteApi } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 
 import heroBlobs from '@/assets/hero-blobs.png'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Skeleton } from '@/components/ui/skeleton'
+import { LibroCard } from '@/features/biblioteca/components/libro-card'
+import { LibrosTable } from '@/features/biblioteca/components/libros-table'
+import { CatalogoSkeleton } from '@/features/biblioteca/components/skeletons'
+import { useLibros } from '@/features/biblioteca/hooks/use-libros'
 import { ApiError } from '@/lib/api/client'
-import { useLibros } from '@/features/biblioteca/hooks'
-import type { Libro } from '@/features/biblioteca/types'
-import { Route } from '@/routes/catalogo'
+
+const Route = getRouteApi('/catalogo')
 
 const vistaKey = 'asa-catalogo-vista'
 
-const columnas: LegacyColumnDef<Libro>[] = [
-  {
-    accessorKey: 'titulo',
-    header: 'Título',
-    cell: ({ row }) => (
-      <Link
-        to="/libros/$idLibro"
-        params={{ idLibro: String(row.original.idLibro) }}
-        className="font-display text-base text-verde underline-offset-2 hover:underline"
-      >
-        {row.original.titulo}
-      </Link>
-    ),
-  },
-  { accessorKey: 'autor', header: 'Autor' },
-  { accessorKey: 'categoria', header: 'Categoría' },
-  {
-    id: 'stock',
-    header: 'Stock',
-    cell: ({ row }) => <StockBadge libro={row.original} />,
-  },
-]
 
 export function CatalogoPage() {
   const search = Route.useSearch()
@@ -219,129 +192,6 @@ export function CatalogoPage() {
         </nav>
       ) : null}
     </main>
-  )
-}
-
-function LibroCard({ libro }: { libro: Libro }) {
-  return (
-    <Link
-      to="/libros/$idLibro"
-      params={{ idLibro: String(libro.idLibro) }}
-      className="flex h-full gap-3 rounded-2xl border-2 border-tinta bg-white p-3 shadow-cartoon transition-transform hover:-rotate-1"
-    >
-      <Portada isbn={libro.isbn} titulo={libro.titulo} />
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <h2 className="font-display text-xl leading-tight text-verde">{libro.titulo}</h2>
-        <p className="truncate text-sm">{libro.autor}</p>
-        <p className="text-xs uppercase tracking-wide text-verde/70">{libro.categoria}</p>
-        <div className="mt-auto pt-2">
-          <StockBadge libro={libro} />
-        </div>
-      </div>
-    </Link>
-  )
-}
-
-function StockBadge({ libro }: { libro: Libro }) {
-  if (libro.disponibles > 0) {
-    return <Badge variant="disponible">Disponible ({libro.disponibles})</Badge>
-  }
-
-  return (
-    <Badge variant="outline" className="bg-muted text-verde/70">
-      Sin stock
-    </Badge>
-  )
-}
-
-function Portada({ isbn, titulo }: { isbn: string; titulo: string }) {
-  const [fallo, setFallo] = useState(false)
-  const limpio = isbn.replace(/[^0-9Xx]/g, '')
-
-  if (fallo || limpio.length === 0) {
-    return <PortadaVacia titulo={titulo} />
-  }
-
-  return (
-    <img
-      src={`https://covers.openlibrary.org/b/isbn/${limpio}-M.jpg?default=false`}
-      alt=""
-      className="h-36 w-24 shrink-0 rounded-xl border-2 border-tinta object-cover"
-      onError={() => setFallo(true)}
-    />
-  )
-}
-
-function PortadaVacia({ titulo }: { titulo: string }) {
-  return (
-    <svg
-      viewBox="0 0 96 144"
-      role="img"
-      aria-label={titulo}
-      className="h-36 w-24 shrink-0 rounded-xl border-2 border-tinta"
-    >
-      <rect width="96" height="144" fill="#1E3D2E" />
-      <rect x="8" y="8" width="80" height="128" fill="#FEF8EC" stroke="#111111" strokeWidth="2" />
-      <text
-        x="48"
-        y="72"
-        textAnchor="middle"
-        fill="#1E3D2E"
-        fontFamily="Fredoka, sans-serif"
-        fontSize="11"
-      >
-        {titulo.slice(0, 42)}
-      </text>
-    </svg>
-  )
-}
-
-function LibrosTable({ libros }: { libros: Libro[] }) {
-  const table = useLegacyTable({
-    data: libros,
-    columns: columnas,
-    getCoreRowModel: getCoreRowModel(),
-  })
-
-  return (
-    <div className="overflow-x-auto rounded-2xl border-2 border-tinta bg-white shadow-cartoon">
-      <table className="w-full min-w-[36rem] text-left text-sm">
-        <thead className="border-b-2 border-tinta bg-lima/40">
-          {table.getHeaderGroups().map((group) => (
-            <tr key={group.id}>
-              {group.headers.map((header) => (
-                <th key={header.id} className="px-3 py-3 font-display text-verde">
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="border-b border-tinta/30 last:border-0">
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-3 py-3">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-}
-
-function CatalogoSkeleton() {
-  return (
-    <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }, (_, index) => (
-        <li key={index}>
-          <Skeleton className="h-40 rounded-2xl border-2 border-tinta" />
-        </li>
-      ))}
-    </ul>
   )
 }
 

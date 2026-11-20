@@ -1,7 +1,9 @@
-export type EstadoLibro = 'Activo' | 'Inactivo'
-export type EstadoEjemplar = 'Disponible' | 'Reservado' | 'Prestado' | 'Inactivo'
-export type EstadoReserva = 'Activa' | 'Cancelada' | 'Completada'
-export type EstadoLector = 'Activo' | 'Inactivo'
+import type {
+  EstadoEjemplar,
+  EstadoLector,
+  EstadoLibro,
+  EstadoReserva,
+} from '@/features/biblioteca/types/estados'
 
 export type Libro = {
   idLibro: number
@@ -84,4 +86,37 @@ export type ProblemDetails = {
   detail?: string
   code?: string
   errors?: Record<string, string[]>
+}
+
+// ---- Parámetros de consulta y cuerpos de request ----
+
+export type ListarLibrosParams = {
+  page: number
+  pageSize: number
+  buscar?: string
+  categoria?: string
+}
+
+export type ListarLectoresParams = {
+  page: number
+  pageSize: number
+  buscar?: string
+}
+
+export type ReservarBody = {
+  lectorId: number
+  libroId: number
+}
+
+export type CrearLectorBody = {
+  identificador: string
+  nombre: string
+  correo: string
+  password?: string
+}
+
+export type EditarLectorBody = {
+  identificador: string
+  nombre: string
+  correo: string
 }

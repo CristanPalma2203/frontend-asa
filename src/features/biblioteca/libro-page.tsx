@@ -1,25 +1,22 @@
-import { Link } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
-import heroBlobs from '@/assets/hero-blobs.png'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Skeleton } from '@/components/ui/skeleton'
 import { isSessionActive, selectIsAdmin, selectIsLector, useAuthStore } from '@/features/auth/store'
-import { EstadoBadge } from '@/features/biblioteca/estado-badge'
-import { badgeEjemplar } from '@/features/biblioteca/estados'
+import { EstadoBadge } from '@/features/biblioteca/components/estado-badge'
+import { badgeEjemplar } from '@/features/biblioteca/components/estado-badge.styles'
+import { LibroNoEncontrado } from '@/features/biblioteca/components/libro-no-encontrado'
+import { PortadaFicha } from '@/features/biblioteca/components/portadas'
+import { ReservaError } from '@/features/biblioteca/components/reserva-error'
+import { ReservarDialog } from '@/features/biblioteca/components/reservar-dialog'
+import { FichaSkeleton } from '@/features/biblioteca/components/skeletons'
 import { mensajeDeError } from '@/features/biblioteca/errores'
-import { useLibro, useMisReservas, useReservar } from '@/features/biblioteca/hooks'
+import { useLibro } from '@/features/biblioteca/hooks/use-libros'
+import { useMisReservas, useReservar } from '@/features/biblioteca/hooks/use-reservas'
 import { ApiError } from '@/lib/api/client'
-import { Route } from '@/routes/libros.$idLibro'
+
+const Route = getRouteApi('/libros/$idLibro')
 
 export function LibroPage() {
   const { idLibro } = Route.useParams()
@@ -38,12 +35,7 @@ export function LibroPage() {
   }, [libro.data])
 
   if (libro.isPending) {
-    return (
-      <main className="mx-auto grid w-full max-w-5xl gap-4 px-4 py-8 md:grid-cols-[16rem_1fr]">
-        <Skeleton className="h-80 rounded-2xl border-2 border-tinta" />
-        <Skeleton className="h-80 rounded-2xl border-2 border-tinta" />
-      </main>
-    )
+    return <FichaSkeleton />
   }
 
   if (libro.isError) {
@@ -77,9 +69,17 @@ export function LibroPage() {
   const errorReserva = reservar.error instanceof ApiError ? reservar.error : null
   const sinStock = detalle.disponibles === 0
 
+  function confirmarReserva() {
+    if (!lectorId) return
+    reservar.mutate(
+      { lectorId, libroId: detalle.idLibro },
+      { onSuccess: (reserva) => avisar(reserva.codigoInventario, setAbierto) },
+    )
+  }
+
   return (
     <main className="mx-auto grid w-full max-w-5xl gap-6 px-4 py-8 md:grid-cols-[16rem_1fr]">
-      <Portada isbn={detalle.isbn} titulo={detalle.titulo} />
+      <PortadaFicha isbn={detalle.isbn} titulo={detalle.titulo} />
       <section className="rounded-2xl border-2 border-tinta bg-white p-6 shadow-cartoon">
         <h1 className="font-display text-4xl text-verde">{detalle.titulo}</h1>
         <p className="mt-1 text-lg">{detalle.autor}</p>
@@ -115,13 +115,7 @@ export function LibroPage() {
             <ReservaError
               code={errorReserva.code}
               fallback={errorReserva.detail || errorReserva.title}
-              onRetry={() => {
-                if (!lectorId) return
-                reservar.mutate(
-                  { lectorId, libroId: detalle.idLibro },
-                  { onSuccess: (reserva) => avisar(reserva.codigoInventario, setAbierto) },
-                )
-              }}
+              onRetry={confirmarReserva}
             />
           ) : null}
         </div>
@@ -138,36 +132,13 @@ export function LibroPage() {
           ))}
         </ul>
       </section>
-      <Dialog open={abierto} onOpenChange={setAbierto}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reservar {detalle.titulo}</DialogTitle>
-            <DialogDescription>
-              Se asignará el primer ejemplar disponible.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAbierto(false)}>
-              Cancelar
-            </Button>
-            <Button
-              type="button"
-              disabled={reservar.isPending || !lectorId}
-              onClick={() => {
-                if (!lectorId) return
-                reservar.mutate(
-                  { lectorId, libroId: detalle.idLibro },
-                  {
-                    onSuccess: (reserva) => avisar(reserva.codigoInventario, setAbierto),
-                  },
-                )
-              }}
-            >
-              Confirmar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ReservarDialog
+        abierto={abierto}
+        onOpenChange={setAbierto}
+        titulo={detalle.titulo}
+        deshabilitado={reservar.isPending || !lectorId}
+        onConfirmar={confirmarReserva}
+      />
     </main>
   )
 }
@@ -175,63 +146,4 @@ export function LibroPage() {
 function avisar(codigo: string, cerrar: (open: boolean) => void) {
   cerrar(false)
   toast.success(`Ejemplar asignado: ${codigo}`)
-}
-
-function ReservaError({
-  code,
-  fallback,
-  onRetry,
-}: {
-  code: string | undefined
-  fallback: string
-  onRetry: () => void
-}) {
-  return (
-    <div className="mt-3 text-sm">
-      <p>{mensajeDeError(code, fallback)}</p>
-      {code === 'reserva-duplicada' ? (
-        <Link to="/mis-reservas" className="mt-1 inline-block font-semibold text-verde underline">
-          Mis reservas
-        </Link>
-      ) : null}
-      {code === 'ejemplar-ya-reservado' ? (
-        <Button type="button" size="sm" className="mt-2" onClick={onRetry}>
-          Reintentar
-        </Button>
-      ) : null}
-    </div>
-  )
-}
-
-function LibroNoEncontrado() {
-  return (
-    <main className="mx-auto flex w-full max-w-lg flex-col items-center gap-3 px-4 py-10 text-center">
-      <img src={heroBlobs} alt="" className="h-36 w-52 rounded-2xl border-2 border-tinta object-cover shadow-cartoon" />
-      <h1 className="font-display text-4xl text-verde">Libro no encontrado</h1>
-      <p className="text-sm">Ese título no está en la biblioteca.</p>
-    </main>
-  )
-}
-
-function Portada({ isbn, titulo }: { isbn: string; titulo: string }) {
-  const [fallo, setFallo] = useState(false)
-  const limpio = isbn.replace(/[^0-9Xx]/g, '')
-  if (fallo || limpio.length === 0) {
-    return (
-      <svg viewBox="0 0 160 240" role="img" aria-label={titulo} className="w-full rounded-2xl border-2 border-tinta shadow-cartoon">
-        <rect width="160" height="240" fill="#1E3D2E" />
-        <text x="80" y="120" textAnchor="middle" fill="#FEF8EC" fontFamily="Fredoka, sans-serif" fontSize="14">
-          {titulo.slice(0, 48)}
-        </text>
-      </svg>
-    )
-  }
-  return (
-    <img
-      src={`https://covers.openlibrary.org/b/isbn/${limpio}-L.jpg?default=false`}
-      alt=""
-      className="w-full rounded-2xl border-2 border-tinta object-cover shadow-cartoon"
-      onError={() => setFallo(true)}
-    />
-  )
 }

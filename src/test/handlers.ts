@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-import type { PagedResponse, Reserva, ReservaCreada } from '@/features/biblioteca/types'
+import type { PagedResponse, Reserva, ReservaCreada } from '@/features/biblioteca/types/api'
 
 import { detalleEjemplo, libroEjemplo } from './fixtures'
 

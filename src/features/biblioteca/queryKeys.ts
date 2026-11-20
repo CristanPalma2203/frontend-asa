@@ -1,21 +1,38 @@
+import type { ListarLectoresParams, ListarLibrosParams } from '@/features/biblioteca/types/api'
+import type { FiltroReservas } from '@/features/biblioteca/types/estados'
+
+// Cada recurso tiene una raíz `all`; listas y detalles cuelgan de ella para poder
+// invalidar todo un recurso (`all`), solo sus listas (`lists`) o un registro (`detail`).
+
+const librosAll = ['libros'] as const
+const lectoresAll = ['lectores'] as const
+const reservasAll = ['reservas'] as const
+const ejemplaresAll = ['ejemplares'] as const
+
 export const queryKeys = {
   libros: {
-    list: (params: {
-      buscar?: string
-      categoria?: string
-      page: number
-      pageSize: number
-    }) => ['libros', 'list', params] as const,
-    detail: (id: number) => ['libros', 'detail', id] as const,
+    all: librosAll,
+    lists: () => [...librosAll, 'list'] as const,
+    list: (params: ListarLibrosParams) => [...librosAll, 'list', params] as const,
+    details: () => [...librosAll, 'detail'] as const,
+    detail: (id: number) => [...librosAll, 'detail', id] as const,
+  },
+  lectores: {
+    all: lectoresAll,
+    lists: () => [...lectoresAll, 'list'] as const,
+    list: (params: ListarLectoresParams) => [...lectoresAll, 'list', params] as const,
+    details: () => [...lectoresAll, 'detail'] as const,
+    detail: (id: number) => [...lectoresAll, 'detail', id] as const,
   },
   reservas: {
-    mine: (filtro: 'Activa' | 'Cancelada' | 'Todas' = 'Todas', page = 1, pageSize = 20) =>
-      ['reservas', 'mine', filtro, page, pageSize] as const,
+    all: reservasAll,
+    /** Todas las listas de "Mis reservas" (cualquier filtro y página). */
+    mias: () => [...reservasAll, 'mine'] as const,
+    list: (filtro: FiltroReservas = 'Todas', page = 1, pageSize = 20) =>
+      [...reservasAll, 'mine', filtro, page, pageSize] as const,
   },
-  ejemplares: (idLibro: number) => ['ejemplares', idLibro] as const,
-  lectores: {
-    list: (params: { buscar?: string; page: number; pageSize: number }) =>
-      ['lectores', 'list', params] as const,
-    detail: (id: number) => ['lectores', 'detail', id] as const,
+  ejemplares: {
+    all: ejemplaresAll,
+    list: (idLibro: number) => [...ejemplaresAll, idLibro] as const,
   },
 }
