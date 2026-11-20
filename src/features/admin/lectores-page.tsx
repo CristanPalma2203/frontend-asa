@@ -21,6 +21,8 @@ import {
   obtenerLector,
 } from '@/features/biblioteca/api'
 import { mensajeDeError } from '@/features/biblioteca/errores'
+import { EstadoBadge } from '@/features/biblioteca/estado-badge'
+import { badgeLector } from '@/features/biblioteca/estados'
 import { queryKeys } from '@/features/biblioteca/queryKeys'
 import { lectorSchema, type LectorForm } from '@/features/biblioteca/schemas'
 import type { LectorLista } from '@/features/biblioteca/types'
@@ -149,7 +151,9 @@ function LectorFilas({
         <td className="py-2">{lector.identificador}</td>
         <td>{lector.nombre}</td>
         <td>{lector.correo}</td>
-        <td>{lector.estado}</td>
+        <td>
+          <EstadoBadge estilo={badgeLector[lector.estado]} />
+        </td>
         <td className="space-x-2 py-2 text-right">
           <Button type="button" size="sm" variant="outline" onClick={onEdit}>
             Editar

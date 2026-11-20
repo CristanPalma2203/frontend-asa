@@ -17,6 +17,8 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cambiarEstadoEjemplar, crearEjemplar, listarEjemplares } from '@/features/biblioteca/api'
 import { mensajeDeError } from '@/features/biblioteca/errores'
+import { EstadoBadge } from '@/features/biblioteca/estado-badge'
+import { badgeEjemplar } from '@/features/biblioteca/estados'
 import { useLibro } from '@/features/biblioteca/hooks'
 import { queryKeys } from '@/features/biblioteca/queryKeys'
 import { ejemplarSchema, type EjemplarForm } from '@/features/biblioteca/schemas'
@@ -122,7 +124,9 @@ export function LibroAdminPage() {
             {filas.map((item) => (
               <tr key={item.idEjemplar} className="border-b border-tinta/20">
                 <td className="py-2">{item.codigoInventario}</td>
-                <td>{item.estado}</td>
+                <td>
+                  <EstadoBadge estilo={badgeEjemplar[item.estado]} />
+                </td>
                 <td className="py-2 text-right">
                   <Button
                     type="button"

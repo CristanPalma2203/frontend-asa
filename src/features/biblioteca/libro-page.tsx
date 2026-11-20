@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 
 import heroBlobs from '@/assets/hero-blobs.png'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -15,9 +14,10 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { isSessionActive, selectIsAdmin, selectIsLector, useAuthStore } from '@/features/auth/store'
+import { EstadoBadge } from '@/features/biblioteca/estado-badge'
+import { badgeEjemplar } from '@/features/biblioteca/estados'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import { useLibro, useMisReservas, useReservar } from '@/features/biblioteca/hooks'
-import type { Ejemplar } from '@/features/biblioteca/types'
 import { ApiError } from '@/lib/api/client'
 import { Route } from '@/routes/libros.$idLibro'
 
@@ -129,11 +129,11 @@ export function LibroPage() {
         <ul className="mt-3 flex flex-col gap-2">
           {detalle.ejemplares.map((ejemplar) => (
             <li
-              key={ejemplar.id}
+              key={ejemplar.idEjemplar}
               className="flex items-center justify-between gap-3 rounded-xl border-2 border-tinta px-3 py-2"
             >
               <span className="text-sm">{ejemplar.codigoInventario}</span>
-              <EstadoBadge ejemplar={ejemplar} />
+              <EstadoBadge estilo={badgeEjemplar[ejemplar.estado]} />
             </li>
           ))}
         </ul>
@@ -200,17 +200,6 @@ function ReservaError({
         </Button>
       ) : null}
     </div>
-  )
-}
-
-function EstadoBadge({ ejemplar }: { ejemplar: Ejemplar }) {
-  if (ejemplar.estado === 'Disponible') return <Badge variant="disponible">Disponible</Badge>
-  if (ejemplar.estado === 'Reservado') return <Badge>Reservado</Badge>
-  if (ejemplar.estado === 'Prestado') return <Badge variant="outline">Prestado</Badge>
-  return (
-    <Badge variant="outline" className="bg-muted text-verde/70">
-      Inactivo
-    </Badge>
   )
 }
 

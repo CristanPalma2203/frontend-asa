@@ -1,9 +1,7 @@
-import type {
-  EstadoEjemplar,
-  EstadoLector,
-  EstadoLibro,
-  EstadoReserva,
-} from '@/features/biblioteca/estados'
+export type EstadoLibro = 'Activo' | 'Inactivo'
+export type EstadoEjemplar = 'Disponible' | 'Reservado' | 'Prestado' | 'Inactivo'
+export type EstadoReserva = 'Activa' | 'Cancelada' | 'Completada'
+export type EstadoLector = 'Activo' | 'Inactivo'
 
 export type Libro = {
   idLibro: number
@@ -16,7 +14,7 @@ export type Libro = {
 }
 
 export type Ejemplar = {
-  id: number
+  idEjemplar: number
   codigoInventario: string
   estado: EstadoEjemplar
   rowVersion: string
@@ -39,7 +37,7 @@ export type Reserva = {
   titulo: string
   codigoInventario: string
   estado: EstadoReserva
-  fechaReserva: string
+  fechaSolicitud: string
   fechaCancelacion: string | null
 }
 
@@ -48,7 +46,7 @@ export type ReservaCreada = {
   idEjemplar: number
   codigoInventario: string
   estado: EstadoReserva
-  fechaReserva: string
+  fechaSolicitud: string
 }
 
 export type EjemplarLista = {

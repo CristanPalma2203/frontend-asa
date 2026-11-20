@@ -2,7 +2,6 @@ import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 
 import heroBlobs from '@/assets/hero-blobs.png'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -14,6 +13,8 @@ import {
 } from '@/components/ui/dialog'
 import { Skeleton } from '@/components/ui/skeleton'
 import { mensajeDeError } from '@/features/biblioteca/errores'
+import { EstadoBadge } from '@/features/biblioteca/estado-badge'
+import { badgeReserva } from '@/features/biblioteca/estados'
 import { useCancelarReserva, useLibro, useMisReservas } from '@/features/biblioteca/hooks'
 import type { FiltroReservas } from '@/features/biblioteca/api'
 import type { Reserva } from '@/features/biblioteca/types'
@@ -164,12 +165,12 @@ function ReservaCard({ reserva, onCancelar }: { reserva: Reserva; onCancelar: ()
           {reserva.titulo}
         </Link>
         <p className="text-sm">{reserva.codigoInventario}</p>
-        <p className="text-sm">Solicitud {formatearFecha(reserva.fechaReserva)}</p>
+        <p className="text-sm">Solicitud {formatearFecha(reserva.fechaSolicitud)}</p>
         {reserva.fechaCancelacion ? (
           <p className="text-sm">Cancelación {formatearFecha(reserva.fechaCancelacion)}</p>
         ) : null}
         <div className="mt-1 flex flex-wrap items-center gap-2">
-          <EstadoReservaBadge estado={reserva.estado} />
+          <EstadoBadge estilo={badgeReserva[reserva.estado]} />
           {reserva.estado === 'Activa' ? (
             <Button type="button" size="sm" variant="outline" onClick={onCancelar}>
               Cancelar reserva
@@ -205,18 +206,6 @@ function MiniPortada({ idLibro, titulo }: { idLibro: number; titulo: string }) {
       onError={() => setFallo(true)}
     />
   )
-}
-
-function EstadoReservaBadge({ estado }: { estado: Reserva['estado'] }) {
-  if (estado === 'Activa') return <Badge variant="disponible">Activa</Badge>
-  if (estado === 'Cancelada') {
-    return (
-      <Badge variant="outline" className="bg-muted text-verde/70">
-        Cancelada
-      </Badge>
-    )
-  }
-  return <Badge variant="outline">Completada</Badge>
 }
 
 function ListaSkeleton() {

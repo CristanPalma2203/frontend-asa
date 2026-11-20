@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw'
 
-import type { PagedResponse } from '@/features/biblioteca/types'
+import type { PagedResponse, Reserva, ReservaCreada } from '@/features/biblioteca/types'
 
 import { detalleEjemplo, libroEjemplo } from './fixtures'
 
@@ -49,35 +49,29 @@ export const handlers = [
     )
     return HttpResponse.json(pagina(items))
   }),
-  http.get(`${base}/api/libros/:id`, () =>
-    HttpResponse.json({
-      ...detalleEjemplo,
-      estado: 0,
-      ejemplares: detalleEjemplo.ejemplares.map((ejemplar) => ({ ...ejemplar, estado: 0 })),
-    }),
-  ),
+  http.get(`${base}/api/libros/:id`, () => HttpResponse.json(detalleEjemplo)),
   http.post(`${base}/api/reservas`, () =>
     HttpResponse.json(
       {
         idReserva: 9,
         idEjemplar: 1,
         codigoInventario: 'BIB-001',
-        estado: 0,
-        fechaReserva: '2026-11-20T14:00:00',
-      },
+        estado: 'Activa',
+        fechaSolicitud: '2026-11-20T14:00:00Z',
+      } satisfies ReservaCreada,
       { status: 201 },
     ),
   ),
   http.get(`${base}/api/lectores/:id/reservas`, () =>
     HttpResponse.json(
-      pagina([
+      pagina<Reserva>([
         {
           idReserva: 4,
           idLibro: 1,
           titulo: 'El Principito',
           codigoInventario: 'BIB-001',
-          estado: 0,
-          fechaReserva: '2026-11-20T14:00:00',
+          estado: 'Activa',
+          fechaSolicitud: '2026-11-20T14:00:00Z',
           fechaCancelacion: null,
         },
       ]),

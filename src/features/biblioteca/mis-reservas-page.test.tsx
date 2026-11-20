@@ -7,6 +7,20 @@ import { bloquearCancelacion, soltarCancelacion } from '@/test/handlers'
 import { renderEn } from '@/test/render'
 
 describe('mis reservas', () => {
+  it('muestra fechaSolicitud (UTC con Z) en hora de El Salvador', async () => {
+    useAuthStore.getState().login({
+      token: 'token-test',
+      expiresAt: Date.now() + 60_000,
+      rol: 'Lector',
+      nombre: 'Ana',
+      lectorId: 2,
+      correo: 'ana@demo.local',
+    })
+    await renderEn('/mis-reservas')
+    // 14:00Z = 8:00 en America/El_Salvador (UTC-6)
+    expect(await screen.findByText(/Solicitud 20 nov 2026.*8:00/)).toBeInTheDocument()
+  })
+
   it('cancela con update optimista y hace rollback si falla', async () => {
     const user = userEvent.setup()
     useAuthStore.getState().login({

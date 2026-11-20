@@ -1,14 +1,9 @@
 import { api } from '@/lib/api/client'
 import { useAuthStore } from '@/features/auth/store'
-import {
-  mapEstadoEjemplar,
-  mapEstadoLector,
-  mapEstadoLibro,
-  mapEstadoReserva,
-} from '@/features/biblioteca/estados'
 import type {
-  Ejemplar,
   EjemplarLista,
+  EstadoEjemplar,
+  EstadoReserva,
   Libro,
   LibroDetalle,
   Lector,
@@ -26,14 +21,6 @@ export type ListarLibrosParams = {
   categoria?: string
 }
 
-type LibroDetalleCrudo = Omit<LibroDetalle, 'estado' | 'ejemplares'> & {
-  estado: unknown
-  ejemplares: Array<Omit<Ejemplar, 'estado'> & { estado: unknown }>
-}
-
-type ReservaCruda = Omit<Reserva, 'estado'> & { estado: unknown }
-type ReservaCreadaCruda = Omit<ReservaCreada, 'estado'> & { estado: unknown }
-
 export function listarLibros(params: ListarLibrosParams) {
   const query = new URLSearchParams({
     page: String(params.page),
@@ -46,40 +33,22 @@ export function listarLibros(params: ListarLibrosParams) {
   return api<PagedResponse<Libro>>(`/api/libros?${query.toString()}`)
 }
 
-export async function obtenerLibro(id: number): Promise<LibroDetalle> {
-  const libro = await api<LibroDetalleCrudo>(`/api/libros/${id}`)
-  return {
-    ...libro,
-    estado: mapEstadoLibro(libro.estado),
-    ejemplares: libro.ejemplares.map((ejemplar) => ({
-      ...ejemplar,
-      estado: mapEstadoEjemplar(ejemplar.estado),
-    })),
-  }
+export function obtenerLibro(id: number) {
+  return api<LibroDetalle>(`/api/libros/${id}`)
 }
 
-export async function reservar(input: { lectorId: number; libroId: number }) {
-  const reserva = await api<ReservaCreadaCruda>('/api/reservas', {
+export function reservar(input: { lectorId: number; libroId: number }) {
+  return api<ReservaCreada>('/api/reservas', {
     method: 'POST',
     body: { lectorId: input.lectorId, libroId: input.libroId },
   })
-
-  return {
-    ...reserva,
-    estado: mapEstadoReserva(reserva.estado),
-  }
 }
 
 export function cancelarReserva(id: number) {
   return api<void>(`/api/reservas/${id}/cancelar`, { method: 'POST' })
 }
 
-export type FiltroReservas = 'Activa' | 'Cancelada' | 'Todas'
-
-const estadoQuery: Record<Exclude<FiltroReservas, 'Todas'>, string> = {
-  Activa: '0',
-  Cancelada: '1',
-}
+export type FiltroReservas = Extract<EstadoReserva, 'Activa' | 'Cancelada'> | 'Todas'
 
 export async function misReservas(
   filtro: FiltroReservas = 'Activa',
@@ -95,19 +64,9 @@ export async function misReservas(
     page: String(page),
     pageSize: String(pageSize),
   })
-  if (filtro !== 'Todas') query.set('estado', estadoQuery[filtro])
+  if (filtro !== 'Todas') query.set('estado', filtro)
 
-  const pagina = await api<PagedResponse<ReservaCruda>>(
-    `/api/lectores/${lectorId}/reservas?${query.toString()}`,
-  )
-
-  return {
-    ...pagina,
-    items: pagina.items.map((reserva) => ({
-      ...reserva,
-      estado: mapEstadoReserva(reserva.estado),
-    })),
-  }
+  return api<PagedResponse<Reserva>>(`/api/lectores/${lectorId}/reservas?${query.toString()}`)
 }
 
 export function crearLibro(body: LibroForm) {
@@ -122,11 +81,8 @@ export function desactivarLibro(id: number) {
   return api<void>(`/api/libros/${id}`, { method: 'DELETE' })
 }
 
-export async function listarEjemplares(idLibro: number) {
-  const items = await api<Array<Omit<EjemplarLista, 'estado'> & { estado: unknown }>>(
-    `/api/libros/${idLibro}/ejemplares`,
-  )
-  return items.map((item) => ({ ...item, estado: mapEstadoEjemplar(item.estado) }))
+export function listarEjemplares(idLibro: number) {
+  return api<EjemplarLista[]>(`/api/libros/${idLibro}/ejemplares`)
 }
 
 export function crearEjemplar(idLibro: number, body: EjemplarForm) {
@@ -136,16 +92,16 @@ export function crearEjemplar(idLibro: number, body: EjemplarForm) {
 export function cambiarEstadoEjemplar(
   idLibro: number,
   idEjemplar: number,
-  estado: 'Disponible' | 'Inactivo',
+  estado: Extract<EstadoEjemplar, 'Disponible' | 'Inactivo'>,
   rowVersion: string,
 ) {
   return api<void>(`/api/libros/${idLibro}/ejemplares/${idEjemplar}/estado`, {
     method: 'PUT',
-    body: { estado: estado === 'Disponible' ? 0 : 3, rowVersion },
+    body: { estado, rowVersion },
   })
 }
 
-export async function listarLectores(params: {
+export function listarLectores(params: {
   page: number
   pageSize: number
   buscar?: string
@@ -155,18 +111,11 @@ export async function listarLectores(params: {
     pageSize: String(params.pageSize),
   })
   if (params.buscar) query.set('buscar', params.buscar)
-  const pagina = await api<PagedResponse<Omit<LectorLista, 'estado'> & { estado: unknown }>>(
-    `/api/lectores?${query.toString()}`,
-  )
-  return {
-    ...pagina,
-    items: pagina.items.map((item) => ({ ...item, estado: mapEstadoLector(item.estado) })),
-  }
+  return api<PagedResponse<LectorLista>>(`/api/lectores?${query.toString()}`)
 }
 
-export async function obtenerLector(id: number): Promise<Lector> {
-  const lector = await api<Omit<Lector, 'estado'> & { estado: unknown }>(`/api/lectores/${id}`)
-  return { ...lector, estado: mapEstadoLector(lector.estado) }
+export function obtenerLector(id: number) {
+  return api<Lector>(`/api/lectores/${id}`)
 }
 
 export function crearLector(body: {

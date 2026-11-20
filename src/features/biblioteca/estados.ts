@@ -1,61 +1,40 @@
-export const estadoLibroPorNumero = {
-  0: 'Activo',
-  1: 'Inactivo',
-} as const
+import type { ComponentProps } from 'react'
 
-export const estadoEjemplarPorNumero = {
-  0: 'Disponible',
-  1: 'Reservado',
-  2: 'Prestado',
-  3: 'Inactivo',
-} as const
+import type { Badge } from '@/components/ui/badge'
+import type {
+  EstadoEjemplar,
+  EstadoLector,
+  EstadoLibro,
+  EstadoReserva,
+} from '@/features/biblioteca/types'
 
-export const estadoReservaPorNumero = {
-  0: 'Activa',
-  1: 'Cancelada',
-  2: 'Completada',
-} as const
-
-export const estadoLectorPorNumero = {
-  0: 'Activo',
-  1: 'Inactivo',
-} as const
-
-export type EstadoLibro = (typeof estadoLibroPorNumero)[keyof typeof estadoLibroPorNumero]
-export type EstadoEjemplar = (typeof estadoEjemplarPorNumero)[keyof typeof estadoEjemplarPorNumero]
-export type EstadoReserva = (typeof estadoReservaPorNumero)[keyof typeof estadoReservaPorNumero]
-export type EstadoLector = (typeof estadoLectorPorNumero)[keyof typeof estadoLectorPorNumero]
-
-export function mapEstadoLibro(value: unknown): EstadoLibro {
-  return mapEnum(value, estadoLibroPorNumero, 'Inactivo')
+export type EstiloBadge = {
+  etiqueta: string
+  variant: ComponentProps<typeof Badge>['variant']
+  className?: string
 }
 
-export function mapEstadoEjemplar(value: unknown): EstadoEjemplar {
-  return mapEnum(value, estadoEjemplarPorNumero, 'Inactivo')
+const apagado = { variant: 'outline', className: 'bg-muted text-verde/70' } as const
+
+export const badgeEjemplar: Record<EstadoEjemplar, EstiloBadge> = {
+  Disponible: { etiqueta: 'Disponible', variant: 'disponible' },
+  Reservado: { etiqueta: 'Reservado', variant: 'default' },
+  Prestado: { etiqueta: 'Prestado', variant: 'outline' },
+  Inactivo: { etiqueta: 'Inactivo', ...apagado },
 }
 
-export function mapEstadoReserva(value: unknown): EstadoReserva {
-  return mapEnum(value, estadoReservaPorNumero, 'Cancelada')
+export const badgeReserva: Record<EstadoReserva, EstiloBadge> = {
+  Activa: { etiqueta: 'Activa', variant: 'disponible' },
+  Cancelada: { etiqueta: 'Cancelada', ...apagado },
+  Completada: { etiqueta: 'Completada', variant: 'outline' },
 }
 
-export function mapEstadoLector(value: unknown): EstadoLector {
-  return mapEnum(value, estadoLectorPorNumero, 'Inactivo')
+export const badgeLibro: Record<EstadoLibro, EstiloBadge> = {
+  Activo: { etiqueta: 'Activo', variant: 'disponible' },
+  Inactivo: { etiqueta: 'Inactivo', ...apagado },
 }
 
-function mapEnum<T extends string>(
-  value: unknown,
-  table: Record<number, T>,
-  fallback: T,
-): T {
-  if (typeof value === 'number') {
-    return table[value] ?? fallback
-  }
-
-  if (typeof value === 'string') {
-    const asNumber = Number(value)
-    if (Number.isInteger(asNumber) && table[asNumber]) return table[asNumber]
-    if (Object.values(table).includes(value as T)) return value as T
-  }
-
-  return fallback
+export const badgeLector: Record<EstadoLector, EstiloBadge> = {
+  Activo: { etiqueta: 'Activo', variant: 'disponible' },
+  Inactivo: { etiqueta: 'Inactivo', ...apagado },
 }
