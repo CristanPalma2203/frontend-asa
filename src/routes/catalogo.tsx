@@ -1,15 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-import { PlaceholderPage } from '@/components/layout/placeholder-page'
+import { CatalogoPage } from '@/features/biblioteca/catalogo-page'
+import { parseCatalogoSearch } from '@/features/biblioteca/schemas'
 
 export const Route = createFileRoute('/catalogo')({
-  validateSearch: (search: Record<string, unknown>): { buscar?: string } => {
-    if (typeof search.buscar !== 'string' || search.buscar.length === 0) return {}
-    return { buscar: search.buscar }
-  },
+  validateSearch: (search) => parseCatalogoSearch(search),
   component: CatalogoPage,
 })
-
-function CatalogoPage() {
-  return <PlaceholderPage title="Catálogo" />
-}

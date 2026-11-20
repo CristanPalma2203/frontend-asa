@@ -33,7 +33,11 @@ function HomePage() {
               event.preventDefault()
               void navigate({
                 to: '/catalogo',
-                search: buscar.trim() ? { buscar: buscar.trim() } : {},
+                search: {
+                  page: 1,
+                  pageSize: 12,
+                  ...(buscar.trim() ? { buscar: buscar.trim() } : {}),
+                },
               })
             }}
           >
@@ -49,7 +53,9 @@ function HomePage() {
             </Button>
           </form>
           <Button asChild variant="secondary" size="lg">
-            <Link to="/catalogo">Ver catálogo</Link>
+            <Link to="/catalogo" search={{ page: 1, pageSize: 12 }}>
+              Ver catálogo
+            </Link>
           </Button>
         </div>
       </div>
