@@ -9,6 +9,13 @@ export const catalogoSearchSchema = z.object({
     .optional()
     .catch(undefined)
     .transform((value) => (value ? value : undefined)),
+  autor: z
+    .string()
+    .trim()
+    .max(150)
+    .optional()
+    .catch(undefined)
+    .transform((value) => (value ? value : undefined)),
   categoria: z
     .string()
     .trim()
@@ -22,6 +29,7 @@ export const catalogoSearchSchema = z.object({
 
 export type CatalogoSearch = {
   buscar?: string
+  autor?: string
   categoria?: string
   page: number
   pageSize: number
@@ -33,6 +41,7 @@ export function parseCatalogoSearch(search: Record<string, unknown>): CatalogoSe
     page: parsed.page,
     pageSize: parsed.pageSize,
     ...(parsed.buscar ? { buscar: parsed.buscar } : {}),
+    ...(parsed.autor ? { autor: parsed.autor } : {}),
     ...(parsed.categoria ? { categoria: parsed.categoria } : {}),
   }
 }

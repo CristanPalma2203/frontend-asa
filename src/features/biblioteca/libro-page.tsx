@@ -73,7 +73,13 @@ export function LibroPage() {
     if (!lectorId) return
     reservar.mutate(
       { lectorId, libroId: detalle.idLibro },
-      { onSuccess: (reserva) => avisar(reserva.codigoInventario, setAbierto) },
+      {
+        onSuccess: (reserva) => avisar(reserva.codigoInventario, setAbierto),
+        // Sin stock no hay nada que confirmar: cierro el diálogo y queda a la vista el mensaje.
+        onError: (error) => {
+          if (error instanceof ApiError && error.code === 'sin-stock') setAbierto(false)
+        },
+      },
     )
   }
 

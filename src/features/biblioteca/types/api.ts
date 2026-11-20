@@ -93,7 +93,9 @@ export type ProblemDetails = {
 export type ListarLibrosParams = {
   page: number
   pageSize: number
+  /** Texto libre (título, autor o ISBN). Se envía a la API como `search`. */
   buscar?: string
+  autor?: string
   categoria?: string
 }
 

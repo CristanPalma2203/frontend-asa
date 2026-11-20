@@ -13,7 +13,7 @@ describe('catálogo', () => {
     expect(await screen.findByRole('heading', { name: 'El Principito' })).toBeInTheDocument()
   })
 
-  it('buscar manda ?buscar= a GET /api/libros y muestra solo los resultados filtrados', async () => {
+  it('buscar manda ?search= a GET /api/libros y muestra solo los resultados filtrados', async () => {
     const user = userEvent.setup()
     const api = crearApiFake([{ titulo: 'El Principito' }, { titulo: 'El Hobbit' }, { titulo: 'Dune' }])
     server.use(...api.handlers)
@@ -28,9 +28,28 @@ describe('catálogo', () => {
     )
     expect(screen.queryByRole('heading', { name: 'Dune' })).not.toBeInTheDocument()
     const ultimo = api.pedidos('/api/libros').at(-1)
-    expect(ultimo?.searchParams.get('buscar')).toBe('hobbit')
+    expect(ultimo?.searchParams.get('search')).toBe('hobbit')
+    expect(ultimo?.searchParams.has('buscar')).toBe(false)
     expect(ultimo?.searchParams.get('page')).toBe('1')
+    // La URL de la app conserva su propio nombre de parámetro.
     expect(router.state.location.href).toContain('buscar=hobbit')
+  })
+
+  it('el filtro de autor de la URL manda ?autor= y muestra solo sus libros', async () => {
+    const api = crearApiFake([
+      { titulo: 'El Hobbit', autor: 'J. R. R. Tolkien' },
+      { titulo: 'El Silmarillion', autor: 'J. R. R. Tolkien' },
+      { titulo: 'Dune', autor: 'Frank Herbert' },
+    ])
+    server.use(...api.handlers)
+    await renderEn('/catalogo?page=1&pageSize=12&autor=tolkien')
+
+    expect(await screen.findByRole('heading', { name: 'El Hobbit' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'El Silmarillion' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Dune' })).not.toBeInTheDocument()
+    const ultimo = api.pedidos('/api/libros').at(-1)
+    expect(ultimo?.searchParams.get('autor')).toBe('tolkien')
+    expect(ultimo?.searchParams.get('page')).toBe('1')
   })
 
   it('Siguiente manda ?page=2 y muestra los libros de esa página', async () => {

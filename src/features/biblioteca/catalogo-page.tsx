@@ -39,6 +39,7 @@ export function CatalogoPage() {
     page: search.page,
     pageSize: search.pageSize,
     buscar: search.buscar,
+    autor: search.autor,
     categoria: search.categoria,
   })
 
@@ -52,15 +53,18 @@ export function CatalogoPage() {
         page: number
         pageSize: number
         buscar?: string
+        autor?: string
         categoria?: string
       } = { page: 1, pageSize: search.pageSize }
       if (nextBuscar) searchNext.buscar = nextBuscar
+      // autor no tiene input propio: se conserva el de la URL al cambiar búsqueda o categoría.
+      if (search.autor) searchNext.autor = search.autor
       if (nextCategoria) searchNext.categoria = nextCategoria
       void navigate({ replace: true, search: searchNext })
     }, 300)
 
     return () => window.clearTimeout(timer)
-  }, [buscar, categoria, navigate, search.buscar, search.categoria, search.pageSize])
+  }, [buscar, categoria, navigate, search.autor, search.buscar, search.categoria, search.pageSize])
 
   function cambiarVista(next: 'tarjetas' | 'tabla') {
     setVista(next)

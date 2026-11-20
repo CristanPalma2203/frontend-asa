@@ -82,11 +82,15 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     http.get(`${base}/api/libros`, ({ request }) => {
       registrar(request)
       const params = new URL(request.url).searchParams
-      const buscar = (params.get('buscar') ?? '').toLowerCase()
+      // Como el backend: `search` es alias de `buscar` (si llegan los dos, manda `buscar`).
+      const buscar = (params.get('buscar') || params.get('search') || '').toLowerCase()
+      const autor = (params.get('autor') ?? '').toLowerCase()
       const page = Number(params.get('page') ?? 1)
       const pageSize = Number(params.get('pageSize') ?? 10)
-      const filtrados = libros.filter((l) =>
-        [l.titulo, l.autor, l.isbn].some((campo) => campo.toLowerCase().includes(buscar)),
+      const filtrados = libros.filter(
+        (l) =>
+          [l.titulo, l.autor, l.isbn].some((campo) => campo.toLowerCase().includes(buscar)) &&
+          l.autor.toLowerCase().includes(autor),
       )
       const respuesta: PagedResponse<Libro> = {
         items: filtrados.slice((page - 1) * pageSize, page * pageSize).map(resumen),

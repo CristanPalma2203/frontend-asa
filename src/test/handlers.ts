@@ -42,7 +42,7 @@ function problema(status: number, code: string) {
 
 export const handlers = [
   http.get(`${base}/api/libros`, ({ request }) => {
-    const buscar = new URL(request.url).searchParams.get('buscar') ?? ''
+    const buscar = new URL(request.url).searchParams.get('search') ?? ''
     if (buscar === 'vacio') return HttpResponse.json(pagina([]))
     const items = [libroEjemplo].filter((libro) =>
       libro.titulo.toLowerCase().includes(buscar.toLowerCase()),

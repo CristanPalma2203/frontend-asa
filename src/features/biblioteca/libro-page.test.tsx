@@ -76,7 +76,7 @@ describe('ficha', () => {
     expect(await screen.findByText(mensajeDeError('reserva-duplicada', ''))).toBeInTheDocument()
   })
 
-  it('sin stock (409) muestra el mensaje y no cambia nada', async () => {
+  it('sin stock (409) cierra el diálogo, deja visible el mensaje y no cambia nada', async () => {
     const user = userEvent.setup()
     entrarComo('Lector')
     const api = crearApiFake([{ titulo: 'El Principito', copias: 1 }])
@@ -90,7 +90,12 @@ describe('ficha', () => {
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByText('No hay ejemplares disponibles para este libro.')).toBeInTheDocument()
+    const mensaje = await screen.findByText('No hay ejemplares disponibles para este libro.')
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    // Con el diálogo cerrado la página ya no queda aria-hidden: el mensaje es visible y accesible.
+    expect(mensaje).toBeVisible()
+    expect(mensaje.closest('[aria-hidden="true"]')).toBeNull()
+    expect(screen.getByRole('heading', { name: 'Ejemplares' })).toBeInTheDocument()
     expect(badgesDeEjemplares().getAllByText('Disponible')).toHaveLength(1)
     expect(badgesDeEjemplares().queryByText('Reservado')).not.toBeInTheDocument()
     expect(screen.queryByText(/Tu ejemplar:/)).not.toBeInTheDocument()

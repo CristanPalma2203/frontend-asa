@@ -30,7 +30,7 @@ Organizo el código por **features**. Cada una trae su API, tipos, hooks, schema
 ```
 src/
   routes/              Rutas de TanStack Router (routeTree.gen.ts se genera solo)
-    __root.tsx           Layout, título por ruta, toaster
+    __root.tsx           Layout y título por ruta (el Toaster se monta en main.tsx)
     catalogo.tsx         /catalogo
     libros.$idLibro.tsx  /libros/:idLibro
     mis-reservas.tsx     /mis-reservas (requiere sesión de lector)
@@ -38,7 +38,12 @@ src/
     admin/               /admin/libros, /admin/libros/:idLibro, /admin/lectores (rol Admin)
   features/
     auth/              store (Zustand), login y guards (requireSession / requireAdmin)
-    biblioteca/        api, types, estados, hooks (Query), queryKeys, schemas, errores y páginas
+    biblioteca/        páginas del lector (catálogo, ficha, mis reservas), errores.ts y queryKeys.ts
+      components/        UI del módulo: badges, portadas, tarjetas, tablas, formularios y diálogos
+      services/          llamadas a la API separadas en *.read.ts y *.mutation.ts por recurso
+      hooks/             useQuery/useMutation por recurso (use-libros, use-ejemplares, use-reservas…)
+      types/             contrato de la API y uniones de estados
+      schemas/           esquemas Zod de formularios y de search params
     admin/             páginas de administración de libros, ejemplares y lectores
   components/
     layout/            AppShell (público) y AdminShell
@@ -47,7 +52,7 @@ src/
     api/client.ts      fetch tipado: token, ProblemDetails → ApiError
     fechas.ts          formateo UTC → America/El_Salvador
   config/env.ts        valida VITE_API_URL con Zod al arrancar
-  test/                MSW (handlers, fixtures), setup y render con router
+  test/                MSW (handlers, api-fake con estado, fixtures), sesión, setup y render con router
 ```
 
 ## Cómo correrlo
@@ -78,6 +83,7 @@ docker run --rm -p 5173:80 --name frontend-asa frontend-asa
 
 - La imagen es multi-stage: `node:22-alpine` compila con su npm 10 (`npm ci` con el mismo `.npmrc`) y `nginx:alpine` sirve `dist/`.
 - `nginx.conf` hace fallback a `index.html` para que funcionen los deep links (`/libros/1`, `/admin/...`). Los assets con hash se cachean como `immutable` y `index.html` va con `no-cache`.
+- Todas las respuestas, también las de error, llevan `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` y `Referrer-Policy: strict-origin-when-cross-origin`.
 - Si falta `VITE_API_URL`, el build falla con un mensaje claro.
 
 Si `npm run dev` ya ocupa el 5173, hay que pararlo antes de `docker run`. Si no, el navegador seguirá llegando a Vite.
@@ -86,7 +92,7 @@ Si `npm run dev` ya ocupa el 5173, hay que pararlo antes de `docker run`. Si no,
 
 | Variable | Obligatoria | Ejemplo |
 | --- | --- | --- |
-| `VITE_API_URL` | Sí | `https://localhost:44358` (IIS Express) o `http://localhost:8080` (compose) |
+| `VITE_API_URL` | Sí | `http://localhost:8080` (backend en Docker, el valor de `.env.example`) o `https://localhost:44358` (IIS Express) |
 
 Está en `.env.example`. `src/config/env.ts` la valida con Zod y, si falta o no es una URL, la app falla al arrancar con un mensaje explícito.
 
@@ -108,17 +114,26 @@ Está en `.env.example`. `src/config/env.ts` la valida con Zod y, si falta o no 
 npm test
 ```
 
-Uso Vitest con jsdom, Testing Library y **MSW**, que intercepta `fetch` con handlers tipados contra el contrato de la API (`src/test/handlers.ts`). Cubren:
+Uso Vitest con jsdom, Testing Library y **MSW**, que intercepta `fetch` con handlers tipados contra el contrato de la API. `src/test/handlers.ts` trae respuestas fijas. `src/test/api-fake.ts` es una API en memoria con estado: calcula "disponibles" desde los ejemplares, igual que el backend, así que reservar o inactivar cambia lo que devuelven los GET siguientes.
 
-- **Catálogo:** listado, búsqueda con debounce que actualiza la URL, estado vacío y error.
+Los tests de invalidación usan el `staleTime` de la app (30 s). Así, un dato solo se vuelve a pedir si una mutación lo invalidó. Cubren:
+
+- **Catálogo:**
+  - listado, estado vacío y error;
+  - búsqueda: envía `?search=` y muestra solo lo filtrado;
+  - filtro de autor: envía `?autor=`;
+  - paginación: `?page=2`.
 - **Ficha:**
   - reservar sin sesión manda a login;
-  - mensajes de `reserva-duplicada` y `sin-stock`.
+  - reservar muestra "Tu ejemplar: <código>" y la disponibilidad baja de 3 a 2 en la ficha y en el catálogo;
+  - `reserva-duplicada`;
+  - sin stock (409): se cierra el diálogo, queda el mensaje y no cambia nada.
+- **Admin:** inactivar un ejemplar baja los disponibles del libro en el detalle y en la lista.
 - **Mis reservas:**
   - cancelación con *update optimista* y rollback si el servidor falla;
   - fecha mostrada en hora de El Salvador.
 - **Login:** credenciales inválidas.
-- **Cliente de API:** el estado del ejemplar y el filtro de reservas van como texto.
+- **Services:** el estado del ejemplar y el filtro de reservas van como texto.
 - **Mensajes de error por `code`.**
 - **Schema del lector:** contraseña opcional, mínimo 8.
 - **Formateo de fechas.**
