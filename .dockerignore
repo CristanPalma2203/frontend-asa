@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-ssr
+coverage
+docs
+.git
+.gitignore
+.vscode
+.idea
+.tanstack
+.env
+.env.*
+*.log
+Dockerfile
+.dockerignore
+README.md
