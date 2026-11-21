@@ -1,9 +1,11 @@
 export type ChatRole = 'user' | 'assistant'
 
-/** Libro enlazado bajo una respuesta de LuxIA (solo lo necesario para el enlace a la ficha). */
+/** Libro bajo una respuesta de LuxIA: lo que pinta su tarjeta (se guarda en el historial). */
 export interface ChatLibro {
   idLibro: number
+  isbn: string
   titulo: string
+  autor: string
   disponibles: number
 }
 
@@ -12,7 +14,7 @@ export interface ChatMsg {
   text: string
   /** Solo respuestas de LuxIA: enlaces a las fichas de los libros encontrados. */
   libros?: ChatLibro[]
-  /** Con más resultados que enlaces: búsqueda para «Ver todos en el catálogo». */
+  /** Con varios resultados: búsqueda para «Ver todos en el catálogo». */
   consulta?: string
   total?: number
 }

@@ -14,7 +14,6 @@ import {
 import { queryKeys } from '@/features/biblioteca/queryKeys'
 import { listarLibros } from '@/features/biblioteca/services/libros.read'
 import type { ListarLibrosParams } from '@/features/biblioteca/types/api'
-import { textoDisponibles } from '@/features/biblioteca/disponibilidad'
 import { LuxiaAvatar } from '@/features/luxia/components/luxia-avatar'
 import { useLuxiaController } from '@/features/luxia/hooks/use-luxia-controller'
 import { usePrefersReducedMotion } from '@/features/luxia/hooks/use-prefers-reduced-motion'
@@ -34,6 +33,7 @@ import {
   type Dock,
 } from '@/features/luxia/services/vuelo'
 import { useLuxiaStore } from '@/features/luxia/store'
+import { LuxiaLibroCard } from '@/features/luxia/components/luxia-libro-card'
 import { textos as t } from '@/features/luxia/textos'
 import type { ChatMsg } from '@/features/luxia/types/chat'
 import { cn } from '@/lib/utils'
@@ -340,25 +340,20 @@ export function LuxiaFab() {
                   (m.libros?.length || m.consulta) ? (
                     <div className="luxia-chat__links">
                       {m.libros?.map((libro) => (
-                        <Link
+                        <LuxiaLibroCard
                           key={libro.idLibro}
-                          to="/libros/$idLibro"
-                          params={{ idLibro: String(libro.idLibro) }}
-                          className="luxia-chat__link"
-                          onClick={cerrar}
-                        >
-                          {libro.titulo}
-                          <span>· {textoDisponibles(libro.disponibles)}</span>
-                        </Link>
+                          libro={libro}
+                          onNavegar={cerrar}
+                        />
                       ))}
                       {m.consulta && m.total ? (
                         <Link
                           to="/catalogo"
                           search={{ page: 1, pageSize: 12, buscar: m.consulta }}
-                          className="luxia-chat__link"
+                          className="luxia-chat__ver-todos"
                           onClick={cerrar}
                         >
-                          Ver los {m.total} resultados en el catálogo
+                          Ver todos en el catálogo
                         </Link>
                       ) : null}
                     </div>

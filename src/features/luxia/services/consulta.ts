@@ -6,8 +6,8 @@ import type {
 import { interpretar } from '@/features/luxia/interpretar'
 import type { ChatMsg } from '@/features/luxia/types/chat'
 
-/** Cuántos libros enlaza LuxIA en una respuesta. */
-export const RESULTADOS = 5
+/** Cuántas tarjetas de libro muestra LuxIA en una respuesta. */
+export const RESULTADOS = 3
 
 export type BuscarLibros = (
   params: ListarLibrosParams,
@@ -39,11 +39,15 @@ export async function consultarLuxia(
     pageSize: RESULTADOS,
     buscar: intencion.consulta,
   })
-  const libros = pagina.items.map(({ idLibro, titulo, disponibles }) => ({
-    idLibro,
-    titulo,
-    disponibles,
-  }))
+  const libros = pagina.items.map(
+    ({ idLibro, isbn, titulo, autor, disponibles }) => ({
+      idLibro,
+      isbn,
+      titulo,
+      autor,
+      disponibles,
+    }),
+  )
 
   return {
     role: 'assistant',
@@ -52,7 +56,7 @@ export async function consultarLuxia(
         ? textoReservar(libros.length)
         : textoBusqueda(intencion.consulta, pagina.items, pagina.totalCount),
     ...(libros.length > 0 ? { libros } : {}),
-    ...(pagina.totalCount > libros.length
+    ...(pagina.totalCount > 1
       ? { consulta: intencion.consulta, total: pagina.totalCount }
       : {}),
   }

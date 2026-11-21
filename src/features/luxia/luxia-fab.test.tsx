@@ -26,6 +26,73 @@ afterEach(() => {
 })
 
 describe('LuxIA', () => {
+  it('la respuesta de Tolkien muestra una tarjeta con portada, título y disponibles; al pulsarla va a la ficha y cierra', async () => {
+    server.use(
+      ...crearApiFake([
+        { titulo: 'El hobbit', autor: 'J. R. R. Tolkien', copias: 3 },
+      ]).handlers,
+    )
+    const { router } = await renderEn(CATALOGO)
+    const { user, panel } = await abrir()
+
+    await user.type(
+      within(panel).getByLabelText('Mensaje para LuxIA'),
+      'Tolkien{Enter}',
+    )
+
+    const tarjeta = await within(panel).findByRole('link', {
+      name: /El hobbit/,
+    })
+    expect(tarjeta).toHaveAttribute('href', '/libros/1')
+    // Portada por ISBN, la misma fuente que el catálogo.
+    const portada = tarjeta.querySelector('img')
+    expect(portada?.getAttribute('src')).toContain(
+      'covers.openlibrary.org/b/isbn/9780000000001',
+    )
+    expect(within(tarjeta).getByText('El hobbit')).toBeInTheDocument()
+    expect(within(tarjeta).getByText('J. R. R. Tolkien')).toBeInTheDocument()
+    expect(within(tarjeta).getByText('3 disponibles')).toBeInTheDocument()
+    // Un solo resultado: sin «Ver todos».
+    expect(
+      within(panel).queryByRole('link', { name: 'Ver todos en el catálogo' }),
+    ).toBeNull()
+
+    await user.click(tarjeta)
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/libros/1'),
+    )
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: 'LuxIA' })).toBeNull(),
+    )
+  })
+
+  it('con varios resultados apila 3 tarjetas y enlaza «Ver todos en el catálogo» con la búsqueda', async () => {
+    server.use(
+      ...crearApiFake(
+        ['Uno', 'Dos', 'Tres', 'Cuatro'].map((t) => ({
+          titulo: `Saga ${t}`,
+          autor: 'Autora Saga',
+        })),
+      ).handlers,
+    )
+    await renderEn(CATALOGO)
+    const { user, panel } = await abrir()
+
+    await user.type(
+      within(panel).getByLabelText('Mensaje para LuxIA'),
+      'Saga{Enter}',
+    )
+
+    expect(
+      await within(panel).findAllByRole('link', { name: /^Saga/ }),
+    ).toHaveLength(3)
+    const verTodos = within(panel).getByRole('link', {
+      name: 'Ver todos en el catálogo',
+    })
+    expect(verTodos.getAttribute('href')).toContain('buscar=Saga')
+  })
+
   it('abre el panel, enfoca el mensaje y Escape lo cierra devolviendo el foco al botón', async () => {
     await renderEn(CATALOGO)
     const { user, panel } = await abrir()
@@ -192,13 +259,11 @@ describe('LuxIA', () => {
   it('con reduced-motion no hay vuelo: solo fundido de 0,3 s', async () => {
     vi.stubGlobal(
       'matchMedia',
-      vi
-        .fn()
-        .mockReturnValue({
-          matches: true,
-          addEventListener: vi.fn(),
-          removeEventListener: vi.fn(),
-        }),
+      vi.fn().mockReturnValue({
+        matches: true,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+      }),
     )
     await renderEn(CATALOGO)
     expect(screen.getByTestId('luxia-fab')).toHaveClass('is-reduced')

@@ -15,6 +15,17 @@ function esLibro(l: unknown): l is ChatLibro {
   )
 }
 
+/** Solo los campos de la tarjeta; un historial antiguo sin isbn/autor muestra el respaldo. */
+function libroGuardado(l: ChatLibro): ChatLibro {
+  return {
+    idLibro: l.idLibro,
+    isbn: typeof l.isbn === 'string' ? l.isbn : '',
+    titulo: l.titulo,
+    autor: typeof l.autor === 'string' ? l.autor : '',
+    disponibles: l.disponibles,
+  }
+}
+
 export function loadHistory(): ChatMsg[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
@@ -31,7 +42,7 @@ export function loadHistory(): ChatMsg[] {
         role: m.role,
         text: m.text.slice(0, MAX_MESSAGE),
         ...(Array.isArray(m.libros)
-          ? { libros: m.libros.filter(esLibro) }
+          ? { libros: m.libros.filter(esLibro).map(libroGuardado) }
           : {}),
         ...(typeof m.consulta === 'string' ? { consulta: m.consulta } : {}),
         ...(typeof m.total === 'number' ? { total: m.total } : {}),

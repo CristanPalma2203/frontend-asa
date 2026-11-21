@@ -249,33 +249,66 @@
   margin-top: -6px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 6px;
-  max-width: 86%;
+  width: 86%;
 }
-.luxia-fab .luxia-chat__link {
-  display: inline-flex;
+/* Tarjeta de libro: portada 40×60 a la izquierda, texto a la derecha; toda enlaza a la ficha. */
+.luxia-fab .luxia-chat__card {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border: 1.5px solid var(--lx-green);
-  border-radius: 999px;
-  color: var(--lx-green);
+  gap: 12px;
+  padding: 8px 12px 8px 8px;
+  border: 1px solid #e6e2da;
+  border-radius: 14px;
   background: #fff;
-  font-size: 13px;
-  font-weight: 600;
+  color: var(--lx-green);
   text-decoration: none;
+  transition: background-color 0.15s ease;
 }
-.luxia-fab .luxia-chat__link:hover {
-  background: var(--lx-bubble);
+.luxia-fab .luxia-chat__card:hover {
+  background: #f6f6f6;
 }
-.luxia-fab .luxia-chat__link:focus-visible {
+.luxia-fab .luxia-chat__card:focus-visible {
   outline: 2px solid var(--lx-green);
   outline-offset: 2px;
 }
-.luxia-fab .luxia-chat__link span {
-  font-weight: 500;
+.luxia-fab .luxia-chat__card-texto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 1;
+}
+.luxia-fab .luxia-chat__card-titulo,
+.luxia-fab .luxia-chat__card-autor {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.luxia-fab .luxia-chat__card-titulo {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.luxia-fab .luxia-chat__card-autor {
+  font-size: 12.5px;
   color: var(--lx-text-muted);
+}
+.luxia-fab .luxia-chat__ver-todos {
+  align-self: flex-start;
+  padding: 2px 4px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--lx-green);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.luxia-fab .luxia-chat__ver-todos:focus-visible {
+  outline: 2px solid var(--lx-green);
+  outline-offset: 2px;
 }
 .luxia-fab .luxia-chat__typing {
   display: flex;
