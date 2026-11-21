@@ -74,7 +74,7 @@ function LayoutConSidebar({
     }),
   )
 
-  // Transición de ruta: arriba del todo, contenedor con so() y 12, h1 por palabras y bloques de
+  // Transición de ruta: arriba del todo, contenedor con reveal (y 12), h1 por palabras y bloques de
   // cabecera con y 14 (stagger 0.07, t 0.12). Sin salida.
   useMotion(
     rutaRef,

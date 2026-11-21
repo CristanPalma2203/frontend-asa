@@ -1,9 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
-import { clearHistory } from '@/features/luxia/services/historial'
-import { useLuxiaStore } from '@/features/luxia/store'
-
 export type AuthSession = {
   token: string
   expiresAt: string | number
@@ -24,6 +21,12 @@ type AuthState = {
   logout: () => void
 }
 
+/**
+ * true si al cargar la app había un token guardado pero vencido (la rehidratación cierra la
+ * sesión antes de que exista la app). main.tsx lo usa para limpiar lo ligado a esa sesión.
+ */
+export let sesionExpiradaAlCargar = false
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
@@ -42,10 +45,7 @@ export const useAuthStore = create<AuthState>()(
           lectorId: session.lectorId,
           correo: session.correo ?? null,
         }),
-      logout: () => {
-        // La conversación de LuxIA es de quien la tuvo: se borra con la sesión.
-        clearHistory()
-        useLuxiaStore.getState().reiniciar()
+      logout: () =>
         set({
           token: null,
           expiresAt: null,
@@ -53,8 +53,7 @@ export const useAuthStore = create<AuthState>()(
           nombre: null,
           lectorId: null,
           correo: null,
-        })
-      },
+        }),
     }),
     {
       name: 'asa-auth',
@@ -69,6 +68,7 @@ export const useAuthStore = create<AuthState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (state && !isSessionActive(state)) {
+          if (state.token) sesionExpiradaAlCargar = true
           state.logout()
         }
       },

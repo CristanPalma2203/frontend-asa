@@ -5,6 +5,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { Toaster } from '@/components/ui/sonner'
+import { sesionExpiradaAlCargar } from '@/features/auth/store'
+import { olvidarLuxia } from '@/features/luxia/reset'
 import { ApiError, setUnauthorizedHandler } from '@/lib/api/client'
 import { routeTree } from '@/routeTree.gen'
 
@@ -16,7 +18,11 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 30_000,
       retry: (failureCount, error) => {
-        if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+        if (
+          error instanceof ApiError &&
+          error.status >= 400 &&
+          error.status < 500
+        ) {
           return false
         }
         return failureCount < 1
@@ -26,6 +32,9 @@ const queryClient = new QueryClient({
 })
 
 const router = createRouter({ routeTree })
+
+// Token vencido al abrir la app: la sesión ya se cerró al rehidratar; su conversación también se olvida.
+if (sesionExpiradaAlCargar) olvidarLuxia()
 
 setUnauthorizedHandler(() => {
   if (router.state.location.pathname === '/login') return
@@ -52,7 +61,9 @@ createRoot(root).render(
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
       <Toaster />
-      {import.meta.env.DEV ? <ReactQueryDevtools initialIsOpen={false} /> : null}
+      {import.meta.env.DEV ? (
+        <ReactQueryDevtools initialIsOpen={false} />
+      ) : null}
     </QueryClientProvider>
   </StrictMode>,
 )

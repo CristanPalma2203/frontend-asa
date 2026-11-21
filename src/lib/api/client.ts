@@ -1,5 +1,6 @@
 import { env } from '@/config/env'
 import { useAuthStore } from '@/features/auth/store'
+import { olvidarLuxia } from '@/features/luxia/reset'
 
 export type ApiFieldErrors = Record<string, string[]>
 
@@ -73,6 +74,7 @@ export async function api<T>(
   if (!response.ok) {
     if (response.status === 401 && token) {
       useAuthStore.getState().logout()
+      olvidarLuxia()
       onUnauthorized?.()
     }
 
@@ -98,7 +100,12 @@ export async function api<T>(
 function readActiveToken() {
   const { token, expiresAt } = useAuthStore.getState()
   if (!token) return null
-  if (expiresAt != null && expiresAt <= Date.now()) return null
+  if (expiresAt != null && expiresAt <= Date.now()) {
+    // Token vencido durante el uso: se cierra la sesión aquí, igual que con un 401.
+    useAuthStore.getState().logout()
+    olvidarLuxia()
+    return null
+  }
   return token
 }
 

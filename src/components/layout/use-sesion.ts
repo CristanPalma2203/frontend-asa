@@ -7,6 +7,7 @@ import {
   selectIsLector,
   useAuthStore,
 } from '@/features/auth/store'
+import { olvidarLuxia } from '@/features/luxia/reset'
 
 /** Datos de la sesión que necesita la navegación, y la acción de salir. */
 export function useSesion() {
@@ -23,6 +24,7 @@ export function useSesion() {
 
   function salir() {
     logout()
+    olvidarLuxia()
     queryClient.clear()
     void navigate({ to: '/' })
   }
