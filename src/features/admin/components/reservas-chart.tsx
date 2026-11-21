@@ -1,5 +1,5 @@
 import gsap from 'gsap'
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 
 import {
   indiceDiaDesdeX,
@@ -10,10 +10,6 @@ import type { ResumenDia } from '@/features/admin/types/resumen'
 import { dur, prefersReducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-/**
- * Chart de área (reservas) + línea (cancelaciones).
- * SVG a tamaño real del contenedor; monotoneX; pointer → día exacto.
- */
 export function ReservasChart({
   serie,
   dias,
@@ -38,7 +34,6 @@ export function ReservasChart({
     const el = wrapRef.current
     if (!el || typeof ResizeObserver === 'undefined') return
     const medir = () => {
-      // jsdom suele reportar 0: no pisar el ancho por defecto.
       const cw = Math.floor(el.clientWidth)
       const ch = Math.floor(el.clientHeight)
       setSize((prev) => {
@@ -69,25 +64,15 @@ export function ReservasChart({
     RESERVAS_PAD.l +
     (serie.length < 2
       ? 0
-      : (i / (serie.length - 1)) *
-        (width - RESERVAS_PAD.l - RESERVAS_PAD.r))
+      : (i / (serie.length - 1)) * (width - RESERVAS_PAD.l - RESERVAS_PAD.r))
   const yAt = (v: number) =>
-    RESERVAS_PAD.t +
-    (1 - v / maxY) * (height - RESERVAS_PAD.t - RESERVAS_PAD.b)
+    RESERVAS_PAD.t + (1 - v / maxY) * (height - RESERVAS_PAD.t - RESERVAS_PAD.b)
 
-  const ptsR = useMemo(
-    () => reservas.map((v, i) => [xAt(i), yAt(v)] as [number, number]),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [width, height, serie],
-  )
-  const ptsC = useMemo(
-    () =>
-      cancelaciones.map((v, i) => [xAt(i), yAt(v)] as [number, number]),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [width, height, serie],
-  )
-  const pathR = useMemo(() => monotonePath(ptsR), [ptsR])
-  const pathC = useMemo(() => monotonePath(ptsC), [ptsC])
+  const aPuntos = (valores: number[]) =>
+    valores.map((v, i): [number, number] => [xAt(i), yAt(v)])
+  const ptsR = aPuntos(reservas)
+  const pathR = monotonePath(ptsR)
+  const pathC = monotonePath(aPuntos(cancelaciones))
   const area =
     pathR && ptsR.length
       ? `${pathR} L${xAt(ptsR.length - 1)},${height - RESERVAS_PAD.b} L${xAt(0)},${height - RESERVAS_PAD.b} Z`
@@ -110,15 +95,12 @@ export function ReservasChart({
   }, [pathR, width, dias])
 
   const vacio =
-    !cargando &&
-    serie.every((d) => d.reservas === 0 && d.cancelaciones === 0)
+    !cargando && serie.every((d) => d.reservas === 0 && d.cancelaciones === 0)
   const tip = hover !== null ? serie[hover] : null
 
   function diaDesdeEvento(clientX: number) {
     const box = wrapRef.current?.getBoundingClientRect()
     if (!box) return 0
-    // Ancho lógico del SVG (= size.w), no box.width: evita desfase si el
-    // layout CSS escala el SVG respecto al viewBox.
     return indiceDiaDesdeX(
       clientX,
       box.left,
@@ -135,11 +117,8 @@ export function ReservasChart({
   let tipTop = 8
   if (hover !== null) {
     const cx = xAt(hover)
-    tipLeft =
-      cx + tipW + 12 > width ? Math.max(8, cx - tipW - 12) : cx + 12
-    const cy = yAt(
-      Math.max(reservas[hover] ?? 0, cancelaciones[hover] ?? 0),
-    )
+    tipLeft = cx + tipW + 12 > width ? Math.max(8, cx - tipW - 12) : cx + 12
+    const cy = yAt(Math.max(reservas[hover] ?? 0, cancelaciones[hover] ?? 0))
     tipTop = Math.max(8, Math.min(height - tipH - 8, cy - tipH / 2))
   }
 
@@ -173,7 +152,7 @@ export function ReservasChart({
               className={cn(
                 'focus-visible:shadow-foco h-8 cursor-pointer rounded-full px-3 text-sm outline-none',
                 dias === n
-                  ? 'bg-card text-tinta shadow-sm font-semibold'
+                  ? 'bg-card text-tinta font-semibold shadow-sm'
                   : 'text-texto-3 hover:text-tinta font-medium',
               )}
             >
@@ -299,9 +278,7 @@ export function ReservasChart({
                   key={lab + i}
                   x={xAt(i)}
                   y={height - 6}
-                  textAnchor={
-                    i === last ? 'end' : i === 0 ? 'start' : 'middle'
-                  }
+                  textAnchor={i === last ? 'end' : i === 0 ? 'start' : 'middle'}
                   fill="var(--color-texto-5)"
                   fontSize={11}
                 >
@@ -340,14 +317,15 @@ export function ReservasChart({
               aria-live="polite"
               data-testid="reservas-chart-tooltip"
               data-dia={hover}
-              className="bg-papel border-linea text-tinta pointer-events-none absolute z-10 rounded-xl border px-3 py-2 text-xs shadow-card"
+              className="bg-papel border-linea text-tinta shadow-card pointer-events-none absolute z-10 rounded-xl border px-3 py-2 text-xs"
               style={{ left: tipLeft, top: tipTop, width: tipW }}
             >
               <b className="block">{labels[hover]}</b>
               <span className="text-texto-3 mt-1 flex flex-col gap-0.5">
                 <span className="inline-flex items-center gap-1.5">
                   <i className="bg-pino-800 size-1.5 rounded-full" />
-                  Reservas <strong className="text-tinta">{tip.reservas}</strong>
+                  Reservas{' '}
+                  <strong className="text-tinta">{tip.reservas}</strong>
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <i className="bg-rojo-600 size-1.5 rounded-full" />

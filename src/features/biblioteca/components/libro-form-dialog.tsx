@@ -20,7 +20,6 @@ import {
 import type { Libro } from '@/features/biblioteca/types/api'
 import { ApiError } from '@/lib/api/client'
 
-/** Alta o edición de un libro. Pinta en cada campo los errores de la API (isbn-duplicado, validación). */
 export function LibroFormDialog({
   abierto,
   libro,

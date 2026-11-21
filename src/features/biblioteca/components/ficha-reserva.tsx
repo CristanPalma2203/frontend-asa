@@ -27,12 +27,6 @@ import { ApiError } from '@/lib/api/client'
 import { pop } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-/**
- * Tarjeta de reserva de la ficha. Un solo «Reservar»: el backend asigna el ejemplar con
- * `{ lectorId, libroId }`. Estados: disponible, sin stock (botón deshabilitado) y reservado por
- * ti («Tu ejemplar: …» con enlace a Mis reservas). Sin sesión, «Reservar» lleva a /login y vuelve.
- * En móvil la acción queda fija abajo de la pantalla.
- */
 export function FichaReserva({
   detalle,
   total,
@@ -75,7 +69,6 @@ export function FichaReserva({
           setAbierto(false)
           setCodigoNuevo(reserva.codigoInventario)
         },
-        // Sin stock no hay nada que confirmar: se cierra el diálogo y queda a la vista el mensaje.
         onError: (error) => {
           if (error instanceof ApiError && error.code === 'sin-stock')
             setAbierto(false)
@@ -102,7 +95,6 @@ export function FichaReserva({
 
   let accion: ReactNode = null
   if (isAdmin)
-    // Vista Biblioteca del admin: sin «Reservar»; lleva a la gestión de ejemplares del libro.
     accion = (
       <Link
         to="/admin/libros/$idLibro"
@@ -198,7 +190,6 @@ export function FichaReserva({
   )
 }
 
-/** La tarjeta mientras llega el libro: misma forma, «Reservar» visible y deshabilitado. */
 export function FichaReservaCargando() {
   return (
     <div data-m="meta">
@@ -257,7 +248,6 @@ function TarjetaReserva({
         ) : null}
       </div>
       {accion ? (
-        // Móvil: la acción queda fija abajo (la mascota de LuxIA sube para no taparla).
         <div
           data-barra-reserva
           className="max-md:border-pino-800/5 max-md:bg-hueso/85 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:px-4 max-md:pt-3 max-md:pb-[calc(1.25rem+env(safe-area-inset-bottom))] max-md:backdrop-blur-md"
@@ -312,7 +302,6 @@ function EtiquetaEstado({
   )
 }
 
-/** «Tu ejemplar: …» con el código real de la API y enlace a Mis reservas; entra con pop. */
 function TuEjemplar({ codigo, animar }: { codigo: string; animar: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   useMotion(ref, (root) => {

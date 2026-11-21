@@ -9,12 +9,6 @@ import { useMotion } from '@/hooks/use-motion'
 import { lift, reveal } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-/**
- * «Explora por categoría»: categorías de la muestra del catálogo con su número de libros y una
- * portada representativa. Toda la tarjeta lleva al catálogo filtrado.
- * - `anchoCompleto`: grilla auto-fill (mín. 220 px) con hasta 12 categorías.
- * - Junto a «Tu reserva activa»: 2 columnas y 2 filas (4 categorías).
- */
 export function HomeCategorias({
   categorias,
   cargando,
@@ -91,7 +85,6 @@ export function HomeCategorias({
                 <span className="max-w-[62%] text-base leading-tight font-semibold tracking-[-0.02em] lg:text-[19px]">
                   {categoria}
                 </span>
-                {/* Botón «ir» abajo a la izquierda, por encima de la portada. */}
                 <span className="relative z-10 flex items-center gap-3">
                   <span
                     aria-hidden

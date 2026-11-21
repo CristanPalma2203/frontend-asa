@@ -4,9 +4,6 @@ import type {
 } from '@/features/biblioteca/types/api'
 import type { FiltroReservas } from '@/features/biblioteca/types/estados'
 
-// Cada recurso tiene una raíz `all`; listas y detalles cuelgan de ella para poder
-// invalidar todo un recurso (`all`), solo sus listas (`lists`) o un registro (`detail`).
-
 const librosAll = ['libros'] as const
 const lectoresAll = ['lectores'] as const
 const reservasAll = ['reservas'] as const
@@ -36,7 +33,6 @@ export const queryKeys = {
   },
   reservas: {
     all: reservasAll,
-    /** Todas las listas de "Mis reservas" (cualquier filtro y página). */
     mias: () => [...reservasAll, 'mine'] as const,
     list: (filtro: FiltroReservas = 'Todas', page = 1, pageSize = 20) =>
       [...reservasAll, 'mine', filtro, page, pageSize] as const,

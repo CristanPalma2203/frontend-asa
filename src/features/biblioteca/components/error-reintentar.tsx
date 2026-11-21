@@ -2,7 +2,6 @@ import { Button } from '@/components/ui/button'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import { ApiError } from '@/lib/api/client'
 
-/** Mensaje de error de una consulta (traducido por `code`) con botón para reintentar. */
 export function ErrorReintentar({
   error,
   onRetry,

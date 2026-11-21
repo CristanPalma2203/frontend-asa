@@ -82,7 +82,6 @@ describe('admin: editar y desactivar ejemplares', () => {
 
   it('con conflicto de concurrencia avisa y recarga la lista para tomar el rowVersion nuevo', async () => {
     const { api, fila, user } = await montar()
-    // Otro usuario cambió el ejemplar: el rowVersion de la fila ya no vale.
     const ejemplar = api.libros[0]?.ejemplares[0]
     if (ejemplar) ejemplar.rowVersion = 'otro'
 
@@ -114,7 +113,6 @@ describe('admin: editar y desactivar ejemplares', () => {
     const dialogo = await screen.findByRole('dialog', {
       name: 'Desactivar ejemplar',
     })
-    // Sin confirmar no se envía nada.
     expect(api.pedidos('/api/ejemplares/1')).toHaveLength(0)
     await user.click(
       within(dialogo).getByRole('button', { name: 'Desactivar' }),

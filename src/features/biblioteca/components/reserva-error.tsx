@@ -4,10 +4,6 @@ import { AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 
-/**
- * Error al reservar, traducido por `code`. Con `reserva-duplicada` enlaza a Mis reservas y con
- * `ejemplar-ya-reservado` (otra persona tomó la copia) ofrece reintentar.
- */
 export function ReservaError({
   code,
   fallback,

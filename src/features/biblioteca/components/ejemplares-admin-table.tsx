@@ -12,7 +12,6 @@ import { EstadoBadge } from '@/features/biblioteca/components/estado-badge'
 import { badgeEjemplar } from '@/features/biblioteca/components/estado-badge.styles'
 import type { EjemplarLista } from '@/features/biblioteca/types/api'
 
-/** Ejemplares de un libro: cambiar entre Disponible e Inactivo, editar el código y desactivar. */
 export function EjemplaresAdminTable({
   ejemplares,
   cargando = false,
@@ -22,7 +21,6 @@ export function EjemplaresAdminTable({
   onDesactivar,
 }: {
   ejemplares: EjemplarLista[]
-  /** Mientras llega la consulta: cabecera real y filas con un hueco por celda. */
   cargando?: boolean
   deshabilitado: boolean
   onCambiarEstado: (ejemplar: EjemplarLista) => void

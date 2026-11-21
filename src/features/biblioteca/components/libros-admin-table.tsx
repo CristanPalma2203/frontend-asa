@@ -18,7 +18,6 @@ import {
 } from '@/components/ui/table'
 import type { Libro } from '@/features/biblioteca/types/api'
 
-/** Tabla de libros del panel admin: la fila entera navega a la ficha de administración. */
 export function LibrosAdminTable({
   libros,
   cargando = false,
@@ -26,7 +25,6 @@ export function LibrosAdminTable({
   onBaja,
 }: {
   libros: Libro[]
-  /** Mientras llega la consulta: cabecera real y filas con un hueco por celda. */
   cargando?: boolean
   onEdit: (libro: Libro) => void
   onBaja: (libro: Libro) => void

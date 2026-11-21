@@ -31,9 +31,11 @@ export function ResumenKpis({
   cargando: boolean
 }) {
   const ref = useRef<HTMLUListElement>(null)
-  useMotion(ref, (root) => cardsIn(root.children, { delay: 0.08, stagger: 0.05 }), [
-    resumen?.kpis.librosActivos,
-  ])
+  useMotion(
+    ref,
+    (root) => cardsIn(root.children, { delay: 0.08, stagger: 0.05 }),
+    [resumen?.kpis.librosActivos],
+  )
 
   const k = resumen?.kpis
   const serie = resumen?.serieDiaria ?? []
@@ -57,9 +59,7 @@ export function ResumenKpis({
         icono={BookCheck}
         etiqueta="Disponibles"
         valor={k?.ejemplaresDisponibles}
-        detalle={
-          k ? `de ${k.ejemplaresActivos} ejemplares activos` : undefined
-        }
+        detalle={k ? `de ${k.ejemplaresActivos} ejemplares activos` : undefined}
         spark={serieDe(serie, 'reservas')}
         tone="lima"
         destacada
@@ -150,9 +150,7 @@ function Kpi({
     <li
       className={cn(
         'shadow-card flex h-full flex-col gap-3 rounded-xl p-5',
-        destacada
-          ? 'bg-pino-950 text-papel'
-          : 'bg-card border-linea border',
+        destacada ? 'bg-pino-950 text-papel' : 'bg-card border-linea border',
       )}
     >
       <div className="flex items-center justify-between gap-3">

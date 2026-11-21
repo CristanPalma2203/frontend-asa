@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 
 type Tono = 'oscuro' | 'claro'
 
-/** Logotipo «ASA Biblioteca». `oscuro` = sobre pino (sidebar, hero); `claro` = sobre hueso. */
 export function Brand({
   tono = 'oscuro',
   className,
@@ -14,7 +13,6 @@ export function Brand({
   tono?: Tono
   className?: string
   onClick?: () => void
-  /** `<a href="/">` en vez de Link: para pantallas fuera del router (límite de errores). */
   nativo?: boolean
 }) {
   const clases = cn(

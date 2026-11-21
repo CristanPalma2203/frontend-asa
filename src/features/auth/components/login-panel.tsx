@@ -1,7 +1,6 @@
 import { Brand } from '@/components/layout/brand'
 import { HeroBackdrop } from '@/features/biblioteca/components/hero-backdrop'
 
-/** Panel izquierdo del login (escritorio): fondo animado del hero, logo y frase. */
 export function LoginPanel() {
   return (
     <aside className="bg-pino-950 text-papel relative isolate hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12 xl:p-16">
@@ -26,7 +25,6 @@ export function LoginPanel() {
   )
 }
 
-/** Franja pino superior del login en móvil. */
 export function LoginFranjaMovil() {
   return (
     <div className="bg-pino-950 flex h-28 items-start px-5 pt-6 lg:hidden">

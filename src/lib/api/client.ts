@@ -101,7 +101,6 @@ function readActiveToken() {
   const { token, expiresAt } = useAuthStore.getState()
   if (!token) return null
   if (expiresAt != null && expiresAt <= Date.now()) {
-    // Token vencido durante el uso: se cierra la sesión aquí, igual que con un 401.
     useAuthStore.getState().logout()
     olvidarLuxia()
     return null

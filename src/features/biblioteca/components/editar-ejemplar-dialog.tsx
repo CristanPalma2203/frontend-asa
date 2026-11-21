@@ -20,10 +20,6 @@ import {
 import type { EjemplarLista } from '@/features/biblioteca/types/api'
 import { ApiError } from '@/lib/api/client'
 
-/**
- * Edición del código de inventario de un ejemplar. El formulario se monta con `key` por ejemplar,
- * así sus valores por defecto son los de la fila sin sincronizar estado en un efecto.
- */
 export function EditarEjemplarDialog({
   idLibro,
   ejemplar,

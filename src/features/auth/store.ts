@@ -21,10 +21,6 @@ type AuthState = {
   logout: () => void
 }
 
-/**
- * true si al cargar la app había un token guardado pero vencido (la rehidratación cierra la
- * sesión antes de que exista la app). main.tsx lo usa para limpiar lo ligado a esa sesión.
- */
 export let sesionExpiradaAlCargar = false
 
 export const useAuthStore = create<AuthState>()(

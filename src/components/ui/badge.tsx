@@ -12,7 +12,6 @@ const badgeVariants = cva(
         secondary: 'bg-niebla text-niebla-fg',
         destructive: 'bg-cancelada text-rojo-800',
         outline: 'border border-linea-fuerte bg-papel text-texto-3',
-        /** Stock disponible: lima, solo para señalar disponibilidad. */
         disponible: 'bg-lima-400 text-pino-800',
         activa: 'bg-lima-100 text-activa-fg',
         reservado: 'bg-ambar-100 text-ambar-800',

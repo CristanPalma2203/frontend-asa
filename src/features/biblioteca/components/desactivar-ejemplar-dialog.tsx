@@ -11,7 +11,6 @@ import { mensajeDeError } from '@/features/biblioteca/errores'
 import type { EjemplarLista } from '@/features/biblioteca/types/api'
 import { ApiError } from '@/lib/api/client'
 
-/** Confirmación antes de desactivar un ejemplar (DELETE /api/ejemplares/{id}). */
 export function DesactivarEjemplarDialog({
   ejemplar,
   onClose,

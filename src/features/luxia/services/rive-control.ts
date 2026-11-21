@@ -1,5 +1,3 @@
-/** Lógica pura de inputs Rive de LuxIA (sin importar el runtime, testeable). */
-/** push-v8: SM `LuxIA_oculta` (artboard LuxIA) arranca oculta desde el cuadro 0 (iniciar_oculta=true por defecto). */
 export const SM = 'LuxIA_oculta'
 export const ARTBOARD = 'LuxIA'
 
@@ -34,15 +32,10 @@ export function findInputs(rive: RiveLike): LuxiaRiveInputs {
   }
 }
 
-/** true si el .riv trae aparecer/desaparecer (si no, el contenedor usa el respaldo CSS). */
 export function hasAppearControl(i: LuxiaRiveInputs) {
   return !!(i.aparecer && i.desaparecer)
 }
 
-/**
- * En onLoad (onRiveReady, mismo tick de la carga): variante vía r.stateMachineInputs(SM).
- * No usar useStateMachineInput para esto: llega 1-4 cuadros tarde y parpadea.
- */
 export function bootLuxiaRive(
   rive: RiveLike,
   variante: number,
@@ -52,7 +45,6 @@ export function bootLuxiaRive(
   return i
 }
 
-/** Dispara aparecer/desaparecer solo cuando cambia el estado visible. */
 export function syncShown(
   i: LuxiaRiveInputs,
   shown: boolean,

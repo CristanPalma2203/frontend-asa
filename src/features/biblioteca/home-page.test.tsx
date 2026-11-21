@@ -51,7 +51,6 @@ describe('home', () => {
     const enlaces = within(recomendados).getAllByRole('link')
     expect(enlaces.length).toBeGreaterThanOrEqual(4)
     expect(enlaces.length).toBeLessThanOrEqual(6)
-    // Los que tienen stock van antes que el agotado.
     expect(enlaces.at(-1)).toHaveAccessibleName('Agotado 1, agotado')
     expect(
       within(recomendados).getByRole('link', {
@@ -132,7 +131,6 @@ describe('home', () => {
 
   it('con reserva activa: tarjeta con sus datos y la grilla de categorías en 2 columnas', async () => {
     entrarComo('Lector')
-    // handlers.ts: el lector tiene una reserva activa de El Principito (BIB-001).
     await renderEn('/')
     const tarjeta = await screen.findByRole('region', {
       name: 'Tu reserva activa',

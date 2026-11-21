@@ -4,11 +4,6 @@ import type {
 } from '@/features/biblioteca/schemas/catalogo-search.schema'
 import type { Libro } from '@/features/biblioteca/types/api'
 
-/**
- * Chips «Disponibles»/«Agotados» y «Ordenar» del catálogo. GET /api/libros no filtra por
- * disponibilidad ni ordena, así que se aplican en el cliente sobre la página que devolvió la API
- * (no sobre todo el catálogo).
- */
 export function aplicarVistaCatalogo(
   libros: Libro[],
   { disponibilidad, orden }: { disponibilidad?: Disponibilidad; orden?: Orden },

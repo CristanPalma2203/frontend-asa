@@ -8,7 +8,6 @@ import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
 import { entrarComo } from '@/test/sesion'
 
-/** Lectores en memoria: PUT edita, DELETE desactiva y POST …/activar reactiva. */
 function apiLectores(inicial: LectorLista) {
   const lector = { ...inicial }
   const pedidos: string[] = []
@@ -74,7 +73,6 @@ describe('admin: estado del lector al editar', () => {
     await editarEstado('Activo')
 
     expect(api.pedidos).toEqual(['PUT', 'POST activar'])
-    // Las queries de lectores se invalidan: la tabla ya muestra el estado nuevo.
     expect(await screen.findByText('Activo')).toBeInTheDocument()
   })
 

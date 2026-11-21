@@ -1,9 +1,3 @@
-/*
- * LuxIA (chat + avatar flotante), CSS plano con los tokens de src/index.css: pino-800 #042c24,
- * lima-400 #c2f968, niebla #fafaf8, hueso #f6f6f6, linea #e6e2da, linea-fuerte #d4cfc6,
- * texto-3 #525252.
- * Foco: outline pino-800 y no lima, porque el lima sobre blanco solo da 1,2:1 de contraste.
- */
 .luxia-fab {
   --lx-lime: #c2f968;
   --lx-forest: #042c24;
@@ -16,14 +10,12 @@
   font-family: var(--font-sans, 'Geist', system-ui, sans-serif);
 }
 
-/* ---- LuxIA flotante (una sola instancia; viaja al header al abrir) */
 .luxia-fab .luxia-fab__flyer {
   position: fixed;
   right: calc(20px + env(safe-area-inset-right, 0px));
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   z-index: 1002;
   will-change: transform, opacity;
-  /* El contenedor nunca captura clics: solo el botón, y tampoco mientras vuela. */
   pointer-events: none;
 }
 .luxia-fab .luxia-fab__flyer .luxia-fab__btn {
@@ -32,8 +24,6 @@
 .luxia-fab .luxia-fab__flyer[data-volando] .luxia-fab__btn {
   pointer-events: none;
 }
-/* Con el menú móvil (data-slot sheet-content) o un diálogo abiertos, la mascota no tapa su
-   contenido: se esconde hasta que se cierran. */
 body:has(
     [data-slot='sheet-content'],
     [data-slot='dialog-content'],
@@ -44,14 +34,12 @@ body:has(
   visibility: hidden;
   opacity: 0;
 }
-/* push-v7: oculta sin transform (Rive mide el canvas; con scale(0) quedaría 0×0). */
 .luxia-fab .luxia-fab__flyer.is-appear-pending {
   visibility: hidden;
 }
 .luxia-fab .luxia-fab__flyer.is-hidden {
   pointer-events: none;
 }
-/* Respaldo sin aparecer/desaparecer en el .riv (o reduced-motion): fundido CSS. */
 .luxia-fab .luxia-fab__flyer.is-appear-css {
   transition:
     opacity 0.3s ease,
@@ -68,14 +56,12 @@ body:has(
   will-change: transform;
   transform-origin: center center;
 }
-/* Bob en su propio wrapper (no pelea con el transform del vuelo). */
 .luxia-fab .luxia-fab__bob {
   will-change: transform;
 }
 .luxia-fab .luxia-fab__bob.is-floating {
   animation: luxia-fab-float 3.2s ease-in-out infinite;
 }
-/* Acoplada en el header: sigue levitando, bob suave y simétrico (media 0). */
 .luxia-fab .luxia-fab__bob.is-docked-float {
   animation: luxia-fab-float-docked 3.2s ease-in-out infinite;
 }
@@ -91,7 +77,6 @@ body:has(
   display: grid;
   place-items: center;
   position: relative;
-  /* Sin filter/drop-shadow: iOS Safari lo recorta a un rectángulo sobre el <canvas>. */
   filter: none;
   -webkit-tap-highlight-color: transparent;
 }
@@ -103,7 +88,6 @@ body:has(
   outline-offset: 2px;
   box-shadow: 0 0 0 3px rgba(194, 249, 104, 0.4);
 }
-/* Sombra suave aparte: elipse difuminada bajo sus pies; no dibuja ningún recuadro. */
 .luxia-fab .luxia-fab__shadow {
   position: absolute;
   left: 22%;
@@ -146,7 +130,6 @@ body:has(
   height: 100%;
 }
 
-/* ---- Chat */
 .luxia-fab .luxia-chat {
   --lx-green: #042c24;
   --lx-cream: #fafaf8;
@@ -158,7 +141,6 @@ body:has(
   right: calc(20px + env(safe-area-inset-right, 0px));
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   z-index: 1001;
-  /* Tamaño FIJO: no crece con los mensajes; solo la lista hace scroll. */
   width: 380px;
   height: min(560px, calc(100vh - 120px));
   display: flex;
@@ -181,7 +163,6 @@ body:has(
   background: #fff;
   border-bottom: 1px solid var(--lx-border);
 }
-/* Hueco libre: LuxIA flota aquí sin contenedor ni fondo. */
 .luxia-fab .luxia-chat__slot {
   width: 64px;
   height: 64px;
@@ -233,7 +214,6 @@ body:has(
   outline: 2px solid var(--lx-green);
 }
 
-/* Solo la lista de mensajes hace scroll; cabecera, chip y formulario quedan fijos. */
 .luxia-fab .luxia-chat__msgs {
   flex: 1 1 auto;
   min-height: 0;
@@ -265,7 +245,6 @@ body:has(
   color: var(--lx-cream);
   border-top-right-radius: 6px;
 }
-/* Enlaces a fichas bajo una respuesta: geometría del antiguo chip .luxia-chat__msg-wa. */
 .luxia-fab .luxia-chat__links {
   align-self: flex-start;
   margin-top: -6px;
@@ -275,7 +254,6 @@ body:has(
   gap: 6px;
   width: 86%;
 }
-/* Tarjeta de libro: portada 40×60 a la izquierda, texto a la derecha; toda enlaza a la ficha. */
 .luxia-fab .luxia-chat__card {
   display: flex;
   align-items: center;
@@ -385,7 +363,6 @@ body:has(
   outline-offset: 2px;
 }
 
-/* La única sugerencia: un chip con el texto completo debajo de la última respuesta. */
 .luxia-fab .luxia-chat__sugerencia {
   align-self: flex-start;
   max-width: 86%;
@@ -395,7 +372,6 @@ body:has(
   text-align: left;
 }
 .luxia-fab .luxia-chat__chip {
-  /* Sin encoger: cada chip entero; la fila hace scroll horizontal (o wrap en móvil). */
   flex: none;
   white-space: nowrap;
   border: 1px solid #d4cfc6;
@@ -482,7 +458,6 @@ body:has(
     right: calc(14px + env(safe-area-inset-right, 0px));
     bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   }
-  /* 375 px: más pequeña para no tapar portadas ni botones del contenido. */
   .luxia-fab .luxia-fab__btn {
     width: 64px;
     height: 64px;
@@ -491,7 +466,6 @@ body:has(
     right: calc(12px + env(safe-area-inset-right, 0px));
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   }
-  /* Teclado: --lx-kb = alto tapado bajo el viewport visible, --lx-vvh = alto visible. Sin JS → dvh. */
   .luxia-fab .luxia-chat {
     left: 0;
     right: 0;
@@ -511,7 +485,6 @@ body:has(
   .luxia-fab .luxia-chat__form {
     margin-bottom: 8px;
   }
-  /* ≥16px: iOS no hace zoom al enfocar. */
   .luxia-fab .luxia-chat__form textarea {
     font-size: 16px;
   }
@@ -554,8 +527,6 @@ body:has(
     animation: none !important;
   }
 }
-/* Movimiento reducido: nada depende de una transición para verse u ocultarse; cada pieza
-   (flyer, sombra, tarjetas) queda directamente en su estado final. */
 .luxia-fab.is-reduced .luxia-fab__flyer,
 .luxia-fab.is-reduced .luxia-fab__flyer.is-appear-css,
 .luxia-fab.is-reduced .luxia-fab__flyer.is-appear-css.is-hidden,

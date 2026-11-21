@@ -8,7 +8,6 @@ vi.mock('@paper-design/shaders-react', () => ({
   MeshGradient: () => <div data-testid="mesh-gradient" />,
 }))
 
-/** Simula un contexto WebGL con el renderer indicado. */
 function simularWebGL(renderer: string) {
   const loseContext = vi.fn()
   const gl = {
@@ -61,7 +60,6 @@ describe('HeroBackdrop', () => {
 
   it('con WebGL por hardware monta el shader a los 800 ms y libera el contexto al desmontar', async () => {
     const { loseContext } = simularWebGL('ANGLE (NVIDIA GeForce)')
-    // El setup fuerza movimiento reducido; aquí hace falta el modo animado.
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: false,
       media: query,

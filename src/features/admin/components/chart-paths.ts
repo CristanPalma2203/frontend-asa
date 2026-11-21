@@ -1,7 +1,5 @@
-/** Padding del área de dibujo del chart de reservas (px). */
 export const RESERVAS_PAD = { l: 32, r: 0, t: 12, b: 28 } as const
 
-/** Monotone cubic (monotoneX / Fritsch–Carlson): no overshoot entre puntos. */
 export function monotonePath(points: Array<[number, number]>) {
   const n = points.length
   if (n < 2) return ''
@@ -60,10 +58,8 @@ export function monotonePath(points: Array<[number, number]>) {
   return d
 }
 
-/** @deprecated alias — preferir monotonePath */
 export const smoothPath = monotonePath
 
-/** Índice del día más cercano a clientX dentro del área de dibujo. */
 export function indiceDiaDesdeX(
   clientX: number,
   rectLeft: number,
@@ -79,7 +75,6 @@ export function indiceDiaDesdeX(
   return Math.max(0, Math.min(n - 1, Math.round(t * (n - 1))))
 }
 
-/** Sparkline Wynlo: viewBox 0 0 92 30 a partir de valores. */
 export function sparkPath(values: number[], width = 92, height = 30) {
   if (values.length === 0) return 'M2,28 L90,28'
   const max = Math.max(1, ...values)

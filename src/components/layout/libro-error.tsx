@@ -5,11 +5,6 @@ import { useMotion } from '@/hooks/use-motion'
 import { prefersReducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-/**
- * Libro hecho con CSS para las pantallas de error (404 y 500): tapa verde con filete lima,
- * título en serif itálica arriba y subtítulo en mayúsculas abajo, girado 8°. Flota con GSAP
- * (sube y baja) y la sombra elíptica se achica cuando sube. Con movimiento reducido, quieto.
- */
 export function LibroError({
   titulo,
   subtitulo,
@@ -18,7 +13,6 @@ export function LibroError({
 }: {
   titulo: string
   subtitulo: string
-  /** Fondo sobre el que va: cambia solo la sombra y el brillo (celeste en la 500). */
   tono?: 'oscuro' | 'celeste'
   className?: string
 }) {

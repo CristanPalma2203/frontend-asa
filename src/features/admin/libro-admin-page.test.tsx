@@ -9,9 +9,8 @@ import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
 import { entrarComo } from '@/test/sesion'
 
-// staleTime de main.tsx: con él, un dato solo se vuelve a pedir si una mutación lo invalida.
 const STALE_TIME_APP = 30_000
-const COLUMNA_DISPONIBLES = 4 // ISBN, Título, Autor, Categoría, Disponibles, acciones
+const COLUMNA_DISPONIBLES = 4
 
 function celdaDisponibles(titulo: string) {
   const fila = screen
@@ -47,7 +46,6 @@ describe('admin de ejemplares', () => {
     ) as HTMLElement
 
     await user.click(within(fila).getByRole('button', { name: 'Inactivar' }))
-    // Inactivar pide confirmación.
     const dialogo = await screen.findByRole('dialog', {
       name: 'Inactivar ejemplar',
     })
@@ -62,7 +60,6 @@ describe('admin de ejemplares', () => {
       ).toBe(2),
     )
 
-    // De vuelta a la lista: estaba en caché con 3 y se invalidó, así que se vuelve a pedir.
     await act(() =>
       router.navigate({
         to: '/admin/libros',
@@ -72,7 +69,6 @@ describe('admin de ejemplares', () => {
     await waitFor(() =>
       expect(celdaDisponibles('El Principito')).toHaveTextContent('2'),
     )
-    // Solo el listado de la tabla (pageSize 12); el contador del sidebar usa otra página.
     const listados = api
       .pedidos('/api/libros')
       .filter((url) => url.searchParams.get('pageSize') === '12')

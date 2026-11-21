@@ -1,10 +1,6 @@
 import { Hueso } from '@/components/ui/hueso'
 import { useMisReservas } from '@/features/biblioteca/hooks/use-reservas'
 
-/**
- * Tres cifras de Mis reservas: Activas, Total y Canceladas (`totalCount` de cada filtro).
- * No hay «Libros leídos»: la API no lo expone.
- */
 export function MisReservasStats() {
   const activas = useMisReservas('Activa', 1, 1)
   const todas = useMisReservas('Todas', 1, 1)

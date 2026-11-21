@@ -20,7 +20,6 @@ export function useLibros(params: ListarLibrosParams) {
   })
 }
 
-/** Muestra del catálogo para la Home: una página de la API de la que salen las portadas y categorías. */
 export const muestraHome = {
   page: 1,
   pageSize: 50,
@@ -28,14 +27,8 @@ export const muestraHome = {
 
 export type ResumenHome = {
   totalTitulos: number
-  /** Portadas para la tira del hero: primero los que tienen stock. */
   destacados: Libro[]
-  /** Categorías más frecuentes de la muestra, de mayor a menor. */
   categorias: string[]
-  /**
-   * Todas las categorías de la muestra con su número de libros y una portada representativa
-   * (el primer libro con stock de esa categoría, o el primero si ninguno tiene).
-   */
   conteoCategorias: { categoria: string; cantidad: number; portada: Libro }[]
 }
 
@@ -86,7 +79,6 @@ export function useResumenHome() {
   return useQuery({
     queryKey: queryKeys.libros.list(muestraHome),
     queryFn: () => listarLibros(muestraHome),
-    // Hasta 12 recomendados: el Home muestra los que quepan en una fila.
     select: (pagina) => resumirHome(pagina, 12),
   })
 }
@@ -99,7 +91,6 @@ export function useLibro(id: number) {
   })
 }
 
-/** Crea un libro o, si se pasa `libro`, lo edita. */
 export function useGuardarLibro(
   libro: Libro | null,
   opciones: { onSuccess?: () => void } = {},
@@ -130,13 +121,8 @@ export function useDesactivarLibro(opciones: { onSuccess?: () => void } = {}) {
   })
 }
 
-/** Máximo de libros en «Más de esta categoría». */
 export const MAS_DE_CATEGORIA = 6
 
-/**
- * «Más de esta categoría» en la ficha: la misma query de libros filtrada por categoría, sin el
- * libro actual y con un máximo de 6. Se pide uno de más por si el actual viene en la página.
- */
 export function useMasDeCategoria(
   categoria: string | undefined,
   idActual: number,

@@ -26,15 +26,9 @@ export type LibroSemilla = {
   titulo: string
   autor?: string
   categoria?: string
-  /** Cantidad de ejemplares, todos Disponibles. */
   copias?: number
 }
 
-/**
- * API de biblioteca en memoria para MSW. Igual que el backend, "disponibles" se calcula desde el
- * estado de cada ejemplar, así que reservar o inactivar cambia lo que devuelven los GET siguientes.
- * `requests` guarda cada URL pedida para verificar query params y refetches.
- */
 export function crearApiFake(semillas: LibroSemilla[]) {
   let siguienteEjemplar = 1
   const libros: LibroFake[] = semillas.map((semilla, i) => ({
@@ -64,7 +58,6 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     titulo: libro.titulo,
     autor: libro.autor,
     categoria: libro.categoria,
-    // Como el backend: el total solo cuenta los ejemplares activos.
     totalEjemplares: libro.ejemplares.filter((e) => e.estado !== 'Inactivo')
       .length,
     disponibles: disponibles(libro),
@@ -94,7 +87,6 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     http.get(`${base}/api/libros`, ({ request }) => {
       registrar(request)
       const params = new URL(request.url).searchParams
-      // Como el backend: `search` es alias de `buscar` (si llegan los dos, manda `buscar`).
       const buscar = (
         params.get('buscar') ||
         params.get('search') ||
@@ -226,7 +218,6 @@ export function crearApiFake(semillas: LibroSemilla[]) {
   return {
     handlers,
     libros,
-    /** URLs pedidas a una ruta exacta (sin query string). */
     pedidos: (pathname: string) =>
       requests.filter((url) => url.pathname === pathname),
   }

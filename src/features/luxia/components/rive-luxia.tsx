@@ -25,26 +25,13 @@ import {
   type RiveLike,
 } from '@/features/luxia/services/rive-control'
 
-// Los inputs de la state machine siguen siendo la API usada (sin migrar a data binding): se
-// silencia solo ese aviso de deprecación del runtime.
 Rive.suppressDeprecationWarnings = ['state-machine-inputs']
 
-// Runtime servido desde /luxia/ (no unpkg ni jsdelivr): una sola vez, al cargar este módulo
-// (lazy), antes del primer useRive. El fallback también es local.
 RuntimeLoader.setWasmUrl(`${import.meta.env.BASE_URL}luxia/rive.wasm`)
 RuntimeLoader.setWasmFallbackUrl(
   `${import.meta.env.BASE_URL}luxia/rive_fallback.wasm`,
 )
 
-/**
- * Único punto que conoce Rive (se carga con React.lazy).
- * SM `LuxIA_oculta`, autoplay, oculta desde el cuadro 0. `variante` se fija en onLoad
- * con r.stateMachineInputs (sin parpadeo). onReady(false) = el contenedor usa el respaldo CSS.
- *
- * `varRef.current = variante` no se escribe en el render (reglas de hooks): se copia en un
- * useLayoutEffect, que corre antes de que Rive termine de cargar (asíncrono),
- * así onRiveReady sigue leyendo la variante vigente.
- */
 export default function RiveLuxia({
   src,
   inputs,

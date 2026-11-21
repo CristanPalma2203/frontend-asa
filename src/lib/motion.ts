@@ -1,18 +1,12 @@
 import gsap from 'gsap'
 
-// Movimiento de la app con GSAP.
-// Con prefers-reduced-motion todas las duraciones, delays y staggers valen 0 y el contenido queda
-// visible al instante (clearProps).
-
 export function prefersReducedMotion() {
   return (
-    typeof window !== 'undefined' &&
     typeof window.matchMedia === 'function' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   )
 }
 
-/** Duración o retardo: 0 con movimiento reducido. */
 export function dur(value: number) {
   return prefersReducedMotion() ? 0 : value
 }
@@ -25,7 +19,6 @@ function lista(nodos: Nodos): Element[] {
   return Array.from(nodos as ArrayLike<Element>)
 }
 
-/** Entrada suave: opacidad y desplazamiento. */
 export function reveal(
   nodos: Nodos,
   {
@@ -53,7 +46,6 @@ export function reveal(
   )
 }
 
-/** Tarjetas que entran ladeadas. */
 export function cardsIn(
   nodos: Nodos,
   { delay = 0, stagger = 0.07 }: { delay?: number; stagger?: number } = {},
@@ -82,10 +74,6 @@ export function cardsIn(
   )
 }
 
-/**
- * Título por palabras: cada palabra va en una máscara con overflow clip
- * (componente <PalabrasAnimadas>) y sube desde abajo. Sin palabras marcadas, entrada suave.
- */
 export function titleLines(el: Element | null | undefined, delay = 0) {
   if (!el) return
   const palabras = el.querySelectorAll('[data-tl]')
@@ -108,7 +96,6 @@ export function titleLines(el: Element | null | undefined, delay = 0) {
   )
 }
 
-/** Aparición con rebote. */
 export function pop(
   nodos: Nodos,
   {
@@ -135,7 +122,6 @@ export function pop(
   )
 }
 
-/** Diálogos: entrada con rebote y salida corta hacia arriba. */
 export function dialogoEntra(el: Element) {
   gsap.fromTo(
     el,
@@ -169,7 +155,6 @@ function punteroFino() {
   )
 }
 
-/** [data-lift] sube 4 px al pasar el puntero. Devuelve la limpieza. */
 export function lift(root: Element) {
   if (!punteroFino()) return () => {}
   const quitar: Array<() => void> = []
@@ -199,7 +184,6 @@ export function lift(root: Element) {
   return () => quitar.forEach((fn) => fn())
 }
 
-/** [data-magnetic] sigue al puntero (factor 0.2 / 0.28 respecto al centro). */
 export function magnetic(root: Element) {
   if (!punteroFino()) return () => {}
   const quitar: Array<() => void> = []
@@ -225,7 +209,6 @@ export function magnetic(root: Element) {
   return () => quitar.forEach((fn) => fn())
 }
 
-/** Mensaje nuevo de un chat: fundido + 8 px hacia arriba en 0.25 s (0 con movimiento reducido). */
 export function entradaMensaje(nodos: Nodos, delay = 0) {
   const els = lista(nodos)
   if (!els.length) return

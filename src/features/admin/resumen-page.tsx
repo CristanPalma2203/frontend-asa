@@ -17,7 +17,7 @@ const lista = { page: 1, pageSize: 12 } as const
 export function ResumenAdminPage() {
   const [dias, setDias] = useState<DiasResumen>(14)
   const resumen = useResumen(dias)
-  const data = resumen.data
+  const totales = resumen.data
   const cargando = resumen.isPending
 
   return (
@@ -39,15 +39,13 @@ export function ResumenAdminPage() {
         </section>
       ) : (
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
-          {/* Fila 1 — 6 KPIs */}
           <div className="min-w-0 lg:col-span-12">
-            <ResumenKpis resumen={data} cargando={cargando} />
+            <ResumenKpis resumen={totales} cargando={cargando} />
           </div>
 
-          {/* Fila 2 — chart 8 + actividad 4 */}
           <div className="flex min-h-[320px] min-w-0 lg:col-span-8">
             <ReservasChart
-              serie={data?.serieDiaria ?? []}
+              serie={totales?.serieDiaria ?? []}
               dias={dias}
               onDias={setDias}
               cargando={cargando}
@@ -56,37 +54,34 @@ export function ResumenAdminPage() {
           </div>
           <div className="flex min-h-[320px] min-w-0 lg:col-span-4">
             <ActividadFeed
-              items={data?.actividad ?? []}
+              items={totales?.actividad ?? []}
               cargando={cargando}
               className="w-full"
             />
           </div>
 
-          {/* Fila 3 — categorías 7 + más reservados 5 */}
           <div className="flex min-h-[280px] min-w-0 lg:col-span-7">
             <CategoriasChart
-              categorias={data?.porCategoria ?? []}
+              categorias={totales?.porCategoria ?? []}
               cargando={cargando}
               className="w-full"
             />
           </div>
           <div className="flex min-h-[280px] min-w-0 lg:col-span-5">
             <MasReservados
-              items={data?.masReservados ?? []}
+              items={totales?.masReservados ?? []}
               cargando={cargando}
               className="w-full"
             />
           </div>
 
-          {/* Fila 4 — por agotarse full */}
           <div className="min-w-0 lg:col-span-12">
             <PorAgotarse
-              items={data?.porAgotarse ?? []}
+              items={totales?.porAgotarse ?? []}
               cargando={cargando}
             />
           </div>
 
-          {/* Fila 5 — accesos 6+6 */}
           <div className="min-w-0 lg:col-span-6">
             <AccesoCompacto
               titulo="Libros y ejemplares"
@@ -127,9 +122,7 @@ function AccesoCompacto({
   return (
     <div className="bg-card border-linea flex h-full items-center justify-between gap-4 rounded-xl border px-5 py-4">
       <div className="min-w-0">
-        <h2 className="text-base font-semibold tracking-[-0.02em]">
-          {titulo}
-        </h2>
+        <h2 className="text-base font-semibold tracking-[-0.02em]">{titulo}</h2>
         <p className="text-texto-3 text-sm">{texto}</p>
       </div>
       <Link

@@ -72,7 +72,6 @@ describe('estados de carga con huecos', () => {
     const fantasmas = await screen.findAllByTestId('libro-card-fantasma')
     expect(fantasmas).toHaveLength(12)
     expect(screen.getAllByTestId('titulo-fantasma')).toHaveLength(12)
-    // La tarjeta se pinta tal cual: no está dentro de ningún Skeleton; solo sus huecos lo están.
     for (const tarjeta of fantasmas) {
       expect(tarjeta.closest('[data-boneyard-content]')).toBeNull()
       expect(

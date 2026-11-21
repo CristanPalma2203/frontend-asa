@@ -21,10 +21,6 @@ import {
 import type { LectorLista } from '@/features/biblioteca/types/api'
 import { ApiError } from '@/lib/api/client'
 
-/**
- * Alta o edición de un lector. Al crear, la contraseña es opcional: si viene, la API crea también
- * su usuario. Los conflictos de la API (correo, identificador, reservas activas) van a su campo.
- */
 export function LectorFormDialog({
   lector,
   onClose,
@@ -32,7 +28,7 @@ export function LectorFormDialog({
   lector: 'crear' | LectorLista | null
   onClose: () => void
 }) {
-  const editando = typeof lector === 'object' && lector ? lector : null
+  const editando = lector === 'crear' ? null : lector
   const form = useForm<LectorForm>({
     resolver: zodResolver(lectorSchema),
     defaultValues: {

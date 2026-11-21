@@ -9,16 +9,10 @@ import { useMotion } from '@/hooks/use-motion'
 import { cardsIn, lift } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-/** Ancho mínimo de cada portada en la grilla (≥ sm) y gap entre columnas (gap-6 = 24). */
 const MIN_PORTADA = 150
 const GAP = 24
-/** Libros en la fila con scroll de móvil (< sm). */
 const EN_MOVIL = 6
 
-/**
- * «Sigue explorando»: móvil = fila snap; desde sm = grilla auto-fill a ancho completo y solo
- * las portadas que caben en una fila (ResizeObserver, como Recomendados del Home). Hasta 12.
- */
 export function MisReservasExplorar() {
   const recomendados = useResumenHome()
   const candidatos = recomendados.data?.destacados ?? []

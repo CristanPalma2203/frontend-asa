@@ -13,8 +13,6 @@ import { routeTree } from '@/routeTree.gen'
 import '@/lib/boneyard'
 import './index.css'
 
-// Devtools de TanStack Query solo en desarrollo: en producción la condición es `false` y Vite
-// elimina el import dinámico, así que el paquete ni siquiera entra en el bundle.
 const QueryDevtools = import.meta.env.DEV
   ? lazy(() =>
       import('@tanstack/react-query-devtools').then((mod) => ({
@@ -43,7 +41,6 @@ const queryClient = new QueryClient({
 
 const router = createRouter({ routeTree })
 
-// Token vencido al abrir la app: la sesión ya se cerró al rehidratar; su conversación también se olvida.
 if (sesionExpiradaAlCargar) olvidarLuxia()
 
 setUnauthorizedHandler(() => {

@@ -1,19 +1,13 @@
 import { Hueso } from '@/components/ui/hueso'
 import { TableCell, TableRow } from '@/components/ui/table'
 
-/** Anchos de los huecos por columna: variados para que la fila fantasma no parezca una rejilla. */
 const COL_WIDTHS = ['72%', '58%', '46%', '64%', '40%', '52%']
 
-/**
- * Filas de una tabla mientras llega la consulta. La tabla y su cabecera ya están pintadas; aquí
- * solo hay un hueco por celda y, en la columna de acciones, dos huecos de 28 × 28.
- */
 export function FilasFantasma({
   columnas,
   filas = 8,
   acciones = true,
 }: {
-  /** Columnas de datos (sin contar la de acciones). */
   columnas: number
   filas?: number
   acciones?: boolean

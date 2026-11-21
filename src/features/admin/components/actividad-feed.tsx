@@ -5,10 +5,6 @@ import { cn } from '@/lib/utils'
 const FILAS_VISIBLES = 6
 const ALTO_FILA = 52
 
-/**
- * Feed «Actividad reciente», portado de «Just in» de Wynlo.
- * Misma altura que el chart: scroll interno + fade + «Ver todo».
- */
 export function ActividadFeed({
   items,
   cargando = false,
@@ -37,10 +33,7 @@ export function ActividadFeed({
       {cargando ? (
         <ul className="flex flex-1 flex-col gap-3" aria-hidden>
           {Array.from({ length: 5 }, (_, i) => (
-            <li
-              key={i}
-              className="bg-niebla h-12 animate-pulse rounded-xl"
-            />
+            <li key={i} className="bg-niebla h-12 animate-pulse rounded-xl" />
           ))}
         </ul>
       ) : items.length === 0 ? (

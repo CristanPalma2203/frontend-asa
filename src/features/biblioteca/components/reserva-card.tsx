@@ -12,10 +12,6 @@ import type { Reserva } from '@/features/biblioteca/types/api'
 import { formatearFecha } from '@/lib/fechas'
 import { cn } from '@/lib/utils'
 
-/**
- * Fila compacta del historial: miniportada 48 px, título/autor, código mono, fechas, badge y
- * «Ver libro». Sin ticket oscuro (eso es solo de la reserva activa protagonista).
- */
 export function ReservaCard({
   reserva,
   onCancelar,
@@ -80,7 +76,6 @@ export function ReservaCard({
   )
 }
 
-/** Lista del historial: una sola tarjeta blanca con filas separadas por borde. */
 export function ReservaHistorialLista({
   items,
   onCancelar,
@@ -92,7 +87,10 @@ export function ReservaHistorialLista({
 }) {
   return (
     <div className="bg-card border-linea shadow-card overflow-hidden rounded-2xl border">
-      <ol ref={listRef} className="flex flex-col [&>li+li]:border-linea [&>li+li]:border-t">
+      <ol
+        ref={listRef}
+        className="[&>li+li]:border-linea flex flex-col [&>li+li]:border-t"
+      >
         {items.map((reserva) => (
           <li key={reserva.idReserva} data-reserva={reserva.idReserva}>
             <ReservaCard
@@ -106,7 +104,6 @@ export function ReservaHistorialLista({
   )
 }
 
-/** Huecos del historial: misma tarjeta única, filas fantasma. */
 export function ReservaCardFantasma({ filas = 2 }: { filas?: number }) {
   return (
     <div

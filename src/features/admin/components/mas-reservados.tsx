@@ -6,10 +6,6 @@ import { cn } from '@/lib/utils'
 
 const MAX_FILAS = 5
 
-/**
- * Ranking «Más reservados», portado de «Selling best» de Flito.
- * Hasta 5 filas; si hay menos, se reparten el alto + mini resumen abajo.
- */
 export function MasReservados({
   items,
   cargando = false,

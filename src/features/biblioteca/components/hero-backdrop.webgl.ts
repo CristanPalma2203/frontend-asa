@@ -1,17 +1,7 @@
-// ---- Detección de WebGL por software ----
-
-/**
- * SwiftShader, llvmpipe, etc.: el rAF del MeshGradient satura el hilo. En software no se
- * monta WebGL; basta el wash y la rejilla estática.
- */
 let softwareWebGlCache: boolean | null = null
 
 export function isSoftwareWebGL(): boolean {
   if (softwareWebGlCache != null) return softwareWebGlCache
-  if (typeof document === 'undefined') {
-    softwareWebGlCache = true
-    return true
-  }
   try {
     const canvas = document.createElement('canvas')
     const gl =
@@ -37,12 +27,10 @@ export function isSoftwareWebGL(): boolean {
   }
 }
 
-/** Solo tests: reinicia la caché de detección de WebGL software. */
 export function resetSoftwareWebGlCache(): void {
   softwareWebGlCache = null
 }
 
-/** Paper no llama a loseContext al desmontar; se fuerza aquí para no acumular contextos. */
 export function loseWebGlCanvases(root: ParentNode | null | undefined) {
   if (!root) return
   root.querySelectorAll('canvas').forEach((canvas) => {
@@ -52,7 +40,7 @@ export function loseWebGlCanvases(root: ParentNode | null | undefined) {
         (canvas.getContext('webgl') as WebGLRenderingContext | null)
       gl?.getExtension('WEBGL_lose_context')?.loseContext()
     } catch {
-      // no-op
+      return
     }
   })
 }

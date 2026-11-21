@@ -9,7 +9,6 @@ import {
 } from '@/features/auth/store'
 import { olvidarLuxia } from '@/features/luxia/reset'
 
-/** Datos de la sesión que necesita la navegación, y la acción de salir. */
 export function useSesion() {
   const isAdmin = useAuthStore(selectIsAdmin)
   const isLector = useAuthStore(selectIsLector)

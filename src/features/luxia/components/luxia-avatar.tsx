@@ -5,12 +5,6 @@ import { PLACEHOLDER_SRC, canUseRive } from '@/features/luxia/services/avatar'
 
 const RiveLuxia = lazy(() => import('@/features/luxia/components/rive-luxia'))
 
-/**
- * Avatar de LuxIA: Rive si carga; si no, imagen estática.
- *
- * Sin efecto que avise `onReady(false)` (reglas de hooks): el contenedor deriva con `canUseRive()` (sin Rive → modo CSS desde el primer
- * render) y, si Rive falla al cargar, se avisa en el propio manejador de error.
- */
 export function LuxiaAvatar({
   riveSrc,
   inputs,

@@ -1,6 +1,5 @@
 import type { ChatLibro, ChatMsg } from '@/features/luxia/types/chat'
 
-// Historial del chat en localStorage, con límites de tamaño.
 export const MAX_MESSAGE = 1000
 export const HISTORY_LIMIT = 10
 export const STORAGE_KEY = 'asa-luxia-history'
@@ -15,7 +14,6 @@ function esLibro(l: unknown): l is ChatLibro {
   )
 }
 
-/** Solo los campos de la tarjeta; un historial antiguo sin isbn/autor muestra el respaldo. */
 function libroGuardado(l: ChatLibro): ChatLibro {
   return {
     idLibro: l.idLibro,
@@ -23,6 +21,7 @@ function libroGuardado(l: ChatLibro): ChatLibro {
     titulo: l.titulo,
     autor: typeof l.autor === 'string' ? l.autor : '',
     disponibles: l.disponibles,
+    ...(typeof l.categoria === 'string' ? { categoria: l.categoria } : {}),
   }
 }
 
@@ -64,15 +63,14 @@ export function saveHistory(list: ChatMsg[]) {
       JSON.stringify(list.slice(-HISTORY_LIMIT)),
     )
   } catch {
-    /* localStorage no disponible */
+    return
   }
 }
 
-/** Borra el historial guardado (al cerrar sesión: el siguiente usuario no ve la conversación). */
 export function clearHistory() {
   try {
     localStorage.removeItem(STORAGE_KEY)
   } catch {
-    /* localStorage no disponible */
+    return
   }
 }

@@ -32,7 +32,6 @@ describe('LuxIA', () => {
     await renderEn(CATALOGO)
     const { user, panel } = await abrir()
     const log = within(panel).getByRole('log')
-    // jsdom no tiene layout: alto de contenido 1000 y visible 300.
     Object.defineProperty(log, 'scrollHeight', {
       configurable: true,
       get: () => 1000,
@@ -65,7 +64,7 @@ describe('LuxIA', () => {
         {
           role: 'assistant',
           text: 'Quedan 3 ejemplares de «Dune».',
-          sugerencia: '¿Cómo reservo Dune?',
+          sugerencia: '¿Hay más libros de Frank Herbert?',
         },
       ]),
     )
@@ -74,7 +73,7 @@ describe('LuxIA', () => {
 
     const chips = within(panel).getAllByTestId('luxia-sugerencia')
     expect(chips).toHaveLength(1)
-    expect(chips[0]).toHaveTextContent('¿Cómo reservo Dune?')
+    expect(chips[0]).toHaveTextContent('¿Hay más libros de Frank Herbert?')
     const ultima = within(panel).getByText('Quedan 3 ejemplares de «Dune».')
     expect(
       ultima.compareDocumentPosition(chips[0] as Node) &
@@ -110,7 +109,7 @@ describe('LuxIA', () => {
     await act(async () => soltar?.())
     expect(
       await within(panel).findByTestId('luxia-sugerencia'),
-    ).toHaveTextContent('¿Cómo reservo Dune?')
+    ).toHaveTextContent('¿Hay más libros de Autor de prueba?')
     expect(within(panel).getAllByTestId('luxia-sugerencia')).toHaveLength(1)
   })
 
@@ -160,8 +159,6 @@ describe('LuxIA', () => {
   })
 
   it('abrir y cerrar el chat (con vuelo real al header y vuelta) no deja errores en consola', async () => {
-    // Con movimiento y con layout: jsdom no mide nada, así que se simula un tamaño para que
-    // el muelle se mida y LuxIA vuele de verdad (GSAP con su ticker real).
     vi.stubGlobal('matchMedia', (query: string) => ({
       matches: false,
       media: query,
@@ -196,7 +193,6 @@ describe('LuxIA', () => {
           'header',
         ),
       )
-      // El vuelo es un gsap.to con los keyframes del arco sobre el muelle de la mascota.
       const dock = document.querySelector('.luxia-fab__dock')
       await waitFor(() =>
         expect(aGsap).toHaveBeenCalledWith(
@@ -204,7 +200,6 @@ describe('LuxIA', () => {
           expect.objectContaining({ keyframes: expect.any(Array) }),
         ),
       )
-      // Deja correr el vuelo de ida (750 ms).
       await act(() => new Promise((r) => setTimeout(r, 900)))
 
       await user.keyboard('{Escape}')
@@ -217,7 +212,6 @@ describe('LuxIA', () => {
           'corner',
         ),
       )
-      // Vuelo de vuelta a la esquina.
       await act(() => new Promise((r) => setTimeout(r, 900)))
 
       expect(errores).toEqual([])
@@ -293,7 +287,6 @@ describe('LuxIA', () => {
       name: /El hobbit/,
     })
     expect(tarjeta).toHaveAttribute('href', '/libros/1')
-    // Portada por ISBN, la misma fuente que el catálogo.
     const portada = tarjeta.querySelector('img')
     expect(portada?.getAttribute('src')).toContain(
       'covers.openlibrary.org/b/isbn/9780000000001',
@@ -301,7 +294,6 @@ describe('LuxIA', () => {
     expect(within(tarjeta).getByText('El hobbit')).toBeInTheDocument()
     expect(within(tarjeta).getByText('J. R. R. Tolkien')).toBeInTheDocument()
     expect(within(tarjeta).getByText('3 disponibles')).toBeInTheDocument()
-    // Un solo resultado: sin «Ver todos».
     expect(
       within(panel).queryByRole('link', { name: 'Ver todos en el catálogo' }),
     ).toBeNull()
@@ -458,7 +450,6 @@ describe('LuxIA', () => {
     await renderEn(CATALOGO)
     const { panel } = await abrir()
 
-    // Al cargar solo quedan los últimos HISTORY_LIMIT.
     expect(within(panel).queryByText('m19')).toBeNull()
     expect(within(panel).getByText('m29')).toBeInTheDocument()
     const guardado = JSON.parse(
@@ -479,7 +470,7 @@ describe('LuxIA', () => {
     )
 
     expect(
-      await within(panel).findByText(/no puedo reservar por ti/),
+      await within(panel).findByText(/no puedo reservar por ti/i),
     ).toBeInTheDocument()
     expect(
       within(panel).getByRole('link', { name: /El Principito/ }),
@@ -516,7 +507,6 @@ describe('LuxIA', () => {
       opacity: 1,
     })
     expect(conVuelo.poses.at(-1)).toMatchObject({ x: -286, y: -388 })
-    // Arco: a mitad de vuelo pasa por encima de la recta entre origen y destino (flota).
     const medio = conVuelo.poses[12]
     expect(medio?.y).toBeLessThan(-388 * 0.5)
   })
@@ -538,5 +528,116 @@ describe('LuxIA', () => {
     expect(MOOD_INPUTS.thinking).toEqual({ estado: 1, gesto: 0, mano: 2 })
     expect(MOOD_INPUTS.talking).toEqual({ estado: 2, gesto: 0, mano: 1 })
     expect(MOOD_INPUTS.error).toEqual({ estado: 4, gesto: 0, mano: 14 })
+  })
+
+  describe('sin repetirse', () => {
+    const escribir = async (
+      user: ReturnType<typeof userEvent.setup>,
+      panel: HTMLElement,
+      texto: string,
+    ) => {
+      const respuestas = within(panel).queryAllByTestId('luxia-chat-msg').length
+      await user.type(
+        within(panel).getByLabelText('Mensaje para LuxIA'),
+        `${texto}{Enter}`,
+      )
+      await waitFor(() =>
+        expect(
+          within(panel).queryAllByTestId('luxia-chat-msg').length,
+        ).toBeGreaterThanOrEqual(respuestas + 2),
+      )
+      await waitFor(() =>
+        expect(
+          within(panel).queryByLabelText('LuxIA está escribiendo'),
+        ).toBeNull(),
+      )
+    }
+
+    it('no repite la tarjeta de un libro que ya salió en la conversación', async () => {
+      server.use(
+        ...crearApiFake([
+          { titulo: 'El hobbit', autor: 'J. R. R. Tolkien', copias: 3 },
+        ]).handlers,
+      )
+      await renderEn(CATALOGO)
+      const { user, panel } = await abrir()
+
+      await escribir(user, panel, '¿Hay libros de Tolkien?')
+      expect(
+        within(panel).getAllByRole('link', { name: /El hobbit/ }),
+      ).toHaveLength(1)
+
+      await escribir(user, panel, '¿Cómo reservo El hobbit?')
+      expect(
+        await within(panel).findByText(
+          /se reserva con el botón «Reservar».*Lo tienes arriba/,
+        ),
+      ).toBeInTheDocument()
+      expect(
+        within(panel).getAllByRole('link', { name: /El hobbit/ }),
+      ).toHaveLength(1)
+
+      await escribir(user, panel, 'El hobbit')
+      expect(
+        within(panel).getAllByRole('link', { name: /El hobbit/ }),
+      ).toHaveLength(1)
+    })
+
+    it('una pregunta repetida responde con el dato actualizado y otras palabras', async () => {
+      server.use(...crearApiFake([{ titulo: 'Dune', copias: 3 }]).handlers)
+      await renderEn(CATALOGO)
+      const { user, panel } = await abrir()
+
+      await escribir(user, panel, 'Dune')
+      await escribir(user, panel, '¿dune?')
+      expect(
+        await within(panel).findByText(
+          /^(Sigue igual|Lo acabo de mirar|Sin cambios).*3 ejemplares de «Dune»/,
+        ),
+      ).toBeInTheDocument()
+      expect(
+        within(panel).getAllByText('Quedan 3 ejemplares de «Dune».'),
+      ).toHaveLength(1)
+    })
+
+    it('el chip nunca sugiere una pregunta ya hecha ni sobre reservar, y desaparece sin opciones', async () => {
+      server.use(
+        ...crearApiFake([
+          {
+            titulo: 'Dune',
+            autor: 'Frank Herbert',
+            categoria: 'Ciencia ficción',
+          },
+        ]).handlers,
+      )
+      await renderEn(CATALOGO)
+      const { user, panel } = await abrir()
+      const hechas = new Set<string>()
+      const chip = () => within(panel).queryByTestId('luxia-sugerencia')
+      const norm = (t: string) =>
+        t
+          .toLowerCase()
+          .normalize('NFD')
+          .replace(/[̀-ͯ]/g, '')
+          .replace(/[^a-z0-9ñ ]/g, '')
+          .trim()
+
+      await escribir(user, panel, 'Dune')
+      hechas.add(norm('Dune'))
+      for (let i = 0; i < 8 && chip(); i++) {
+        const texto = chip()?.textContent ?? ''
+        expect(texto).not.toMatch(/reserv/i)
+        expect(hechas.has(norm(texto))).toBe(false)
+        hechas.add(norm(texto))
+        await user.click(chip() as HTMLElement)
+        await waitFor(() =>
+          expect(
+            within(panel).queryByLabelText('LuxIA está escribiendo'),
+          ).toBeNull(),
+        )
+        await within(panel).findAllByText(/./, { selector: '.is-assistant' })
+      }
+      expect(chip()).toBeNull()
+    })
   })
 })

@@ -2,10 +2,6 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-/**
- * `accionesFijas`: la última columna (acciones) queda fija a la derecha cuando la tabla hace
- * scroll horizontal (móvil), así los botones siempre se ven.
- */
 function Table({
   className,
   accionesFijas = false,

@@ -8,7 +8,6 @@ import { crearApiFake } from '@/test/api-fake'
 import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
 
-/** Peticiones del listado del catálogo (sin la muestra de categorías sugeridas, de pageSize 50). */
 function pedidosCatalogo(api: ReturnType<typeof crearApiFake>) {
   return api
     .pedidos('/api/libros')
@@ -43,7 +42,6 @@ describe('catálogo', () => {
         { timeout: 3000 },
       ),
     ).toBeInTheDocument()
-    // Búsqueda diferida + petición: con la máquina cargada puede pasar de 1 s.
     await waitFor(
       () =>
         expect(
@@ -58,7 +56,6 @@ describe('catálogo', () => {
     expect(ultimo?.searchParams.get('search')).toBe('hobbit')
     expect(ultimo?.searchParams.has('buscar')).toBe(false)
     expect(ultimo?.searchParams.get('page')).toBe('1')
-    // La URL de la app conserva su propio nombre de parámetro.
     expect(router.state.location.href).toContain('buscar=hobbit')
   })
 
@@ -124,7 +121,6 @@ describe('catálogo', () => {
 
     const enlace = await screen.findByRole('link', { name: 'El Principito' })
     expect(enlace).toHaveAttribute('href', '/libros/1')
-    // Sin hoja de vista previa.
     await user.click(enlace)
 
     await waitFor(() =>
@@ -225,11 +221,9 @@ describe('catálogo', () => {
       }),
     )
     await waitFor(() => expect(titulos()).toEqual(['Media']))
-    // La API no recibe parámetros inventados: el filtro es del cliente.
     const ultimo = pedidosCatalogo(api).at(-1)
     expect(ultimo?.searchParams.has('disponibilidad')).toBe(false)
     expect(ultimo?.searchParams.has('orden')).toBe(false)
-    // El total sigue siendo el de la API.
     expect(screen.getByText('3 libros')).toBeInTheDocument()
   })
 

@@ -3,7 +3,6 @@ import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 
-/** Encabezado de pantalla: eyebrow, título (con palabra en serif) y acción a la derecha. */
 export function EncabezadoPagina({
   eyebrow,
   titulo,
@@ -13,7 +12,6 @@ export function EncabezadoPagina({
 }: {
   eyebrow: string
   titulo: string
-  /** Palabra final del título en Instrument Serif itálica. */
   serif?: string
   detalle?: ReactNode
   accion?: ReactNode
@@ -42,7 +40,6 @@ export function EncabezadoPagina({
   )
 }
 
-/** Buscador de una lista (con icono de lupa). */
 export function BuscadorLista({
   className,
   ...props

@@ -4,10 +4,6 @@ import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { StockBadge } from '@/features/biblioteca/components/stock-badge'
 import type { ChatLibro } from '@/features/luxia/types/chat'
 
-/**
- * Libro encontrado por LuxIA: portada (misma fuente por ISBN que el catálogo, con shimmer y
- * respaldo), título, autor y disponibilidad. Toda la tarjeta enlaza a la ficha.
- */
 export function LuxiaLibroCard({
   libro,
   onNavegar,

@@ -1,17 +1,10 @@
-// LuxIA solo consulta: interpreta la pregunta con reglas sencillas (no hay modelo de lenguaje)
-// y la convierte en una búsqueda de la API de libros.
-
 export type Intencion = {
-  /** `reservar`: piden reservar; LuxIA no lo hace y remite al botón de la ficha. */
   tipo: 'buscar' | 'reservar' | 'vacia'
-  /** Texto que se manda como `search` (título, autor o ISBN). */
   consulta: string
 }
 
-// Sin \b: con acentos (resérvame) \b de JS no ve límite de palabra fiable.
 const pideReservar = /(^|[^a-záéíóúñ])(res[eé]rv|ap[aá]rt)/i
 
-/** Frases de relleno al inicio de la pregunta; se quitan en bucle hasta que no queda ninguna. */
 const prefijos: RegExp[] = [
   /^(hola|oye|buenas)[,!\s]+/i,
   /^luxia[,:!\s]+/i,
@@ -24,6 +17,7 @@ const prefijos: RegExp[] = [
   /^(cu[aá]nt[oa]s)\s+(ejemplares|copias|libros)\s+(quedan|hay|tienen|tienes)\s+/i,
   /^(cu[aá]nt[oa]s)\s+(ejemplares|copias|libros)\s+/i,
   /^(alg[uú]n|alguna|algo)\s+/i,
+  /^(m[aá]s|otros?|otras?)\s+/i,
   /^(ejemplares|copias)\s+/i,
   /^(libros?|t[ií]tulos?)\s+/i,
   /^(disponibles?)\s+/i,
@@ -47,7 +41,6 @@ export function interpretar(pregunta: string): Intencion {
   let anterior = ''
   while (anterior !== texto) {
     anterior = texto
-    // El espacio final deja que un prefijo cuadre también con la última palabra («hay libros»).
     for (const prefijo of prefijos)
       texto = `${texto} `.replace(prefijo, '').trim()
     for (const sufijo of sufijos) texto = texto.replace(sufijo, '')
@@ -62,7 +55,6 @@ export function interpretar(pregunta: string): Intencion {
   return { tipo: tipoBase, consulta: texto }
 }
 
-/** Minúsculas y sin tildes («Ciencia» y «ciéncia» → «ciencia»). La ñ se conserva. */
 export function normalizar(texto: string) {
   return texto
     .toLowerCase()
@@ -71,7 +63,6 @@ export function normalizar(texto: string) {
     .normalize('NFC')
 }
 
-/** Palabras que no dicen qué se busca: se quitan antes de comparar con las categorías. */
 const PALABRAS_VACIAS = new Set([
   'que',
   'cual',
@@ -124,6 +115,9 @@ const PALABRAS_VACIAS = new Set([
   'alguno',
   'alguna',
   'algo',
+  'mas',
+  'otro',
+  'otros',
   'categoria',
   'genero',
   'tema',
@@ -143,11 +137,6 @@ const PALABRAS_VACIAS = new Set([
   'leer',
 ])
 
-/**
- * Si, sin palabras vacías, la pregunta es el nombre de una categoría existente, la devuelve
- * (con su escritura original); si no, null y se busca por texto.
- * «¿Qué libros de ciencia hay disponibles?» y «Ciencia» → «Ciencia».
- */
 export function categoriaDe(pregunta: string, categorias: string[]) {
   const resto = sinPalabrasVacias(pregunta)
   if (!resto) return null
@@ -157,11 +146,17 @@ export function categoriaDe(pregunta: string, categorias: string[]) {
   )
 }
 
-/** Texto normalizado, sin signos ni palabras vacías («Historia del arte» → «historia arte»). */
-function sinPalabrasVacias(texto: string) {
+export function sinPalabrasVacias(texto: string) {
   return normalizar(texto)
     .replace(/[^\p{L}\p{N}\s]/gu, ' ')
     .split(/\s+/)
     .filter((palabra) => palabra && !PALABRAS_VACIAS.has(palabra))
     .join(' ')
+}
+
+export function normalizarPregunta(texto: string) {
+  return normalizar(texto)
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }

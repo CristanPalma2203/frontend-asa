@@ -24,7 +24,6 @@ export function useLectores(params: ListarLectoresParams) {
   })
 }
 
-/** Detalle de un lector; no consulta mientras `id` sea null. */
 export function useLector(id: number | null) {
   return useQuery({
     queryKey: queryKeys.lectores.detail(id ?? 0),
@@ -33,11 +32,6 @@ export function useLector(id: number | null) {
   })
 }
 
-/**
- * Crea un lector (con usuario si trae contraseña) o, si se pasa `lector`, edita sus datos.
- * Al editar, si el estado cambia, después de guardar los datos lo desactiva o lo reactiva.
- * Las queries de lectores se invalidan también si falla a medias (los datos ya se guardaron).
- */
 export function useGuardarLector(
   lector: LectorLista | null,
   opciones: { onSuccess?: () => void } = {},

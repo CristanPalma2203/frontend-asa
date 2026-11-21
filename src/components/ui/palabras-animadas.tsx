@@ -2,13 +2,6 @@ import { Fragment } from 'react'
 
 import { cn } from '@/lib/utils'
 
-/**
- * Texto partido por palabras para titleLines (lib/motion.ts): cada palabra va en una máscara
- * inline-block con overflow clip (no hidden: no crea contenedor de scroll) y su interior ([data-tl])
- * es lo que sube. El padding-block de 0.12em compensado con margin-block −0.12em deja sitio a
- * ascendentes y descendentes sin cambiar el alto de la línea; en cursiva se añade 0.08em al final
- * para no cortar la inclinación. Los espacios quedan como texto: el nombre accesible no cambia.
- */
 export function PalabrasAnimadas({
   texto,
   cursiva = false,

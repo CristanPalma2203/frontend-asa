@@ -4,10 +4,6 @@ import { useMemo } from 'react'
 import type { ResumenCategoria } from '@/features/admin/types/resumen'
 import { cn } from '@/lib/utils'
 
-/**
- * Barras apiladas «Ejemplares por categoría», portado de
- * «Revenue by channel» de Wynlo. Clic → catálogo filtrado.
- */
 export function CategoriasChart({
   categorias,
   cargando = false,
@@ -22,9 +18,7 @@ export function CategoriasChart({
     () =>
       Math.max(
         1,
-        ...categorias.map(
-          (c) => c.disponibles + c.reservados + c.inactivos,
-        ),
+        ...categorias.map((c) => c.disponibles + c.reservados + c.inactivos),
       ),
     [categorias],
   )

@@ -53,7 +53,6 @@ export function LibroAdminPage() {
     onConflicto: () => toast.error('Otro usuario cambió este ejemplar'),
   })
 
-  // Mientras carga: cabecera y tabla ya pintadas, huecos en el título, los datos y las filas.
   if (libro.isPending || ejemplares.isPending) {
     return (
       <main

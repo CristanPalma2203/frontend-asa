@@ -13,7 +13,6 @@ export const ejemplarSchema = z.object({
 
 export type EjemplarForm = z.infer<typeof ejemplarSchema>
 
-/** Edición: mismo campo que el alta; el rowVersion viaja aparte (concurrencia optimista). */
 export const editarEjemplarSchema = ejemplarSchema
 
 export type EjemplarEdicion = EjemplarForm & { rowVersion: string }

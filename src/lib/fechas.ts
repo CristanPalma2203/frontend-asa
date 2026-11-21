@@ -13,7 +13,6 @@ export function formatearFecha(iso: string) {
   return formato.format(fecha)
 }
 
-/** Relativo corto en español («hace 5 min», «hace 2 h», «hace 3 d»). */
 export function haceCuanto(iso: string, ahora = Date.now()) {
   const normalizada = conZona.test(iso) ? iso : `${iso}Z`
   const fecha = new Date(normalizada)

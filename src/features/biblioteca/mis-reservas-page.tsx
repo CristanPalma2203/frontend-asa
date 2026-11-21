@@ -59,15 +59,16 @@ export function MisReservasPage() {
   const items = historial.data?.items ?? []
   const totalPages = historial.data?.totalPages ?? 0
   const totalTodas = useMisReservas('Todas', 1, 1)
-  const sinNinguna =
-    totalTodas.isSuccess && (totalTodas.data?.totalCount ?? 0) === 0
+  const sinNinguna = totalTodas.isSuccess && totalTodas.data.totalCount === 0
 
   const claveActivas = activas.map((r) => r.idReserva).join(',')
   const claveHistorial = `${filtro}|${page}|${items.map((r) => r.idReserva).join(',')}`
 
-  useMotion(headerRef, (root) => reveal(root.children, { y: 10, stagger: 0.06 }), [
-    0,
-  ])
+  useMotion(
+    headerRef,
+    (root) => reveal(root.children, { y: 10, stagger: 0.06 }),
+    [0],
+  )
   useMotion(
     activasRef,
     (root) => cardsIn(root.children, { stagger: 0.08, delay: 0.05 }),
@@ -156,8 +157,7 @@ export function MisReservasPage() {
       {error ? (
         <div className="bg-card border-linea shadow-card rounded-xl border p-8">
           <h2 className="text-xl">
-            No pudimos cargar tus{' '}
-            <span className="titulo-serif">reservas</span>
+            No pudimos cargar tus <span className="titulo-serif">reservas</span>
           </h2>
           <ErrorReintentar
             error={error}
@@ -210,7 +210,10 @@ export function MisReservasPage() {
       {!error && !cargando && !sinNinguna ? (
         <>
           {activas.length > 0 ? (
-            <section aria-label="Reservas activas" className="flex flex-col gap-4">
+            <section
+              aria-label="Reservas activas"
+              className="flex flex-col gap-4"
+            >
               <h2 className="text-xl tracking-[-0.02em]">
                 {activas.length === 1 ? (
                   <>
@@ -255,10 +258,7 @@ export function MisReservasPage() {
             </div>
           )}
 
-          <section
-            aria-label="Historial"
-            className="flex flex-col gap-4"
-          >
+          <section aria-label="Historial" className="flex flex-col gap-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-xl tracking-[-0.02em]">Historial</h2>
               <div
@@ -276,9 +276,9 @@ export function MisReservasPage() {
                       aria-selected={seleccionada}
                       onClick={() => irCon({ estado: chip.id })}
                       className={cn(
-                        'focus-visible:shadow-foco h-9 cursor-pointer rounded-full px-4 text-sm outline-none transition-colors',
+                        'focus-visible:shadow-foco h-9 cursor-pointer rounded-full px-4 text-sm transition-colors outline-none',
                         seleccionada
-                          ? 'bg-card text-tinta shadow-sm font-semibold'
+                          ? 'bg-card text-tinta font-semibold shadow-sm'
                           : 'text-texto-3 hover:text-tinta font-medium',
                       )}
                     >
@@ -315,10 +315,7 @@ export function MisReservasPage() {
             ) : null}
 
             {historial.isSuccess && totalPages > 1 ? (
-              <nav
-                aria-label="Paginación"
-                className="flex justify-end gap-2"
-              >
+              <nav aria-label="Paginación" className="flex justify-end gap-2">
                 <Button
                   type="button"
                   variant="outline"

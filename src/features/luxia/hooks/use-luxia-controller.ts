@@ -1,17 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-/**
- * Controlador único de LuxIA (Rive state machine):
- * el componente solo cambia "mood" y RiveLuxia traduce a los inputs numéricos.
- * `mano` NO sigue a `estado`: siempre se fijan ambos.
- */
 export type LuxiaMood =
   'idle' | 'greet' | 'thinking' | 'talking' | 'ready' | 'error'
 
 export interface LuxiaInputs {
-  estado: number // 0 idle,1 pensando,2 hablando,3 listo,4 confundido,5 dormido
-  gesto: number // 0 quieto, 4 reverencia_saludo
-  mano: number // 0 reposo,1 hablando,2 pensando,14 confundido,16 saludo
+  estado: number
+  gesto: number
+  mano: number
 }
 
 export const MOOD_INPUTS: Record<LuxiaMood, LuxiaInputs> = {
@@ -23,7 +18,6 @@ export const MOOD_INPUTS: Record<LuxiaMood, LuxiaInputs> = {
   error: { estado: 4, gesto: 0, mano: 14 },
 }
 
-/** Estados transitorios: vuelven solos al siguiente tras ~2 s. */
 const AUTO_NEXT: Partial<Record<LuxiaMood, LuxiaMood>> = {
   greet: 'idle',
   talking: 'ready',

@@ -20,7 +20,6 @@ export function editarLector(id: number, body: EditarLectorBody) {
   return api<void>(`/api/lectores/${id}`, { method: 'PUT', body })
 }
 
-/** Reactiva un lector inactivo. */
 export function activarLector(id: number) {
   return api<void>(`/api/lectores/${id}/activar`, { method: 'POST' })
 }

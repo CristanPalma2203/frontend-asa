@@ -7,11 +7,6 @@ import { useLibro } from '@/features/biblioteca/hooks/use-libros'
 import type { Reserva } from '@/features/biblioteca/types/api'
 import { formatearFecha } from '@/lib/fechas'
 
-/**
- * «Tu reserva activa» del Home: la más reciente, con portada, título, autor, código de ejemplar,
- * fecha y estado; si hay más, «+N más». La reserva no trae ISBN ni autor: salen del detalle
- * del libro.
- */
 export function HomeReservaActiva({
   reserva,
   otras,
@@ -86,7 +81,6 @@ export function HomeReservaActiva({
   )
 }
 
-/** Hueco de la tarjeta mientras la consulta de reservas tarda (solo pasados ~300 ms). */
 export function HomeReservaActivaCargando() {
   return (
     <div

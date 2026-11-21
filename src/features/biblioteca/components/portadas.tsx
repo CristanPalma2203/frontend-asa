@@ -4,9 +4,6 @@ import { Hueso, PortadaConCarga } from '@/components/ui/hueso'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
 import { cn } from '@/lib/utils'
 
-// Portadas desde Open Library por ISBN. `?default=false` hace que responda 404 si no hay
-// portada, y en ese caso se muestra el respaldo con iniciales.
-
 const ARTICULOS = new Set([
   'el',
   'la',
@@ -27,12 +24,8 @@ const ARTICULOS = new Set([
   'of',
 ])
 
-/** Hasta 2 iniciales del título (omite artículos). */
 function inicialesTitulo(titulo: string) {
-  const palabras = titulo
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean)
+  const palabras = titulo.trim().split(/\s+/).filter(Boolean)
   const utiles = palabras.filter(
     (p) => !ARTICULOS.has(p.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')),
   )
@@ -50,11 +43,6 @@ function isbnLimpio(isbn: string) {
   return isbn.replace(/[^0-9Xx]/g, '')
 }
 
-/**
- * Portada de libro. El tamaño lo pone `className` (ancho; el alto sale de la
- * proporción 2:3). Mientras la imagen carga, shimmer de boneyard en el hueco (PortadaConCarga).
- * Sin ISBN o sin portada en Open Library: fallback verde suave con iniciales.
- */
 export function PortadaLibro({
   isbn,
   titulo,
@@ -101,7 +89,7 @@ function PortadaRespaldo({
       aria-label={titulo}
       className={cn(
         className,
-        'bg-lima-wash text-pino-800 @container flex items-center justify-center ring-1 ring-pino-800/10 ring-inset',
+        'bg-lima-wash text-pino-800 ring-pino-800/10 @container flex items-center justify-center ring-1 ring-inset',
       )}
     >
       {iniciales ? (
@@ -122,10 +110,6 @@ function PortadaRespaldo({
   )
 }
 
-/**
- * Portada pequeña de una reserva. La reserva no trae ISBN: lo toma del detalle del libro y,
- * mientras llega, deja el hueco con shimmer.
- */
 export function MiniPortada({
   idLibro,
   titulo,
@@ -138,7 +122,6 @@ export function MiniPortada({
   const libro = useLibro(idLibro)
   if (libro.isPending) {
     return (
-      // Mismo tamaño que tendrá la portada (ancho por `className`, alto por la proporción 2:3).
       <Hueso
         cargando
         alto={84}

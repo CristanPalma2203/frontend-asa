@@ -1,6 +1,5 @@
 import type { ReactNode } from 'react'
 
-/** Campo de formulario: etiqueta, control y error inline. La `<label>` envuelve al control. */
 export function Campo({
   label,
   error,

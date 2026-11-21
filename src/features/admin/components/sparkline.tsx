@@ -5,7 +5,6 @@ import { sparkPath } from '@/features/admin/components/chart-paths'
 import { dur, prefersReducedMotion } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-/** Mini área+línea estilo KPI Wynlo. Dibuja el trazo con GSAP. */
 export function Sparkline({
   values,
   className,

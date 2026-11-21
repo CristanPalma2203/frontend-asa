@@ -3,10 +3,6 @@ import { useId, useState } from 'react'
 
 import { cn } from '@/lib/utils'
 
-/**
- * Sinopsis del libro, plegada con «Leer más» si es larga. Mientras el backend no la envíe,
- * la sección no se pinta (la ficha no muestra huecos vacíos).
- */
 export function FichaSinopsis({ sinopsis }: { sinopsis?: string | null }) {
   const [abierta, setAbierta] = useState(false)
   const id = useId()

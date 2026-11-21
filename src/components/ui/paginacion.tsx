@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button'
 
-/** Paginador de las listas de admin: «Página X de N» con Anterior y Siguiente. */
 export function Paginacion({
   page,
   totalPages,

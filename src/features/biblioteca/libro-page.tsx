@@ -31,7 +31,6 @@ export function LibroPage() {
     if (libro.data) document.title = `${libro.data.titulo} · ASA Biblioteca`
   }, [libro.data])
 
-  // Mientras carga se pinta la ficha entera; solo los huecos de los datos hacen shimmer.
   if (libro.isPending) return <Ficha />
 
   if (libro.isError) {
@@ -55,18 +54,11 @@ export function LibroPage() {
   return <Ficha detalle={libro.data} />
 }
 
-/**
- * Ficha editorial: tarjeta con portada, categoría, título, autor, datos y reserva; debajo la
- * sinopsis (solo si llega) y «Más de esta categoría». En móvil todo va centrado y en una
- * columna, con «Reservar» fijo abajo.
- */
 function Ficha({ detalle }: { detalle?: LibroDetalle }) {
   const cargando = !detalle
   const ref = useRef<HTMLElement>(null)
   const total = detalle ? totalActivos(detalle.ejemplares) : 0
 
-  // Al llegar el libro: portada (cardsIn), título por palabras, datos y reserva (reveal) y las
-  // secciones de abajo. «Reservar» magnético. Con movimiento reducido todo aparece al instante.
   useMotion(
     ref,
     (root) => {
@@ -91,7 +83,6 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
   return (
     <main
       ref={ref}
-      // Móvil: hueco abajo para la barra fija de «Reservar».
       className="flex flex-col gap-16 px-0 pt-0 pb-32 md:gap-20 md:px-5 md:pt-4 md:pb-14 lg:px-12"
     >
       {detalle ? (

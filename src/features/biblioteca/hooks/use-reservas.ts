@@ -15,7 +15,6 @@ import { listarReservasDeLector } from '@/features/biblioteca/services/reservas.
 import type { PagedResponse, Reserva } from '@/features/biblioteca/types/api'
 import type { FiltroReservas } from '@/features/biblioteca/types/estados'
 
-/** Reservas del lector de la sesión. No consulta si la sesión no tiene lector. */
 export function useMisReservas(
   filtro: FiltroReservas = 'Activa',
   page = 1,
@@ -30,10 +29,6 @@ export function useMisReservas(
   })
 }
 
-/**
- * Reservas activas del lector, para contadores (cabecera y sidebar). Comparte caché con la
- * pestaña «Activas» y cuenta por estado, así que refleja al instante la cancelación optimista.
- */
 export function useReservasActivasCount() {
   const lectorId = useAuthStore((state) => state.lectorId)
   return useQuery({
@@ -58,7 +53,6 @@ export function useReservar() {
   })
 }
 
-/** Cancela con update optimista: marca la reserva como Cancelada y hace rollback si falla. */
 export function useCancelarReserva() {
   const queryClient = useQueryClient()
 
@@ -98,11 +92,6 @@ export function useCancelarReserva() {
   })
 }
 
-/**
- * Reservar o cancelar cambia "disponibles" y las reservas del lector. `libros.all` cubre por prefijo
- * todas las listas y todos los detalles de libros (catálogo, ficha y admin), así que no hace falta
- * invalidar `libros.detail(id)` aparte: hacerlo pedía el detalle dos veces.
- */
 async function invalidarTrasReserva(queryClient: QueryClient) {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.libros.all }),

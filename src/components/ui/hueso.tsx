@@ -4,12 +4,6 @@ import { useMemo, useState, type CSSProperties, type ReactNode } from 'react'
 import { huesoUnico } from '@/components/ui/hueso.bones'
 import { cn } from '@/lib/utils'
 
-/**
- * Hueco de un dato que aún no llega: boneyard pinta el shimmer solo en ese hueco y el resto del
- * componente (tarjeta, bordes, botones) se ve desde el primer render.
- * Sin `children` reserva un bloque de `ancho` × `alto` para que el layout no colapse.
- * No va dentro de <p>, <h*> ni <button>: boneyard envuelve con un <div>.
- */
 export function Hueso({
   cargando,
   ancho,
@@ -22,15 +16,11 @@ export function Hueso({
   children,
 }: {
   cargando: boolean
-  /** Color del hueso (boneyard `color`); sin él, el de la config global. */
   color?: string
-  /** Color del brillo; sin él, el `shimmerColor` de la config global. */
   shimmer?: string
-  /** Ancho del hueco (px o valor CSS). Sin él, el ancho lo da `className` o el contenedor. */
   ancho?: number | string
   alto: number
   radio?: number | string
-  /** El hueco ocupa el alto de su contenedor (p. ej. una portada con aspect-ratio). */
   llenar?: boolean
   className?: string
   children?: ReactNode
@@ -40,8 +30,6 @@ export function Hueso({
     () => huesoUnico(`hueso-${anchoPx}x${alto}`, anchoPx, alto, radio),
     [anchoPx, alto, radio],
   )
-  // boneyard <Skeleton> solo acepta `color`; su shimmerColor es de la config global. El brillo
-  // propio va por `boneClass` (.hueso-brillo en index.css) con estas variables CSS.
   const estilo = {
     ...(ancho === undefined ? {} : { width: ancho }),
     ...(shimmer
@@ -66,11 +54,6 @@ export function Hueso({
   )
 }
 
-/**
- * Portada con shimmer hasta que la imagen carga: lista con onLoad,
- * o al montar si viene de caché (img.complete && naturalWidth > 0). Si falla, `respaldo`.
- * La imagen entra con opacidad 0 → 1 en 200 ms. `key={src}` reinicia el estado si cambia la URL.
- */
 export function PortadaConCarga({
   src,
   alt = '',
@@ -81,9 +64,7 @@ export function PortadaConCarga({
 }: {
   src: string
   alt?: string
-  /** Tamaño y forma del hueco (ancho y aspect-ratio). */
   className?: string
-  /** Alto de referencia del hueso; se escala al alto real. */
   alto?: number
   radio?: number | string
   respaldo: ReactNode
@@ -119,7 +100,6 @@ function PortadaConCargaInterna({
   const [listo, setListo] = useState(false)
   const [fallo, setFallo] = useState(false)
 
-  // Ref callback, no efecto: si la imagen ya estaba en caché, no habrá onLoad.
   const marcarSiCargada = (img: HTMLImageElement | null) => {
     if (img && img.complete && img.naturalWidth > 0) setListo(true)
   }

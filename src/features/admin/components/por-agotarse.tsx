@@ -6,13 +6,8 @@ import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-/** Mini 40×60 (2/3). El fallback del componente compartido usa el mismo box. */
 const PORTADA_MINI = 'w-10 shrink-0'
 
-/**
- * Lista «Por agotarse», portado de «Running out» de Flito.
- * Grilla 2 cols alineada; miniportada fija 2/3; botón centrado en vertical.
- */
 export function PorAgotarse({
   items,
   cargando = false,
@@ -66,7 +61,7 @@ export function PorAgotarse({
                     to="/admin/libros/$idLibro"
                     params={{ idLibro: String(libro.libroId) }}
                     search={{ page: 1, pageSize: 12 }}
-                    className="text-tinta hover:text-pino-800 focus-visible:shadow-foco block truncate text-sm font-medium outline-none transition-colors"
+                    className="text-tinta hover:text-pino-800 focus-visible:shadow-foco block truncate text-sm font-medium transition-colors outline-none"
                   >
                     {libro.titulo}
                   </Link>

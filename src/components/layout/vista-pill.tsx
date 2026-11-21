@@ -4,15 +4,10 @@ import { useSesion } from '@/components/layout/use-sesion'
 import { useVistaAdmin } from '@/components/layout/use-vista-admin'
 import { cn } from '@/lib/utils'
 
-/**
- * Pill segmentada «Panel / Biblioteca» (solo Admin). La vista vive en la URL, así que recargar
- * la conserva y los guards de /admin siguen igual. El lector nunca la ve.
- */
 export function VistaPill({
   tono = 'claro',
   className,
 }: {
-  /** `oscuro`: dentro del menú móvil (sobre el sidebar). */
   tono?: 'claro' | 'oscuro'
   className?: string
 }) {

@@ -27,11 +27,6 @@ import { cn } from '@/lib/utils'
 
 const listaAdmin = { page: 1, pageSize: 12 } as const
 
-/**
- * Sidebar pino 950 de la app: «Menú» para lectores, «Gestión» en la vista Panel del admin y
- * «Biblioteca» (Inicio y Catálogo, sin reservas) en su vista de lector. Al cambiar de vista los
- * ítems entran con un reveal suave. En el menú móvil (`conVistaPill`) la pill va arriba.
- */
 export function Sidebar({
   onNavegar,
   conVistaPill = false,
@@ -228,7 +223,6 @@ function ContadorLectores() {
   )
 }
 
-/** Reservas activas del lector junto a «Mis reservas». */
 function ContadorReservas() {
   const activas = useReservasActivasCount()
   return (
@@ -240,7 +234,6 @@ function ContadorReservas() {
   )
 }
 
-/** Pastilla numérica a la derecha de un ítem del sidebar. No se muestra si no hay dato o es 0. */
 function ContadorNav({
   valor,
   cargando = false,
@@ -278,10 +271,6 @@ function ContadorNav({
   )
 }
 
-/**
- * Envuelve un `<Link>` con el estilo de ítem del sidebar. Recibir el Link como hijo mantiene el
- * tipado de rutas de TanStack Router.
- */
 function ItemNav({
   activo,
   icono: Icono,

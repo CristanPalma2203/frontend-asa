@@ -11,14 +11,8 @@ import { useResumenHome } from '@/features/biblioteca/hooks/use-libros'
 import { useMisReservas } from '@/features/biblioteca/hooks/use-reservas'
 import { cn } from '@/lib/utils'
 
-/** Tiempo antes de enseñar el hueco de la reserva: si responde antes, no hay salto. */
 const DEMORA_HUECO_MS = 300
 
-/**
- * Home del lector a todo el ancho del área de contenido: panel con buscador y «Recomendados»,
- * y debajo «Explora por categoría» con «Tu reserva activa» a la derecha (arriba en < lg).
- * Sin reserva activa, el admin o mientras no hay datos, las categorías ocupan todo el ancho.
- */
 export function HomePage() {
   const resumen = useResumenHome()
   const sesion = useSesion()
@@ -26,7 +20,6 @@ export function HomePage() {
   const [demorada, setDemorada] = useState(false)
 
   const cargandoReservas = sesion.isLector && activas.isPending
-  // El hueco solo aparece si la consulta tarda más de 300 ms (el setState va en el timeout).
   useEffect(() => {
     if (!cargandoReservas) return undefined
     const id = window.setTimeout(() => setDemorada(true), DEMORA_HUECO_MS)
@@ -51,7 +44,6 @@ export function HomePage() {
         )}
       >
         {conColumna ? (
-          // < lg: arriba de las categorías; ≥ lg: a la derecha, alineada con su grilla.
           <div className="lg:order-2 lg:h-full lg:pt-[76px]">
             {masReciente ? (
               <HomeReservaActiva

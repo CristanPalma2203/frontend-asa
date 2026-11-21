@@ -1,8 +1,4 @@
-// Vuelo de LuxIA entre su esquina y el hueco del header.
-
-/** Curva suave ease-in-out (cubic-bezier(0.65,0,0.35,1)) aplicada UNA vez a todo el vuelo. */
 export const FLIGHT_MS = 750
-/** Espera máxima a que el .riv diga si trae aparecer/desaparecer; luego fundido CSS de respaldo. */
 export const APPEAR_WAIT_MS = 1500
 
 function cubicBezier(x1: number, y1: number, x2: number, y2: number) {
@@ -30,21 +26,10 @@ const STEPS = 24
 
 export type Pose = { x: number; y: number; scale: number; opacity: number }
 
-/**
- * Cómo animar el muelle con GSAP:
- * - `arco`: `poses[0]` es el punto de partida y el resto son keyframes con tiempos uniformes
- *   (duración `duration / (poses.length - 1)` cada uno, ease 'none'). El easing ya va aplicado al
- *   muestrear, una sola vez sobre el progreso global.
- * - `quieto` (reduced-motion): sin vuelo ni fundido, pasa a su sitio al instante.
- */
 export type Vuelo =
   | { tipo: 'arco'; poses: Pose[]; duration: number }
   | { tipo: 'quieto'; destino: Omit<Pose, 'opacity'> }
 
-/**
- * Vuelo en curva (Bézier cuadrática from→ctrl→to) muestreado en STEPS + 1 poses con tiempos
- * uniformes, interpolación lineal entre ellas y el easing aplicado una sola vez al progreso global.
- */
 export function flightKeyframes(
   from: Pt,
   ctrl: Pt,
@@ -66,10 +51,6 @@ export function flightKeyframes(
   return { tipo: 'arco', poses, duration: ms / 1000 }
 }
 
-/**
- * Animación del muelle: de la esquina al header (y vuelta) en arco.
- * El punto de control sube 60 px → curva, nunca línea recta ni «suelo».
- */
 export function dockAnim(
   dock: Dock | null,
   from: Dock,
@@ -77,7 +58,6 @@ export function dockAnim(
 ): Vuelo {
   const to = dock || ESQUINA
   if (reduced) {
-    // Sin vuelo: pasa a su nuevo sitio al instante.
     return { tipo: 'quieto', destino: { x: to.x, y: to.y, scale: to.s } }
   }
   const a = { ...from, o: 1 }

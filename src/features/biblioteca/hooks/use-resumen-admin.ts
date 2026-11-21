@@ -11,17 +11,11 @@ import {
 } from '@/features/biblioteca/services/libros.read'
 import type { LectorLista, Libro } from '@/features/biblioteca/types/api'
 
-// Métricas del panel admin a partir de los endpoints existentes (no hay uno de resumen).
-// Todo usa las claves de queryKeys, así que las invalidaciones de libros, lectores y reservas
-// lo refrescan sin hacer nada más.
-
-/** Página grande para recorrer listas completas; la misma que usa la Home. */
 const PAGINA = 50
 
 const paginaLibros = (page: number) => ({ page, pageSize: PAGINA })
 const paginaLectores = (page: number) => ({ page, pageSize: PAGINA })
 
-/** Total de libros, para el contador del sidebar. Comparte caché con la Home y el Resumen. */
 export function useTotalLibros() {
   return useQuery({
     queryKey: queryKeys.libros.list(paginaLibros(1)),
@@ -30,7 +24,6 @@ export function useTotalLibros() {
   })
 }
 
-/** Total de lectores, para el contador del sidebar. */
 export function useTotalLectores() {
   return useQuery({
     queryKey: queryKeys.lectores.list(paginaLectores(1)),
@@ -39,7 +32,6 @@ export function useTotalLectores() {
   })
 }
 
-/** Todas las páginas de una lista: pide la primera y, con su `totalPages`, el resto. */
 function useTodosLosLibros() {
   const primera = useQuery({
     queryKey: queryKeys.libros.list(paginaLibros(1)),
@@ -108,11 +100,6 @@ export type ResumenAdmin = {
   reservasActivas: number
 }
 
-/**
- * - Libros, ejemplares y disponibles: suma de la lista de libros.
- * - Reservados: detalle de los libros con algún ejemplar no disponible (estado «Reservado»).
- * - Reservas activas: suma de `reservasActivas` del detalle de cada lector.
- */
 export function useResumenAdmin() {
   const libros = useTodosLosLibros()
   const lectores = useTodosLosLectores()
@@ -143,7 +130,7 @@ export function useResumenAdmin() {
   )
   const isError = libros.isError || lectores.isError || Boolean(consultasError)
 
-  const data: ResumenAdmin | undefined =
+  const totales: ResumenAdmin | undefined =
     isPending || isError
       ? undefined
       : {
@@ -167,7 +154,7 @@ export function useResumenAdmin() {
         }
 
   return {
-    data,
+    data: totales,
     isPending,
     isError,
     error: libros.error ?? lectores.error ?? consultasError?.error,

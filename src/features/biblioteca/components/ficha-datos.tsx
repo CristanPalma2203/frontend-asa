@@ -4,10 +4,6 @@ import { cn } from '@/lib/utils'
 
 type Item = { etiqueta: string; valor: string; mono?: boolean }
 
-/**
- * Datos del libro: ISBN y ejemplares activos siempre; páginas, año y editorial solo si el
- * backend los envía. Escritorio: una fila con divisores. Móvil: tarjetas en dos columnas.
- */
 export function FichaDatos({
   detalle,
   totalActivos,
@@ -33,7 +29,6 @@ export function FichaDatos({
         },
       ]
     : []
-  // Con más de dos datos, en móvil el ISBN ocupa la fila entera (es el más largo).
   const isbnAncho = items.length > 2
 
   return (

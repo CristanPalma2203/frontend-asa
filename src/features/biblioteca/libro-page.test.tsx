@@ -10,7 +10,6 @@ import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
 import { entrarComo } from '@/test/sesion'
 
-// staleTime de main.tsx: con él, un dato solo se vuelve a pedir si una mutación lo invalida.
 const STALE_TIME_APP = 30_000
 
 function problema(code: string) {
@@ -50,7 +49,6 @@ describe('ficha', () => {
     entrarComo('Lector')
     const api = crearApiFake([{ titulo: 'El Principito', copias: 3 }])
     server.use(...api.handlers)
-    // El catálogo queda en caché con 3 disponibles antes de reservar.
     const { router } = await renderEn('/catalogo?page=1&pageSize=12', {
       staleTime: STALE_TIME_APP,
     })
@@ -81,7 +79,6 @@ describe('ficha', () => {
     )
     expect(api.pedidos('/api/libros/1')).toHaveLength(2)
 
-    // Volver al catálogo: la lista se invalidó, así que se vuelve a pedir pese al staleTime.
     await act(() =>
       router.navigate({ to: '/catalogo', search: { page: 1, pageSize: 12 } }),
     )
@@ -110,7 +107,6 @@ describe('ficha', () => {
       ),
     )
     await renderEn('/libros/1')
-    // Mientras carga, «Reservar» ya se ve pero deshabilitado: se espera al libro.
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
@@ -123,8 +119,6 @@ describe('ficha', () => {
     const user = userEvent.setup()
     entrarComo('Lector')
     const api = crearApiFake([{ titulo: 'El Principito', copias: 1 }])
-    // La ficha dice 1 disponible, pero otra persona se la llevó: la API responde 409 sin-stock.
-    // En un mismo server.use gana el primer handler que coincide: el override va antes que la API fake.
     server.use(
       http.post('http://api.test/api/reservas', () => problema('sin-stock')),
       ...api.handlers,
@@ -144,7 +138,6 @@ describe('ficha', () => {
     await waitFor(() =>
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
     )
-    // Con el diálogo cerrado la página ya no queda aria-hidden: el mensaje es visible y accesible.
     expect(mensaje).toBeVisible()
     expect(mensaje.closest('[aria-hidden="true"]')).toBeNull()
     expect(screen.getByTestId('estado-disponibilidad')).toHaveTextContent(
@@ -169,7 +162,6 @@ describe('ficha', () => {
 
   it('el lector no ve la lista de ejemplares ni sus códigos', async () => {
     entrarComo('Lector')
-    // Sin reservas previas: el único código que vería sería el de su propia reserva.
     server.use(
       ...crearApiFake([{ titulo: 'El Principito', copias: 3 }]).handlers,
     )
@@ -200,7 +192,6 @@ describe('ficha', () => {
 
   it('ya reservado: «Tu ejemplar» con su código y enlace a Mis reservas, sin «Reservar»', async () => {
     entrarComo('Lector')
-    // handlers.ts: el lector tiene una reserva activa de El Principito con BIB-001.
     await renderEn('/libros/1')
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
 

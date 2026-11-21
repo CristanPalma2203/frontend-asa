@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-/** Respuesta de GET /api/resumen?dias=14|30 (camelCase del backend). */
 export const resumenKpisSchema = z.object({
   librosActivos: z.number().int(),
   ejemplaresActivos: z.number().int(),
@@ -8,7 +7,6 @@ export const resumenKpisSchema = z.object({
   ejemplaresReservados: z.number().int(),
   lectoresActivos: z.number().int(),
   reservasActivas: z.number().int(),
-  /** Fracción 0–1. */
   ocupacion: z.number(),
 })
 

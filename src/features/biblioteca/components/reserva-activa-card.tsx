@@ -10,10 +10,6 @@ import { useLibro } from '@/features/biblioteca/hooks/use-libros'
 import type { Reserva } from '@/features/biblioteca/types/api'
 import { formatearFecha } from '@/lib/fechas'
 
-/**
- * Reserva activa protagonista: portada, título, autor en serif itálica, badge Activa y ticket
- * del ejemplar (código + fecha de solicitud reales). En móvil el ticket va debajo de la info.
- */
 export function ReservaActivaCard({
   reserva,
   onCancelar,
@@ -62,7 +58,6 @@ export function ReservaActivaCard({
             ) : null}
           </div>
 
-          {/* Ticket: debajo de la info en móvil (columna); en sm+ sigue bajo el autor. */}
           <div className="bg-pino-950 mt-1 flex flex-col gap-2 rounded-xl p-4">
             <p className="text-[11px] font-semibold tracking-[0.12em] text-white/50 uppercase">
               Tu ejemplar

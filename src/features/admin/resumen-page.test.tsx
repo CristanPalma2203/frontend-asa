@@ -85,9 +85,7 @@ describe('admin: Resumen de la biblioteca', () => {
   it('renderiza KPIs, chart, feed y rankings con datos de /api/resumen', async () => {
     entrarComo('Admin')
     server.use(
-      http.get('*/api/resumen', () =>
-        HttpResponse.json(resumenFixture()),
-      ),
+      http.get('*/api/resumen', () => HttpResponse.json(resumenFixture())),
     )
     await renderEn('/admin')
 
@@ -114,9 +112,7 @@ describe('admin: Resumen de la biblioteca', () => {
     expect(screen.getByText('Ana Pérez')).toBeInTheDocument()
     expect(screen.getByText('El Principito')).toBeInTheDocument()
     expect(screen.getByText('Agotado')).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /Novela/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Novela/i })).toBeInTheDocument()
   })
 
   it('el toggle 14D/30D cambia la query ?dias=', async () => {
@@ -186,9 +182,7 @@ describe('admin: Resumen de la biblioteca', () => {
     const user = userEvent.setup()
     entrarComo('Admin')
     server.use(
-      http.get('*/api/resumen', () =>
-        HttpResponse.json(resumenFixture()),
-      ),
+      http.get('*/api/resumen', () => HttpResponse.json(resumenFixture())),
     )
     const { router } = await renderEn('/admin')
     const barra = await screen.findByRole('button', { name: /Novela/i })
@@ -205,13 +199,10 @@ describe('admin: Resumen de la biblioteca', () => {
   it('pointermove en una X conocida activa el día esperado', async () => {
     entrarComo('Admin')
     server.use(
-      http.get('*/api/resumen', () =>
-        HttpResponse.json(resumenFixture()),
-      ),
+      http.get('*/api/resumen', () => HttpResponse.json(resumenFixture())),
     )
     await renderEn('/admin')
     const plot = await screen.findByTestId('reservas-chart-plot')
-    // Ancho por defecto del chart cuando ResizeObserver no mide en jsdom.
     const width = 640
     const left = 40
     plot.getBoundingClientRect = () =>
@@ -230,17 +221,9 @@ describe('admin: Resumen de la biblioteca', () => {
     const n = 14
     const diaEsperado = 7
     const plotW = width - RESERVAS_PAD.l - RESERVAS_PAD.r
-    const clientX =
-      left + RESERVAS_PAD.l + (diaEsperado / (n - 1)) * plotW
+    const clientX = left + RESERVAS_PAD.l + (diaEsperado / (n - 1)) * plotW
     expect(
-      indiceDiaDesdeX(
-        clientX,
-        left,
-        width,
-        RESERVAS_PAD.l,
-        RESERVAS_PAD.r,
-        n,
-      ),
+      indiceDiaDesdeX(clientX, left, width, RESERVAS_PAD.l, RESERVAS_PAD.r, n),
     ).toBe(diaEsperado)
 
     fireEvent.pointerMove(plot, { clientX, clientY: 80 })

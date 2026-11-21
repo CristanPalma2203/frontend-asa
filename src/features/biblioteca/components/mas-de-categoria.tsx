@@ -13,10 +13,6 @@ import { useMotion } from '@/hooks/use-motion'
 import { cardsIn, lift } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-/**
- * Otros libros de la misma categoría (sin el actual, máximo 6), cada uno con enlace directo a su
- * ficha. Si no hay otros, la sección no aparece.
- */
 export function MasDeCategoria({
   categoria,
   idActual,

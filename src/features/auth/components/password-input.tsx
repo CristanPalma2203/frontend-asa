@@ -4,7 +4,6 @@ import { useState, type ComponentProps } from 'react'
 import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
-/** Input de contraseña con botón para mostrarla u ocultarla. */
 export function PasswordInput({
   className,
   ...props

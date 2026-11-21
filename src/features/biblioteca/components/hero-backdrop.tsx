@@ -14,11 +14,6 @@ import {
   loseWebGlCanvases,
 } from '@/features/biblioteca/components/hero-backdrop.webgl'
 
-// Fondo animado compartido: hero de la Home, login y pantallas de error (404 y 500).
-// Capas: wash (radiales lima) · MeshGradient (WebGL, lazy, solo en oscuro) · rejilla con celdas
-// en canvas · viñeta. Variante `celeste` (500): mismo movimiento sobre fondo celeste claro, con
-// glow y celdas celestes y sin shader (su mezcla en `screen` no se ve sobre claro). Estilos en index.css (`.hero-fx*`).
-
 const MeshGradientLazy = lazy(() =>
   import('@paper-design/shaders-react').then((mod) => ({
     default: mod.MeshGradient,
@@ -27,8 +22,6 @@ const MeshGradientLazy = lazy(() =>
 
 const SHADER_COLORS = ['#032A21', '#021912', '#C2F968', '#0A3D32', '#1E1E1E']
 const RETRASO_SHADER_MS = 800
-
-// ---- Estado del navegador como stores externos ----
 
 const consultaReducida = '(prefers-reduced-motion: reduce)'
 
@@ -54,8 +47,6 @@ function suscribirVisibilidad(avisar: () => void) {
 function pestanaVisible() {
   return document.visibilityState === 'visible'
 }
-
-// ---- Shader ----
 
 class ShaderGate extends Component<{ children?: ReactNode }, { ok: boolean }> {
   state = { ok: true }
@@ -124,14 +115,12 @@ export function HeroBackdrop({
   const live = !staticHero && visible && enPantalla
   const shaderOn = shaderListo && !staticHero && variante === 'oscuro'
 
-  // El shader entra a los 800 ms para no competir con la carga inicial.
   useEffect(() => {
     if (staticHero) return undefined
     const id = window.setTimeout(() => setShaderListo(true), RETRASO_SHADER_MS)
     return () => window.clearTimeout(id)
   }, [staticHero])
 
-  // Pausa cuando el hero sale de pantalla. El observer avisa también al empezar a observar.
   useEffect(() => {
     const node = rootRef.current
     if (!node) return undefined
@@ -168,8 +157,6 @@ export function HeroBackdrop({
   )
 }
 
-// ---- Rejilla con celdas que se encienden ----
-
 const CELL = 64
 const MAX_CELLS = 14
 const SEMILLAS_ESTATICAS = [
@@ -196,7 +183,6 @@ function HeroGrid({
 }: {
   paused: boolean
   staticCells: boolean
-  /** Color de las celdas que se encienden, «r, g, b» (lima; celeste en la 500). */
   rgbCeldas: string
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -243,7 +229,6 @@ function HeroGrid({
       ctx.setTransform(1, 0, 0, 1, 0, 0)
       cols = Math.max(1, Math.ceil(w / CELL))
       rows = Math.max(1, Math.ceil(h / CELL))
-      // Cambiar el tamaño del canvas lo borra; en modo estático hay que repintar.
       if (staticCells) drawStatic()
     }
 

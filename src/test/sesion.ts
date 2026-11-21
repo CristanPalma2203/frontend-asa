@@ -1,6 +1,5 @@
 import { useAuthStore } from '@/features/auth/store'
 
-/** Abre una sesión de prueba (el setup la cierra después de cada test). */
 export function entrarComo(rol: 'Lector' | 'Admin') {
   useAuthStore.getState().login({
     token: 'token-test',

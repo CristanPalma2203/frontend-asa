@@ -15,7 +15,6 @@ import { badgeLector } from '@/features/biblioteca/components/estado-badge.style
 import type { Lector, LectorLista } from '@/features/biblioteca/types/api'
 import { cn } from '@/lib/utils'
 
-/** Lectores del panel admin; cada fila se puede expandir para ver sus reservas activas. */
 export function LectoresTable({
   lectores,
   cargando = false,
@@ -26,7 +25,6 @@ export function LectoresTable({
   onToggle,
 }: {
   lectores: LectorLista[]
-  /** Mientras llega la consulta: cabecera real y filas con un hueco por celda. */
   cargando?: boolean
   abiertoId: number | null
   detalle: Lector | undefined

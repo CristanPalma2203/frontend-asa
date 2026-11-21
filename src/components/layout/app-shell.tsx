@@ -15,15 +15,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
-  // 404 global (notFoundComponent de la raíz): pantalla completa, sin sidebar ni LuxIA.
   const esNoEncontrada = useRouterState({
     select: (state) =>
-      // Sin ruta hija que coincida solo queda la raíz: es el 404 global.
       state.matches.every((match) => match.routeId === '__root__') ||
       state.matches.some((match) => match.status === 'notFound'),
   })
 
-  // El login es una pantalla partida; la Home va con sidebar (su panel hace de cabecera).
   if (pathname === '/login' || esNoEncontrada) return <>{children}</>
 
   return (
@@ -47,7 +44,6 @@ function LayoutConSidebar({
   const barraRef = useRef<HTMLDivElement>(null)
   const rutaRef = useRef<HTMLDivElement>(null)
 
-  // Arranque del shell, solo la primera vez.
   useMotion(asideRef, (root) =>
     reveal(root.querySelectorAll('nav [data-item-nav]'), {
       x: -12,
@@ -64,18 +60,10 @@ function LayoutConSidebar({
     }),
   )
 
-  // Transición de ruta: arriba del todo, contenedor con reveal (y 12), h1 por palabras y bloques de
-  // cabecera con y 14 (stagger 0.07, t 0.12). Sin salida.
   useMotion(
     rutaRef,
     (root) => {
-      if (typeof window.scrollTo === 'function') {
-        try {
-          window.scrollTo({ top: 0 })
-        } catch {
-          /* jsdom */
-        }
-      }
+      window.scrollTo({ top: 0 })
       reveal(root, { y: 12 })
       titleLines(root.querySelector('h1'))
       const bloques = Array.from(root.querySelectorAll('header > *')).filter(
@@ -103,22 +91,16 @@ function LayoutConSidebar({
             <Topbar enInicio={pathname === '/'} />
           )}
         </div>
-        {/* No es <main>: cada pantalla ya trae el suyo. */}
         <div ref={rutaRef} data-ruta className="flex-1 overflow-clip">
           {children}
         </div>
         <SiteFooter />
       </div>
-      {/* LuxIA (la mascota) vive en las pantallas con sidebar: nunca en el login ni el 404. */}
       {conLuxia ? <LuxiaFab /> : null}
     </div>
   )
 }
 
-/**
- * Barra superior del área de lector: buscador que lleva al catálogo y, para el admin, la pill
- * Panel/Biblioteca centrada. En el Inicio el buscador ya está en el panel: solo queda la pill.
- */
 function Topbar({ enInicio }: { enInicio: boolean }) {
   const sesion = useSesion()
   if (enInicio && !sesion.isAdmin) return null
@@ -188,7 +170,6 @@ function BuscadorGlobal({ className = 'w-[440px]' }: { className?: string }) {
   )
 }
 
-/** Barra móvil (< lg) con el sidebar como panel lateral. */
 function MobileNav() {
   const [abierto, setAbierto] = useState(false)
 

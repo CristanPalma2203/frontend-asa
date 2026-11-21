@@ -17,10 +17,6 @@ import { cn } from '@/lib/utils'
 
 type Tono = 'oscuro' | 'claro'
 
-/**
- * Estructura común de las pantallas de error: pantalla completa (sin sidebar ni LuxIA), logo
- * arriba, texto y botones a la izquierda, libro a la derecha (arriba en móvil) y pie.
- */
 function PantallaError({
   tono,
   etiqueta,
@@ -42,7 +38,6 @@ function PantallaError({
   libro: { titulo: string; subtitulo: string }
   detalle?: ReactNode
   logo: ReactNode
-  /** Cubre toda la ventana aunque se pinte dentro del layout (ficha de un libro inexistente). */
   encima?: boolean
 }) {
   const ref = useRef<HTMLElement>(null)
@@ -67,7 +62,6 @@ function PantallaError({
         encima && 'fixed inset-0 z-[1100] overflow-y-auto',
       )}
     >
-      {/* El mismo fondo animado del hero; con movimiento reducido queda estático. */}
       <HeroBackdrop variante={oscuro ? 'oscuro' : 'celeste'} />
       <div className="relative z-10 mx-auto w-full max-w-[72rem] origin-left [&>a]:origin-left [&>a]:scale-[1.15]">
         {logo}
@@ -138,7 +132,6 @@ function PantallaError({
   )
 }
 
-/** 404: ruta que no existe (y ficha de un libro inexistente, con `encima`). */
 export function PaginaNoEncontrada({ encima = false }: { encima?: boolean }) {
   return (
     <PantallaError
@@ -177,7 +170,6 @@ export function PaginaNoEncontrada({ encima = false }: { encima?: boolean }) {
   )
 }
 
-/** Cuerpo de la 500, sin depender del router (lo usa también LimiteError, fuera de él). */
 function PaginaError({
   error,
   onReintentar,
@@ -208,7 +200,6 @@ function PaginaError({
         </>
       }
       detalle={
-        // Solo en desarrollo: el usuario nunca ve el mensaje técnico ni el stack.
         import.meta.env.DEV && error instanceof Error ? (
           <details className="text-texto-3 mt-8 max-w-md text-xs">
             <summary className="cursor-pointer">Detalle técnico</summary>
@@ -224,7 +215,6 @@ function PaginaError({
 
 const claseInicio = buttonVariants({ variant: 'outline', size: 'lg' })
 
-/** 500 dentro del router (errorComponent de la raíz): reintenta reseteando y recargando la ruta. */
 export function ErrorGeneral({ error, reset }: ErrorComponentProps) {
   const router = useRouter()
   return (
@@ -245,11 +235,6 @@ export function ErrorGeneral({ error, reset }: ErrorComponentProps) {
   )
 }
 
-/**
- * Límite de errores fuera del router (lo que falle por encima de las rutas): la misma 500,
- * con enlaces normales porque aquí no hay router. «Reintentar» llama a `onReset` (por
- * defecto recarga la página) y vuelve a pintar los hijos.
- */
 export class LimiteError extends Component<
   { children: ReactNode; onReset?: () => void },
   { error: unknown }

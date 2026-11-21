@@ -8,7 +8,6 @@ import { useMotion } from '@/hooks/use-motion'
 import { cardsIn, dur, prefersReducedMotion, reveal } from '@/lib/motion'
 import { renderEn } from '@/test/render'
 
-/** Ningún elemento queda oculto ni desplazado por una animación a medias. */
 function sinRestosDeAnimacion(root: HTMLElement) {
   const conEstilo = Array.from(
     root.querySelectorAll<HTMLElement>('[style]'),
@@ -17,7 +16,6 @@ function sinRestosDeAnimacion(root: HTMLElement) {
       el.style.opacity === '0' ||
       /translate|scale|rotate/.test(el.style.transform),
   )
-  // Los huesos de boneyard arrancan en opacidad 0 por diseño (stagger); no son contenido.
   return conEstilo.filter((el) => !el.closest('[data-boneyard-overlay]'))
 }
 
@@ -124,7 +122,6 @@ describe('con movimiento', () => {
   it('CountUp termina en el valor final', async () => {
     simularMovimiento()
     render(<CountUp value={12345} duration={0.2} />)
-    // Arranca en 0 y GSAP (con su ticker real) cuenta hasta el valor.
     expect(screen.getByText('0')).toBeInTheDocument()
     expect(
       await screen.findByText('12.345', {}, { timeout: 2000 }),

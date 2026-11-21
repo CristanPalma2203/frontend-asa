@@ -12,7 +12,6 @@ export function listarLibros(params: ListarLibrosParams) {
     pageSize: String(params.pageSize),
   })
 
-  // GET /api/libros?search=&autor=&categoria=&page=&pageSize=
   if (params.buscar) query.set('search', params.buscar)
   if (params.autor) query.set('autor', params.autor)
   if (params.categoria) query.set('categoria', params.categoria)

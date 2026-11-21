@@ -13,10 +13,6 @@ import { cn } from '@/lib/utils'
 const claseChip =
   'focus-visible:shadow-foco flex h-[42px] flex-none cursor-pointer items-center gap-2 rounded-full border px-4 text-sm font-medium whitespace-nowrap transition-colors outline-none'
 
-/**
- * Chips de categoría con su contador («Todos 24», «Novela 6»…). Los conteos salen de la muestra
- * del catálogo (la misma consulta de la Home). En móvil hacen scroll horizontal.
- */
 export function ChipsCategorias({
   total,
   categorias,
@@ -84,10 +80,6 @@ export function ChipsCategorias({
   )
 }
 
-/**
- * Barra del catálogo: búsqueda, chips rápidos «Disponibles»/«Agotados», total de libros y
- * «Ordenar». Todo vive en la URL; la búsqueda la escribe con espera (la pantalla).
- */
 export function BarraCatalogo({
   texto,
   onTexto,

@@ -1,4 +1,3 @@
-/** Textos de LuxIA en español (sin i18n). */
 export const textos = {
   open: 'Abrir chat con LuxIA',
   close: 'Cerrar chat',
@@ -16,6 +15,6 @@ export const textos = {
   chips: [
     '¿Hay libros de Tolkien?',
     '¿Cuántos ejemplares quedan de Dune?',
-    '¿Cómo reservo El Principito?',
+    '¿Qué libros hay disponibles?',
   ],
 } as const

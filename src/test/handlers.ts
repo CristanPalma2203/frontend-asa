@@ -66,7 +66,6 @@ export const handlers = [
       { status: 201 },
     ),
   ),
-  // Lista de lectores vacía por defecto (Resumen y contador del sidebar de admin).
   http.get(`${base}/api/lectores`, () => HttpResponse.json(pagina([]))),
   http.get(`${base}/api/lectores/:id/reservas`, () =>
     HttpResponse.json(

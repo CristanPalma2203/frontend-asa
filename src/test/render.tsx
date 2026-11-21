@@ -9,11 +9,6 @@ import { render } from '@testing-library/react'
 import { Toaster } from '@/components/ui/sonner'
 import { routeTree } from '@/routeTree.gen'
 
-/**
- * Renderiza la app completa (router + Query + Toaster, como main.tsx) en `path`.
- * `staleTime`: por defecto 0; pásale 30_000 (el de main.tsx) en los tests de invalidación, así un
- * dato solo se recarga si se invalida y no por estar viejo.
- */
 export async function renderEn(
   path: string,
   opciones: { staleTime?: number } = {},

@@ -46,7 +46,6 @@ describe('pill Panel / Biblioteca', () => {
         'Estás viendo la biblioteca como un lector, sin reservas.',
       ),
     ).toBeInTheDocument()
-    // Sin reservas en la vista Biblioteca del admin.
     expect(
       within(navBiblioteca).queryByRole('link', { name: /Mis reservas/ }),
     ).toBeNull()

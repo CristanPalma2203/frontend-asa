@@ -1,6 +1,5 @@
 import { z } from 'zod'
 
-/** Search params de las listas paginadas (catálogo y listados de admin). */
 export const catalogoSearchSchema = z.object({
   buscar: z
     .string()
@@ -25,12 +24,10 @@ export const catalogoSearchSchema = z.object({
     .transform((value) => (value ? value : undefined)),
   page: z.coerce.number().int().min(1).catch(1),
   pageSize: z.coerce.number().int().min(1).max(50).catch(12),
-  /** Chip rápido. La API no lo filtra: se aplica en el cliente sobre la página actual. */
   disponibilidad: z
     .enum(['disponibles', 'agotados'])
     .optional()
     .catch(undefined),
-  /** Orden. La API no ordena: se aplica en el cliente sobre la página actual. */
   orden: z.enum(['titulo', 'autor', 'disponibles']).optional().catch(undefined),
 })
 

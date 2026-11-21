@@ -5,10 +5,6 @@ import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { StockBadge } from '@/features/biblioteca/components/stock-badge'
 import type { Libro } from '@/features/biblioteca/types/api'
 
-/**
- * Tarjeta del catálogo. Toda la tarjeta lleva a la ficha: el enlace del título se estira encima
- * (un solo elemento enfocable; el foco se ve en la tarjeta entera).
- */
 export function LibroCard({ libro }: { libro: Libro }) {
   return (
     <article
@@ -42,10 +38,6 @@ export function LibroCard({ libro }: { libro: Libro }) {
   )
 }
 
-/**
- * Tarjeta mientras llega la consulta: misma forma que LibroCard; el shimmer solo está en los
- * huecos de los datos (portada, categoría, título en 2 líneas, autor al 60 % y badge).
- */
 export function LibroCardFantasma() {
   return (
     <article

@@ -47,16 +47,10 @@ import { cn } from '@/lib/utils'
 
 import '@/features/luxia/luxia-chat.css'
 
-/** Posición del muelle: `to` = destino actual (null = esquina) y `from` = de dónde sale el vuelo. */
 type Muelle = { from: Dock; to: Dock | null }
 
 gsap.registerPlugin(useGSAP)
 
-/**
- * LuxIA: panel propio, avatar flotante que vuela al header y
- * consulta por reglas sobre /api/libros (sin LLM, sin reservas). Está siempre visible mientras
- * esté montada (aquí no hay hero que la oculte).
- */
 export function LuxiaFab() {
   const queryClient = useQueryClient()
   const reduced = usePrefersReducedMotion()
@@ -70,15 +64,12 @@ export function LuxiaFab() {
   const [error, setError] = useState(false)
   const shown = true
 
-  // ---- Aparición: Rive (aparecer/desaparecer) si el .riv los trae; si no, fundido CSS.
-  // Sin Rive usable (tests, reduced-motion, sin canvas) el modo CSS se deriva en el render.
   const [riveUsable] = useState(() => !reduced && canUseRive())
   const [riveAppear, setRiveAppear] = useState<boolean | null>(null)
   const [waited, setWaited] = useState(false)
   const onAvatarReady = useCallback(
     (has: boolean) => {
       setRiveAppear(has)
-      // Al llegar a su esquina: saludo breve (gesto=4, mano=16) y luego reposo.
       setMood('greet')
     },
     [setMood],
@@ -112,8 +103,6 @@ export function LuxiaFab() {
   const dockRef = useRef<HTMLDivElement>(null)
   const primerVuelo = useRef(true)
 
-  // El panel sigue montado mientras sale: se desmonta en el onComplete de su tween de salida.
-  // Al abrir se monta; se deriva del store durante el render, no en un efecto.
   const [panelMontado, setPanelMontado] = useState(open)
   const [abiertoPrevio, setAbiertoPrevio] = useState(open)
   if (open !== abiertoPrevio) {
@@ -121,15 +110,10 @@ export function LuxiaFab() {
     if (open) setPanelMontado(true)
   }
 
-  // El origen del vuelo viaja en el mismo estado que el destino (no en un ref leído en el render): cada cambio de muelle guarda de dónde sale.
   const [muelle, setMuelle] = useState<Muelle>({ from: ESQUINA, to: null })
   const dock = muelle.to
   const dockKey = claveDock(dock ?? ESQUINA)
 
-  /**
-   * Destino del muelle = centro del hueco del header, medido con offsetLeft/offsetTop (layout
-   * final, sin el translateY de entrada del panel ni el transform del vuelo).
-   */
   const measureDock = useCallback(() => {
     const slot = slotRef.current
     const anchor = anchorRef.current
@@ -143,7 +127,6 @@ export function LuxiaFab() {
       el;
       el = el.offsetParent as HTMLElement | null
     ) {
-      // offsetLeft/Top de los hijos se miden desde el borde interior: suma el borde del panel.
       sx += el.offsetLeft + el.clientLeft
       sy += el.offsetTop + el.clientTop
       if (el === panel) break
@@ -153,7 +136,6 @@ export function LuxiaFab() {
       y: sy - (flyer.offsetTop + anchor.offsetTop + anchor.offsetHeight / 2),
       s: slot.offsetWidth / anchor.offsetWidth,
     }
-    // Evita re-vuelos por diferencias subpíxel.
     setMuelle((m) =>
       m.to &&
       Math.abs(m.to.x - next.x) < 0.5 &&
@@ -164,8 +146,6 @@ export function LuxiaFab() {
     )
   }, [])
 
-  // Se mide cuando el panel entra en el DOM, no con setState en un useLayoutEffect
-  // (ref callback: el layout ya está calculado) y luego con ResizeObserver y resize de ventana.
   const panelRef = useCallback(
     (node: HTMLElement | null) => {
       panelCleanup.current?.()
@@ -189,15 +169,12 @@ export function LuxiaFab() {
 
   const kbOpen = useVisualViewportVars(open, rootRef, measureDock)
 
-  // Abrir y cerrar llegan por el store (mascota flotante, Escape o un enlace del chat). La
-  // reacción va en el listener del store, no en un efecto que mire `open`.
   useEffect(
     () =>
       useLuxiaStore.subscribe((s, prev) => {
         if (s.abierto && !prev.abierto) setMood('greet')
         if (!s.abierto && prev.abierto) {
           setClosing(true)
-          // El foco vuelve al botón que lo abrió (o al de LuxIA) sin esperar a que el panel salga.
           const destino = s.opener?.isConnected ? s.opener : btnRef.current
           window.setTimeout(() => destino?.focus(), 0)
         }
@@ -216,11 +193,8 @@ export function LuxiaFab() {
     if (el) el.scrollTop = el.scrollHeight
   }, [msgs, busy, open])
 
-  // Una sola sugerencia, debajo de la última respuesta de LuxIA (nunca mientras responde).
   const sugerencia = elegirSugerencia(msgs, busy)
 
-  // Entrada de lo nuevo (no del historial al abrir): el último mensaje, el indicador de
-  // «escribiendo» y el chip con un pequeño retraso. Con movimiento reducido, al instante.
   const [baseHistorial] = useState(msgs.length)
   useMotion(
     listRef,
@@ -234,15 +208,12 @@ export function LuxiaFab() {
     [msgs.length, busy, sugerencia, open],
   )
 
-  /** Panel ya desvanecido → ahora sí LuxIA vuelve a su esquina y queda en reposo. */
   const onPanelExited = useCallback(() => {
     setClosing(false)
     setMuelle((m) => ({ from: m.to ?? ESQUINA, to: null }))
     setMood('idle')
   }, [setMood])
 
-  // Entrada y salida del panel (mismos valores que antes: entra 0.28 s ease-out desde y 12,
-  // sale 0.25 s ease-in hacia y 8). Con reduced-motion, sin desplazamiento y sin duración.
   useGSAP(
     () => {
       const panel = panelElRef.current
@@ -270,14 +241,11 @@ export function LuxiaFab() {
     { scope: rootRef, dependencies: [open, panelMontado, reduced] },
   )
 
-  // Vuelo del muelle entre la esquina y el hueco del header: arco muestreado en vuelo.ts
-  // (750 ms, la curva ya lleva el easing; cada tramo es lineal). El primer render solo coloca.
   useGSAP(
     () => {
       const el = dockRef.current
       if (!el) return
       const vuelo = dockAnim(muelle.to, muelle.from, reduced)
-      // En la esquina el muelle no lleva transform: al llegar se limpia el estilo en línea.
       const alaEsquina = muelle.to === null
       gsap.killTweensOf(el)
       if (primerVuelo.current) {
@@ -291,14 +259,12 @@ export function LuxiaFab() {
         return
       }
       if (vuelo.tipo === 'quieto') {
-        // Movimiento reducido: el muelle cambia de sitio al instante, sin vuelo ni fundido.
         if (alaEsquina) gsap.set(el, { clearProps: 'transform,opacity' })
         else gsap.set(el, { ...vuelo.destino, opacity: 1 })
         return
       }
       const [inicio, ...resto] = vuelo.poses
       const tramo = vuelo.duration / resto.length
-      // Mientras vuela, el botón no recibe clics (luxia-chat.css, [data-volando]).
       const flyer = el.closest<HTMLElement>('.luxia-fab__flyer')
       gsap.set(el, { ...inicio })
       gsap.to(el, {
@@ -310,7 +276,6 @@ export function LuxiaFab() {
           duration: tramo,
           ease: 'none',
         })),
-        // clearProps solo si hay algo que limpiar: GSAP falla con undefined («reading 'split'»).
         ...(alaEsquina && { clearProps: 'transform,opacity' }),
       })
     },
@@ -326,7 +291,6 @@ export function LuxiaFab() {
     [queryClient],
   )
 
-  /** Categorías existentes: las de la misma muestra del catálogo que usa la Home (en caché). */
   const categorias = useCallback(
     async () =>
       resumirHome(
@@ -340,7 +304,6 @@ export function LuxiaFab() {
     [queryClient],
   )
 
-  /** `base` = conversación previa (en reintento, sin el último mensaje fallido para no duplicarlo). */
   const send = async (preset?: string, base: ChatMsg[] = msgs) => {
     const text = (preset ?? draft).trim().slice(0, MAX_MESSAGE)
     if (!text || busy) return
@@ -350,7 +313,7 @@ export function LuxiaFab() {
     setBusy(true)
     setMood('thinking')
     try {
-      const reply = await consultarLuxia(text, buscar, categorias)
+      const reply = await consultarLuxia(text, buscar, categorias, base)
       setMsgs((m) => [...m, reply])
       setMood('talking')
     } catch {
@@ -400,7 +363,6 @@ export function LuxiaFab() {
           aria-labelledby="luxia-chat-title"
         >
           <header className="luxia-chat__head">
-            {/* Hueco donde aterriza (flotando) la LuxIA del botón; no es una copia. */}
             <div
               className="luxia-chat__slot"
               ref={slotRef}
@@ -562,7 +524,6 @@ export function LuxiaFab() {
         </section>
       )}
 
-      {/* Siempre montada (un solo canvas): Rive recibe aparecer/desaparecer sin perder estado. */}
       <div
         className={`luxia-fab__flyer is-appear-${appearMode} ${shown ? 'is-shown' : 'is-hidden'}`}
         data-testid="luxia-flyer"

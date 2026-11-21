@@ -45,10 +45,6 @@ export function useCrearEjemplar(
   })
 }
 
-/**
- * Crear un ejemplar o cambiar su estado cambia "disponibles" del libro. Invalida la lista de
- * ejemplares, el detalle del libro (ficha y admin) y todas las listas de libros (catálogo y admin).
- */
 async function invalidarDisponibilidad(
   queryClient: QueryClient,
   idLibro: number,
@@ -64,10 +60,6 @@ async function invalidarDisponibilidad(
   ])
 }
 
-/**
- * Edita el código de inventario (PUT /api/ejemplares/{id}) con el rowVersion de la fila. Si otro
- * usuario lo cambió antes (`conflicto-concurrencia`), recarga la lista para tomar el rowVersion nuevo.
- */
 export function useEditarEjemplar(
   idLibro: number,
   opciones: { onSuccess?: () => void; onError?: (error: Error) => void } = {},
@@ -98,7 +90,6 @@ export function useEditarEjemplar(
   })
 }
 
-/** Desactiva un ejemplar (DELETE /api/ejemplares/{id}); cambia los disponibles del libro. */
 export function useDesactivarEjemplar(
   idLibro: number,
   opciones: { onSuccess?: () => void } = {},
@@ -118,10 +109,6 @@ export type CambioEstadoEjemplar = EjemplarLista & {
   siguiente: EstadoEjemplarEditable
 }
 
-/**
- * Cambia el estado con concurrencia optimista (rowVersion). Si otro usuario lo cambió antes
- * (`conflicto-concurrencia`), avisa con `onConflicto` y recarga la lista para tomar el rowVersion nuevo.
- */
 export function useCambiarEstadoEjemplar(
   idLibro: number,
   opciones: { onConflicto?: () => void } = {},

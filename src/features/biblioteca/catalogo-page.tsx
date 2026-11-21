@@ -29,7 +29,6 @@ export function CatalogoPage() {
   const [texto, setTexto] = useState(search.buscar ?? '')
   const [textoUrl, setTextoUrl] = useState(search.buscar)
 
-  // Si la URL cambia desde fuera (atrás/adelante, buscador del Home), el input la sigue.
   if (search.buscar !== textoUrl) {
     setTextoUrl(search.buscar)
     setTexto(search.buscar ?? '')
@@ -42,10 +41,8 @@ export function CatalogoPage() {
     autor: search.autor,
     categoria: search.categoria,
   })
-  // Muestra del catálogo (misma consulta que la Home): categorías con su conteo y total.
   const resumen = useResumenHome()
 
-  /** Cambia filtros en la URL; cualquier filtro nuevo vuelve a la página 1. */
   function irCon(cambios: Partial<CatalogoSearch>, reemplazar = false) {
     const siguiente: CatalogoSearch = { ...search, ...cambios, page: 1 }
     for (const clave of Object.keys(siguiente) as (keyof CatalogoSearch)[])
@@ -53,7 +50,6 @@ export function CatalogoPage() {
     void navigate({ replace: reemplazar, search: siguiente })
   }
 
-  // Lo escrito pasa a la URL con 300 ms de espera; la URL es la que dispara la consulta.
   useEffect(() => {
     const timer = window.setTimeout(() => {
       const buscar = texto.trim() || undefined
@@ -66,18 +62,15 @@ export function CatalogoPage() {
   }, [texto, navigate, search])
 
   const recibidos = libros.data?.items ?? []
-  // Disponibilidad y orden: la API no los soporta, se aplican sobre esta página.
   const items = aplicarVistaCatalogo(recibidos, {
     disponibilidad: search.disponibilidad,
     orden: search.orden,
   })
   const gridRef = useRef<HTMLUListElement>(null)
-  // Clave de los resultados: cada búsqueda, filtro, orden o página nueva vuelve a hacer cardsIn.
   const claveResultados = libros.isSuccess
     ? items.map((l) => l.idLibro).join(',') + `|${search.page}`
     : ''
 
-  // Tarjetas: cardsIn (stagger 0.05) y [data-lift] al pasar el puntero.
   useMotion(
     gridRef,
     (root) => {

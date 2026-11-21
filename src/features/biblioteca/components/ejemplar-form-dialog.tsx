@@ -19,7 +19,6 @@ import {
 } from '@/features/biblioteca/schemas/ejemplar.schema'
 import { ApiError } from '@/lib/api/client'
 
-/** Alta de un ejemplar. Muestra en el campo `codigo-inventario-duplicado` y los errores de validación. */
 export function EjemplarFormDialog({
   idLibro,
   abierto,

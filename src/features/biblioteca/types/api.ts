@@ -31,7 +31,6 @@ export type LibroDetalle = {
   estado: EstadoLibro
   disponibles: number
   ejemplares: Ejemplar[]
-  /** Aún no los envía el backend: la ficha oculta su sección mientras no lleguen. */
   sinopsis?: string | null
   paginas?: number | null
   anioPublicacion?: number | null
@@ -93,12 +92,9 @@ export type ProblemDetails = {
   errors?: Record<string, string[]>
 }
 
-// ---- Parámetros de consulta y cuerpos de request ----
-
 export type ListarLibrosParams = {
   page: number
   pageSize: number
-  /** Texto libre (título, autor o ISBN). Se envía a la API como `search`. */
   buscar?: string
   autor?: string
   categoria?: string

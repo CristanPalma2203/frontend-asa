@@ -6,7 +6,6 @@ import * as React from 'react'
 import { dialogoEntra, dialogoSale, dur } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-/** `open` del Dialog para que DialogContent sepa cuándo entrar y cuándo salir (GSAP). */
 const AbiertoContext = React.createContext(false)
 
 function Dialog({
@@ -54,12 +53,6 @@ function DialogOverlay({
   )
 }
 
-/**
- * Contenido del diálogo con entrada y salida animadas (lib/motion.ts): entra con
- * {opacity 0, y −14, scale 0.97} → 0.38 s back.out(1.6) y sale {opacity 0, y −8} 0.16 s power2.in.
- * Para que la salida se vea, el contenido sigue montado (forceMount) hasta que termina el tween;
- * el desmontaje va en su onComplete, no en un efecto.
- */
 function DialogContent({
   className,
   children,
@@ -71,7 +64,6 @@ function DialogContent({
   const contentRef = React.useRef<HTMLDivElement>(null)
   const overlayRef = React.useRef<HTMLDivElement>(null)
 
-  // Estado derivado del prop durante el render (no en un efecto): al abrir, se monta.
   if (open !== abiertoPrevio) {
     setAbiertoPrevio(open)
     if (open) setMontado(true)
@@ -112,7 +104,6 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           'border-linea bg-card shadow-flotante fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 rounded-[28px] border p-7',
-          // Mientras sale ya no recibe clics.
           !open && 'pointer-events-none',
           className,
         )}

@@ -16,10 +16,6 @@ import { cn } from '@/lib/utils'
 
 const catalogoInicial = { page: 1, pageSize: 12 } as const
 
-/**
- * Panel superior del Home: fondo animado (HeroBackdrop), saludo, título, buscador flotante y
- * «Recomendados», cuyas portadas sobresalen del borde inferior del panel.
- */
 export function HomeHero({
   resumen,
   cargando,
@@ -29,10 +25,8 @@ export function HomeHero({
 }) {
   const sesion = useSesion()
   const ref = useRef<HTMLElement>(null)
-  // Primer nombre (o la parte local del correo). Sin sesión, `nombre` es null.
   const nombre = sesion.visible ? sesion.nombre?.split(/[\s@]/)[0] : undefined
 
-  // Entrada: saludo, título por palabras y buscador (una vez por montaje).
   useMotion(ref, (root) => {
     reveal(root.querySelectorAll('[data-m="bloque"]'), {
       y: 14,
@@ -44,13 +38,11 @@ export function HomeHero({
 
   return (
     <section ref={ref} className="relative mt-3 lg:mt-6">
-      {/* El panel termina antes que el contenido: las portadas sobresalen por abajo. */}
       <div className="bg-bosque absolute inset-x-0 top-0 bottom-[96px] overflow-hidden rounded-[28px] lg:bottom-[150px] lg:rounded-[32px]">
         <HeroBackdrop />
       </div>
 
       <div className="relative flex flex-col px-5 pt-7 lg:px-12">
-        {/* Saludo solo con sesión y nombre: si no, el título ocupa su lugar. */}
         {nombre ? (
           <p
             data-m="bloque"
@@ -93,7 +85,6 @@ export function HomeHero({
   )
 }
 
-/** Barra blanca flotante: categoría, texto y «Buscar». Lleva al catálogo con los filtros en la URL. */
 function BuscadorHome({ categorias }: { categorias: string[] }) {
   const navigate = useNavigate()
   const [texto, setTexto] = useState('')
@@ -167,18 +158,10 @@ function BuscadorHome({ categorias }: { categorias: string[] }) {
   )
 }
 
-/** Ancho mínimo de cada portada en la grilla (≥ sm) y separación entre columnas. */
 const MIN_PORTADA = 160
 const GAP = 24
-/** Libros en la fila con scroll de móvil (< sm). */
 const EN_MOVIL = 6
 
-/**
- * Recomendados (primero los que tienen stock). Móvil: fila con scroll y snap. Desde sm: grilla
- * auto-fill (mín. 160 px) y solo los que caben en una fila: se mide el ancho con un
- * ResizeObserver en vez de esconder la segunda fila con CSS, que dejaría enlaces ocultos pero
- * enfocables.
- */
 function Recomendados({
   libros,
   cargando,
@@ -218,8 +201,6 @@ function Recomendados({
   if (!cargando && lista.length === 0) return null
 
   const claseLista =
-    // Móvil: scroll horizontal; overflow-y-hidden + margen interno para que la entrada (cardsIn) no
-    // saque barra vertical ni recorte sombras. Desde sm: grilla auto-fill sin scroll.
     'tira-sin-barra -mx-5 mt-1 flex snap-x gap-4 overflow-x-auto overflow-y-hidden px-5 pt-4 pb-6 sm:mx-0 sm:mt-5 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-6 sm:overflow-visible sm:p-0'
 
   if (cargando) {

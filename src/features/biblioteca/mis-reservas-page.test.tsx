@@ -51,7 +51,6 @@ describe('mis reservas', () => {
     const activa = await screen.findByRole('region', {
       name: 'Reservas activas',
     })
-    // 14:00Z = 8:00 en America/El_Salvador (UTC-6)
     expect(
       within(activa).getByText(/Solicitud 20 nov 2026.*8:00/),
     ).toBeInTheDocument()
@@ -83,7 +82,6 @@ describe('mis reservas', () => {
     expect(
       await screen.findByText('Solo se puede cancelar una reserva activa.'),
     ).toBeInTheDocument()
-    // El diálogo sigue abierto (aria-hidden en el main); la reserva vuelve por rollback.
     expect(
       await screen.findByRole('region', {
         name: 'Reservas activas',
@@ -230,9 +228,7 @@ describe('mis reservas', () => {
     expect(
       await screen.findByRole('region', { name: 'Reservas activas' }),
     ).toBeInTheDocument()
-    await user.click(
-      await screen.findByRole('tab', { name: 'Canceladas' }),
-    )
+    await user.click(await screen.findByRole('tab', { name: 'Canceladas' }))
     const historial = await screen.findByRole('region', { name: 'Historial' })
     const fila = (
       await within(historial).findByRole('heading', { name: 'Emma' })
@@ -246,7 +242,6 @@ describe('mis reservas', () => {
     expect(
       within(fila).getByRole('link', { name: 'Ver libro: Emma' }),
     ).toHaveAttribute('href', '/libros/2')
-    // Ticket oscuro solo en la activa protagonista.
     const activa = screen.getByRole('region', { name: 'Reservas activas' })
     expect(within(activa).getByText('Tu ejemplar')).toBeInTheDocument()
   })
