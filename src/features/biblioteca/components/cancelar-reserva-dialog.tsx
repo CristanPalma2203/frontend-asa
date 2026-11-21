@@ -30,11 +30,16 @@ export function CancelarReservaDialog({
         <DialogHeader>
           <DialogTitle>Cancelar reserva</DialogTitle>
           <DialogDescription>
-            Se libera {reserva?.titulo} ({reserva?.codigoInventario}).
+            Se libera <span className="text-tinta font-semibold">{reserva?.titulo}</span> (
+            <span className="font-mono text-[13px]">{reserva?.codigoInventario}</span>) para otros
+            lectores.
           </DialogDescription>
         </DialogHeader>
         {error instanceof ApiError ? (
-          <p className="text-sm text-destructive">
+          <p
+            role="alert"
+            className="border-rojo-600/20 bg-rojo-50 text-rojo-800 rounded-xl border px-4 py-3 text-sm font-medium"
+          >
             {mensajeDeError(error.code, error.detail || error.title)}
           </p>
         ) : null}
@@ -44,6 +49,7 @@ export function CancelarReservaDialog({
           </Button>
           <Button
             type="button"
+            variant="destructive"
             disabled={pending || !reserva}
             onClick={() => {
               if (!reserva) return

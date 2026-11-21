@@ -1,17 +1,31 @@
-import { getRouteApi } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
+import { ArrowLeft, Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
+import { EncabezadoPagina } from '@/components/layout/encabezado-pagina'
 import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Hueso } from '@/components/ui/hueso'
 import { EjemplarFormDialog } from '@/features/biblioteca/components/ejemplar-form-dialog'
 import { EjemplaresAdminTable } from '@/features/biblioteca/components/ejemplares-admin-table'
+import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
+import { EstadoBadge } from '@/features/biblioteca/components/estado-badge'
+import { badgeLibro } from '@/features/biblioteca/components/estado-badge.styles'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import {
   useCambiarEstadoEjemplar,
   useEjemplares,
 } from '@/features/biblioteca/hooks/use-ejemplares'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
+import type { EjemplarLista } from '@/features/biblioteca/types/api'
 import { ApiError } from '@/lib/api/client'
 
 const Route = getRouteApi('/admin/libros/$idLibro')
@@ -22,23 +36,43 @@ export function LibroAdminPage() {
   const libro = useLibro(id)
   const ejemplares = useEjemplares(id)
   const [abierto, setAbierto] = useState(false)
+  const [aInactivar, setAInactivar] = useState<EjemplarLista | null>(null)
   const estado = useCambiarEstadoEjemplar(id, {
     onConflicto: () => toast.error('Otro usuario cambió este ejemplar'),
   })
 
+  // Mientras carga: cabecera y tabla ya pintadas, huecos en el título, los datos y las filas.
   if (libro.isPending || ejemplares.isPending) {
-    return <Skeleton className="h-64 rounded-2xl border-2 border-tinta" />
+    return (
+      <main aria-busy aria-label="Cargando libro" className="flex flex-col gap-6 pt-2">
+        <Link
+          to="/admin/libros"
+          search={{ page: 1, pageSize: 12 }}
+          className="text-texto-3 hover:text-tinta inline-flex items-center gap-1.5 self-start text-sm font-medium transition-colors"
+        >
+          <ArrowLeft aria-hidden className="size-4" strokeWidth={2.2} />
+          Libros
+        </Link>
+        <div className="flex flex-col gap-3">
+          <Hueso cargando ancho={96} alto={11} />
+          <Hueso cargando ancho="min(420px,80%)" alto={40} radio={6} />
+          <Hueso cargando ancho={260} alto={16} />
+        </div>
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl">Ejemplares</h2>
+          <EjemplaresAdminTable ejemplares={[]} cargando deshabilitado onCambiarEstado={() => undefined} />
+        </section>
+      </main>
+    )
   }
   if (libro.isError || ejemplares.isError) {
-    const error = libro.error ?? ejemplares.error
     return (
-      <section className="rounded-2xl border-2 border-tinta bg-white p-6 shadow-cartoon">
-        <p className="text-sm">
-          {error instanceof ApiError ? mensajeDeError(error.code, error.detail || error.title) : 'Error de red.'}
-        </p>
-        <Button type="button" className="mt-3" onClick={() => void Promise.all([libro.refetch(), ejemplares.refetch()])}>
-          Reintentar
-        </Button>
+      <section className="bg-card border-linea shadow-card mt-2 rounded-xl border p-8">
+        <h1 className="text-xl">No se pudo cargar el libro</h1>
+        <ErrorReintentar
+          error={libro.error ?? ejemplares.error}
+          onRetry={() => void Promise.all([libro.refetch(), ejemplares.refetch()])}
+        />
       </section>
     )
   }
@@ -46,37 +80,106 @@ export function LibroAdminPage() {
   const detalle = libro.data
   const filas = ejemplares.data ?? []
 
+  function cambiarEstado(item: EjemplarLista) {
+    estado.mutate({
+      ...item,
+      siguiente: item.estado === 'Inactivo' ? 'Disponible' : 'Inactivo',
+    })
+  }
+
   return (
-    <section className="rounded-2xl border-2 border-tinta bg-white p-4 shadow-cartoon">
-      <h1 className="font-display text-3xl text-verde">{detalle.titulo}</h1>
-      <p className="mt-1 text-sm">
-        {detalle.autor} · {detalle.isbn} · {detalle.categoria} · {detalle.estado}
-      </p>
-      <div className="mt-4 flex items-center justify-between">
-        <h2 className="font-display text-2xl text-verde">Ejemplares</h2>
-        <Button type="button" onClick={() => setAbierto(true)}>
-          Agregar
-        </Button>
-      </div>
-      {filas.length === 0 ? <p className="mt-4 text-sm">Este libro no tiene ejemplares.</p> : null}
-      {filas.length > 0 ? (
-        <EjemplaresAdminTable
-          ejemplares={filas}
-          deshabilitado={estado.isPending}
-          onCambiarEstado={(item) =>
-            estado.mutate({
-              ...item,
-              siguiente: item.estado === 'Inactivo' ? 'Disponible' : 'Inactivo',
-            })
-          }
-        />
-      ) : null}
-      {estado.error instanceof ApiError && estado.error.code !== 'conflicto-concurrencia' ? (
-        <p className="mt-3 text-sm text-destructive">
-          {mensajeDeError(estado.error.code, estado.error.detail || estado.error.title)}
-        </p>
-      ) : null}
+    <main className="flex flex-col gap-6 pt-2">
+      <Link
+        to="/admin/libros"
+        search={{ page: 1, pageSize: 12 }}
+        className="text-texto-3 hover:text-tinta inline-flex items-center gap-1.5 self-start text-sm font-medium transition-colors"
+      >
+        <ArrowLeft aria-hidden className="size-4" strokeWidth={2.2} />
+        Libros
+      </Link>
+
+      <EncabezadoPagina
+        eyebrow={detalle.categoria}
+        titulo={detalle.titulo}
+        detalle={
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <span>{detalle.autor}</span>
+            <span aria-hidden className="text-separador">
+              ·
+            </span>
+            <span className="font-mono text-[13px]">{detalle.isbn}</span>
+            <EstadoBadge estilo={badgeLibro[detalle.estado]} />
+          </span>
+        }
+        accion={
+          <Button type="button" onClick={() => setAbierto(true)}>
+            <Plus aria-hidden />
+            Agregar ejemplar
+          </Button>
+        }
+      />
+
+      <section aria-labelledby="ejemplares-titulo" className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between">
+          <h2 id="ejemplares-titulo" className="text-xl">
+            Ejemplares
+          </h2>
+          <p className="text-texto-3 font-mono text-[13px]">
+            {detalle.disponibles} de {filas.length} disponibles
+          </p>
+        </div>
+        {filas.length === 0 ? (
+          <p className="bg-card border-linea text-texto-3 rounded-xl border px-6 py-10 text-center text-[15px]">
+            Este libro no tiene ejemplares.
+          </p>
+        ) : (
+          <EjemplaresAdminTable
+            ejemplares={filas}
+            deshabilitado={estado.isPending}
+            onCambiarEstado={(item) =>
+              item.estado === 'Inactivo' ? cambiarEstado(item) : setAInactivar(item)
+            }
+          />
+        )}
+        {estado.error instanceof ApiError && estado.error.code !== 'conflicto-concurrencia' ? (
+          <p
+            role="alert"
+            className="border-rojo-600/20 bg-rojo-50 text-rojo-800 rounded-xl border px-4 py-3 text-sm font-medium"
+          >
+            {mensajeDeError(estado.error.code, estado.error.detail || estado.error.title)}
+          </p>
+        ) : null}
+      </section>
+
       <EjemplarFormDialog idLibro={id} abierto={abierto} onOpenChange={setAbierto} />
-    </section>
+
+      <Dialog open={aInactivar !== null} onOpenChange={(open) => !open && setAInactivar(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Inactivar ejemplar</DialogTitle>
+            <DialogDescription>
+              <span className="font-mono text-[13px]">{aInactivar?.codigoInventario}</span> dejará
+              de estar disponible para reservar.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setAInactivar(null)}>
+              Volver
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={!aInactivar || estado.isPending}
+              onClick={() => {
+                if (aInactivar) cambiarEstado(aInactivar)
+                setAInactivar(null)
+              }}
+            >
+              Inactivar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </main>
   )
 }

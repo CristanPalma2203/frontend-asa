@@ -1,9 +1,9 @@
 import { getRouteApi } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { BuscadorLista, EncabezadoPagina } from '@/components/layout/encabezado-pagina'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import { LectorFormDialog } from '@/features/biblioteca/components/lector-form-dialog'
 import { LectoresTable } from '@/features/biblioteca/components/lectores-table'
@@ -46,28 +46,39 @@ export function LectoresAdminPage() {
   const items = lectores.data?.items ?? []
 
   return (
-    <section className="rounded-2xl border-2 border-tinta bg-white p-4 shadow-cartoon">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="font-display text-3xl text-verde">Lectores</h1>
-        <Button type="button" onClick={() => setModo('crear')}>
-          Crear lector
-        </Button>
-      </div>
-      <Input
+    <main className="flex flex-col gap-6 pt-2">
+      <EncabezadoPagina
+        eyebrow="Gestión"
+        titulo="Lectores"
+        serif="registrados"
+        detalle={lectores.isSuccess ? `${lectores.data.totalCount} lectores` : null}
+        accion={
+          <Button type="button" onClick={() => setModo('crear')}>
+            <Plus aria-hidden />
+            Crear lector
+          </Button>
+        }
+      />
+      <BuscadorLista
         value={texto}
         onChange={(event) => setTexto(event.target.value)}
         placeholder="Buscar nombre, correo o identificador"
         aria-label="Buscar lectores"
-        className="mt-4 bg-crema"
       />
-      {lectores.isPending ? <Skeleton className="mt-4 h-40 rounded-2xl border-2 border-tinta" /> : null}
       {lectores.isError ? (
-        <ErrorReintentar error={lectores.error} onRetry={() => void lectores.refetch()} />
+        <div className="bg-card border-linea rounded-xl border p-6">
+          <ErrorReintentar error={lectores.error} onRetry={() => void lectores.refetch()} />
+        </div>
       ) : null}
-      {lectores.isSuccess && items.length === 0 ? <p className="mt-6 text-sm">No hay lectores.</p> : null}
-      {lectores.isSuccess && items.length > 0 ? (
+      {lectores.isSuccess && items.length === 0 ? (
+        <p className="bg-card border-linea text-texto-3 rounded-xl border px-6 py-10 text-center text-[15px]">
+          No hay lectores.
+        </p>
+      ) : null}
+      {lectores.isPending || (lectores.isSuccess && items.length > 0) ? (
         <LectoresTable
           lectores={items}
+          cargando={lectores.isPending}
           abiertoId={abiertoId}
           detalle={detalle.data}
           cargandoDetalle={detalle.isPending}
@@ -76,6 +87,6 @@ export function LectoresAdminPage() {
         />
       ) : null}
       <LectorFormDialog lector={modo} onClose={() => setModo(null)} />
-    </section>
+    </main>
   )
 }

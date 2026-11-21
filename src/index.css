@@ -1,18 +1,104 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
+/*
+ * Paleta Corelux (valores del repo Corelux).
+ * Pino para estructura y acción primaria; lima solo para disponibilidad y acento.
+ * Texto sobre lima: siempre tinta (#0A0A0A) o pino-800 (#042C24).
+ */
 @theme {
-  --color-crema: #fef8ec;
-  --color-verde: #1e3d2e;
-  --color-lima: #c3d73b;
-  --color-tinta: #111111;
+  /* Pino */
+  --color-pino-950: #062c2e; /* sidebar · botón primario */
+  --color-pino-900: #041f21; /* primario activo (pressed) · portada placeholder */
+  --color-pino-850: #0a3d40; /* primario hover */
+  --color-pino-800: #042c24; /* tinta de acento · enlaces · foco */
+  --color-pino-700: #031812; /* pino más profundo */
+  --color-bosque: #032a21; /* fondo del hero (Corelux --color-forest) */
 
-  --radius: 1rem;
-  --shadow-cartoon: 4px 4px 0 0 var(--color-tinta);
-  --default-border-width: 2px;
+  /* Lima */
+  --color-lima-400: #c2f968; /* --accent */
+  --color-lima-500: #b3ec55; /* hover accent (derivado: lima-400 ~6% más oscuro) */
+  --color-lima-wash: rgb(194 249 104 / 0.18);
+  --color-lima-glow: rgb(194 249 104 / 0.4);
+  --color-lima-100: rgb(194 249 104 / 0.32); /* derivado de lima-400 */
 
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Fredoka', 'Nunito', ui-rounded, sans-serif;
+  /* Neutros */
+  --color-hueso: #f6f6f6; /* --background */
+  --color-papel: #ffffff; /* tarjeta · --card */
+  --color-hueso-claro: #fafaf8;
+  --color-arena: #f3eee4; /* fondo crema cálido de la ficha del libro */
+  --color-niebla: #fafaf8; /* --muted */
+  --color-tinta: #0a0a0a; /* títulos */
+  --color-texto: #171717; /* --foreground */
+  --color-texto-2: #3a3a3a;
+  --color-texto-3: #525252;
+  --color-texto-4: #737373; /* placeholder */
+  --color-texto-5: #a3a3a3; /* deshabilitado */
+  --color-niebla-fg: #525252; /* --muted-foreground (AA sobre hueso) */
+  --color-linea: #e6e2da; /* --border */
+  --color-linea-fuerte: #d4cfc6; /* borde de inputs y botones outline */
+  --color-separador: #c8c3ba; /* hover de borde */
+
+  /* Estados */
+  --color-exito-600: #47a75a;
+  --color-exito-100: #dcfce1;
+  --color-ambar-600: #d97706;
+  --color-ambar-100: #fffbeb;
+  --color-ambar-800: #92400e; /* texto sobre ambar-100 (derivado, AA) */
+  --color-rojo-600: #dc2626; /* --destructive */
+  --color-rojo-700: #b91c1c; /* hover destructive (derivado) */
+  --color-rojo-800: #991b1b; /* texto sobre rojo-50 (derivado, AA) */
+  --color-rojo-100: #fef2f2;
+  --color-rojo-50: #fef2f2;
+  --color-azul-700: #1d4ed8;
+  --color-azul-100: #dbeafe;
+  --color-cancelada: var(--color-rojo-50);
+  --color-activa-fg: var(--color-pino-800); /* texto sobre lima */
+
+  --radius: 1.25rem; /* card 20px */
+  --radius-portada: 6px;
+  --radius-input: 12px;
+  --radius-panel: 28px;
+
+  --shadow-sm: 0 1px 2px rgb(4 44 36 / 0.06);
+  --shadow-card:
+    0 2px 4px rgb(4 44 36 / 0.04), 0 12px 28px -8px rgb(4 44 36 / 0.1);
+  --shadow-card-hover:
+    0 4px 8px rgb(4 44 36 / 0.06), 0 16px 32px -8px rgb(194 249 104 / 0.22);
+  --shadow-flotante:
+    0 2px 6px rgb(4 44 36 / 0.05), 0 24px 48px -16px rgb(4 44 36 / 0.22);
+  --shadow-portada:
+    0 1px 2px rgb(4 44 36 / 0.08), 0 16px 28px -14px rgb(4 44 36 / 0.45);
+  --shadow-foco: 0 0 0 3px rgb(194 249 104 / 0.4);
+
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', ui-serif, Georgia, serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --animate-asa-pulse: asa-pulse 1.4s ease-in-out infinite;
+  --animate-asa-dot: asa-dot 1.2s ease-in-out infinite;
+
+  @keyframes asa-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.55;
+    }
+  }
+  @keyframes asa-dot {
+    0%,
+    80%,
+    100% {
+      opacity: 0.25;
+      transform: translateY(0);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
+  }
 }
 
 @theme inline {
@@ -35,37 +121,46 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --radius-sm: calc(var(--radius) - 12px);
+  --radius-md: var(--radius-input);
+  --radius-lg: calc(var(--radius) - 4px);
+  --radius-xl: var(--radius);
+  --radius-2xl: var(--radius-panel);
 }
 
 :root {
-  --background: var(--color-crema);
-  --foreground: var(--color-tinta);
-  --card: var(--color-crema);
-  --card-foreground: var(--color-tinta);
-  --popover: var(--color-crema);
-  --popover-foreground: var(--color-tinta);
-  --primary: var(--color-verde);
-  --primary-foreground: var(--color-crema);
-  --secondary: var(--color-lima);
-  --secondary-foreground: var(--color-verde);
-  --muted: #f3ecd8;
-  --muted-foreground: var(--color-verde);
-  --accent: var(--color-lima);
-  --accent-foreground: var(--color-verde);
-  --destructive: #b42318;
-  --destructive-foreground: var(--color-crema);
-  --border: var(--color-tinta);
-  --input: var(--color-tinta);
-  --ring: var(--color-lima);
+  --background: var(--color-hueso);
+  --foreground: var(--color-texto);
+  --card: var(--color-papel);
+  --card-foreground: var(--color-texto);
+  --popover: var(--color-papel);
+  --popover-foreground: var(--color-texto);
+  --primary: var(--color-pino-950);
+  --primary-foreground: var(--color-papel);
+  --secondary: var(--color-niebla);
+  --secondary-foreground: var(--color-texto);
+  --muted: var(--color-niebla);
+  --muted-foreground: var(--color-niebla-fg);
+  --accent: var(--color-lima-400);
+  --accent-foreground: var(--color-pino-800);
+  --destructive: var(--color-rojo-600);
+  --destructive-foreground: var(--color-papel);
+  --border: var(--color-linea);
+  --input: var(--color-linea-fuerte);
+  --ring: var(--color-lima-400);
+  --sidebar: var(--color-pino-950);
+  --sidebar-foreground: var(--color-papel);
+  --sidebar-primary: var(--color-lima-400);
+  --sidebar-primary-foreground: var(--color-pino-800);
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
 
   html {
@@ -76,8 +171,22 @@
     @apply bg-background text-foreground;
   }
 
+  a {
+    color: inherit;
+  }
+
+  ::selection {
+    background-color: var(--color-lima-400);
+    color: var(--color-tinta);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-texto-4);
+  }
+
   :focus-visible {
-    outline: 3px solid var(--color-lima);
+    outline: 2px solid var(--color-pino-800);
     outline-offset: 2px;
   }
 
@@ -87,7 +196,128 @@
   h4,
   h5,
   h6 {
-    font-family: var(--font-display);
-    color: var(--color-verde);
+    font-family: var(--font-sans);
+    font-weight: 600;
+    letter-spacing: -0.03em;
+    color: var(--color-tinta);
   }
+
+  /* boneyard pone la animación inline y no mira prefers-reduced-motion. El opacity hace falta
+     porque `stagger` arranca cada hueso en 0. */
+  @media (prefers-reduced-motion: reduce) {
+    [data-boneyard-bone] {
+      animation: none !important;
+      opacity: 1 !important;
+    }
+    [data-boneyard-overlay] {
+      transition: none !important;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition: none !important;
+      animation: none !important;
+    }
+  }
+}
+
+@layer components {
+  /* Hueso que llena su contenedor (portadas): el contenido de boneyard también ocupa el alto. */
+  .hueso-llenar > [data-boneyard-content] {
+    height: 100%;
+  }
+
+  /* Fondo animado del hero, portado de la landing de Corelux (ver hero-backdrop.tsx). */
+  .hero-fx {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+    isolation: isolate;
+    contain: paint;
+  }
+
+  .hero-fx__wash {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(58% 48% at 0% 18%, rgb(194 249 104 / 0.38), transparent 58%),
+      radial-gradient(52% 46% at 100% 88%, rgb(194 249 104 / 0.28), transparent 60%),
+      var(--color-bosque);
+  }
+
+  .hero-fx__shader {
+    position: absolute;
+    inset: 0;
+    opacity: 0.55;
+    mix-blend-mode: screen;
+    animation: hero-shader-in 0.9s ease both;
+  }
+
+  .hero-fx__grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgb(194 249 104 / 0.09) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(194 249 104 / 0.09) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse 72% 58% at 50% 36%, #000 18%, transparent 78%);
+  }
+
+  .hero-fx__grid canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .hero-fx__vignette {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      ellipse 55% 50% at 50% 32%,
+      transparent 30%,
+      rgb(3 42 33 / 0.55) 100%
+    );
+  }
+
+  @keyframes hero-shader-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.55;
+    }
+  }
+
+  /* Palabra destacada de un título: Instrument Serif itálica, nunca en párrafos. */
+  .titulo-serif {
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-weight: 400;
+    font-size: 1.16em;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    color: var(--color-pino-800);
+  }
+
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-texto-3);
+  }
+}
+
+/* Tira con scroll horizontal sin barra visible: sigue respondiendo a táctil, trackpad y rueda. */
+.tira-sin-barra {
+  scrollbar-width: none;
+}
+.tira-sin-barra::-webkit-scrollbar {
+  display: none;
 }

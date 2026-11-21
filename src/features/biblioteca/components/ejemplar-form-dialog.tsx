@@ -56,13 +56,27 @@ export function EjemplarFormDialog({
         <DialogHeader>
           <DialogTitle>Agregar ejemplar</DialogTitle>
         </DialogHeader>
-        <form className="grid gap-2" onSubmit={form.handleSubmit((values) => crear.mutate(values))}>
-          <Label htmlFor="codigo">Código de inventario</Label>
-          <Input id="codigo" maxLength={30} {...form.register('codigoInventario')} />
+        <form className="grid gap-1.5" onSubmit={form.handleSubmit((values) => crear.mutate(values))}>
+          <Label htmlFor="codigo" className="text-texto-2 text-[13px] font-semibold">
+            Código de inventario
+          </Label>
+          <Input
+            id="codigo"
+            maxLength={30}
+            placeholder="BIB-001"
+            className="font-mono"
+            aria-invalid={form.formState.errors.codigoInventario ? true : undefined}
+            {...form.register('codigoInventario')}
+          />
           {form.formState.errors.codigoInventario ? (
-            <p className="text-sm text-destructive">{form.formState.errors.codigoInventario.message}</p>
+            <p className="text-rojo-800 text-[13px] font-medium">
+              {form.formState.errors.codigoInventario.message}
+            </p>
           ) : null}
-          <DialogFooter>
+          <DialogFooter className="mt-4">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={crear.isPending}>
               Guardar
             </Button>

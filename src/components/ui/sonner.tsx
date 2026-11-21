@@ -8,7 +8,7 @@ function Toaster({ ...props }: ToasterProps) {
       toastOptions={{
         classNames: {
           toast:
-            'group toast rounded-lg border bg-background text-foreground shadow-cartoon',
+            'group toast rounded-xl border border-linea bg-card text-foreground shadow-flotante',
           description: 'text-muted-foreground',
           actionButton: 'bg-primary text-primary-foreground',
           cancelButton: 'bg-muted text-muted-foreground',

@@ -3,21 +3,30 @@ import { flexRender } from '@tanstack/react-table'
 import { getCoreRowModel, useLegacyTable, type LegacyColumnDef } from '@tanstack/react-table/legacy'
 
 import { Button } from '@/components/ui/button'
+import { FilasFantasma } from '@/components/ui/filas-fantasma'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { Libro } from '@/features/biblioteca/types/api'
 
 /** Tabla de libros del panel admin: la fila entera navega a la ficha de administración. */
 export function LibrosAdminTable({
   libros,
+  cargando = false,
   onEdit,
   onBaja,
 }: {
   libros: Libro[]
+  /** Mientras llega la consulta: cabecera real y filas con un hueco por celda. */
+  cargando?: boolean
   onEdit: (libro: Libro) => void
   onBaja: (libro: Libro) => void
 }) {
   const navigate = useNavigate()
   const columnas: LegacyColumnDef<Libro>[] = [
-    { accessorKey: 'isbn', header: 'ISBN' },
+    {
+      accessorKey: 'isbn',
+      header: 'ISBN',
+      cell: ({ row }) => <span className="text-texto-2 font-mono text-[13px]">{row.original.isbn}</span>,
+    },
     {
       accessorKey: 'titulo',
       header: 'Título',
@@ -26,20 +35,37 @@ export function LibrosAdminTable({
           to="/admin/libros/$idLibro"
           params={{ idLibro: String(row.original.idLibro) }}
           search={{ page: 1, pageSize: 12 }}
-          className="font-display text-verde underline-offset-2 hover:underline"
+          className="text-tinta font-semibold underline-offset-4 hover:underline"
         >
           {row.original.titulo}
         </Link>
       ),
     },
     { accessorKey: 'autor', header: 'Autor' },
-    { accessorKey: 'categoria', header: 'Categoría' },
-    { accessorKey: 'disponibles', header: 'Disponibles' },
+    {
+      accessorKey: 'categoria',
+      header: 'Categoría',
+      cell: ({ row }) => <span className="text-texto-3">{row.original.categoria}</span>,
+    },
+    {
+      accessorKey: 'disponibles',
+      header: 'Disponibles',
+      cell: ({ row }) => (
+        <span className="inline-flex items-center gap-2 font-mono text-[13px]">
+          <span
+            aria-hidden
+            className={row.original.disponibles > 0 ? 'bg-lima-400 size-2 rounded-full' : 'bg-texto-5 size-2 rounded-full'}
+          />
+          {row.original.disponibles}
+          <span className="text-texto-4">/ {row.original.totalEjemplares}</span>
+        </span>
+      ),
+    },
     {
       id: 'acciones',
       header: '',
       cell: ({ row }) => (
-        <div className="flex gap-2">
+        <div className="flex justify-end gap-2">
           <Button
             type="button"
             size="sm"
@@ -54,7 +80,8 @@ export function LibrosAdminTable({
           <Button
             type="button"
             size="sm"
-            variant="destructive"
+            variant="ghost"
+            className="text-rojo-700 hover:bg-rojo-50"
             onClick={(event) => {
               event.stopPropagation()
               onBaja(row.original)
@@ -69,41 +96,40 @@ export function LibrosAdminTable({
   const table = useLegacyTable({ data: libros, columns: columnas, getCoreRowModel: getCoreRowModel() })
 
   return (
-    <div className="mt-4 overflow-x-auto">
-      <table className="w-full min-w-[40rem] text-left text-sm">
-        <thead>
-          {table.getHeaderGroups().map((group) => (
-            <tr key={group.id} className="border-b-2 border-tinta">
-              {group.headers.map((header) => (
-                <th key={header.id} className="px-2 py-2 font-display text-verde">
-                  {flexRender(header.column.columnDef.header, header.getContext())}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className="cursor-pointer border-b border-tinta/20 hover:bg-lima/20"
-              onClick={() =>
-                void navigate({
-                  to: '/admin/libros/$idLibro',
-                  params: { idLibro: String(row.original.idLibro) },
-                  search: { page: 1, pageSize: 12 },
-                })
-              }
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="px-2 py-2">
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <Table className="min-w-[44rem]">
+      <TableHeader>
+        {table.getHeaderGroups().map((group) => (
+          <TableRow key={group.id}>
+            {group.headers.map((header) => (
+              <TableHead key={header.id}>
+                {flexRender(header.column.columnDef.header, header.getContext())}
+              </TableHead>
+            ))}
+          </TableRow>
+        ))}
+      </TableHeader>
+      <TableBody>
+        {cargando ? <FilasFantasma columnas={5} /> : null}
+        {table.getRowModel().rows.map((row) => (
+          <TableRow
+            key={row.id}
+            className="cursor-pointer"
+            onClick={() =>
+              void navigate({
+                to: '/admin/libros/$idLibro',
+                params: { idLibro: String(row.original.idLibro) },
+                search: { page: 1, pageSize: 12 },
+              })
+            }
+          >
+            {row.getVisibleCells().map((cell) => (
+              <TableCell key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   )
 }

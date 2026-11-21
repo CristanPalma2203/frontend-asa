@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { Button } from '@/components/ui/button'
+import { Campo } from '@/components/ui/campo'
 import {
   Dialog,
   DialogContent,
@@ -75,7 +76,7 @@ export function LectorFormDialog({
         <DialogHeader>
           <DialogTitle>{editando ? 'Editar lector' : 'Crear lector'}</DialogTitle>
         </DialogHeader>
-        <form className="grid gap-3" onSubmit={form.handleSubmit((values) => guardar.mutate(values))}>
+        <form className="grid gap-4" onSubmit={form.handleSubmit((values) => guardar.mutate(values))}>
           <Campo label="Identificador" error={form.formState.errors.identificador?.message}>
             <Input {...form.register('identificador')} />
           </Campo>
@@ -86,7 +87,10 @@ export function LectorFormDialog({
             <Input type="email" {...form.register('correo')} />
           </Campo>
           <Campo label="Estado" error={form.formState.errors.estado?.message}>
-            <select className="h-10 rounded-lg border-2 border-tinta bg-white px-2" {...form.register('estado')}>
+            <select
+              className="border-linea-fuerte bg-card text-texto hover:border-separador focus-visible:border-pino-800 focus-visible:shadow-foco h-12 w-full cursor-pointer rounded-[12px] border px-4 text-[15px] transition-[border-color,box-shadow] outline-none"
+              {...form.register('estado')}
+            >
               <option value="Activo">Activo</option>
               <option value="Inactivo">Inactivo</option>
             </select>
@@ -96,7 +100,10 @@ export function LectorFormDialog({
               <Input type="password" autoComplete="new-password" {...form.register('password')} />
             </Campo>
           )}
-          <DialogFooter>
+          <DialogFooter className="mt-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={guardar.isPending}>
               Guardar
             </Button>
@@ -107,20 +114,3 @@ export function LectorFormDialog({
   )
 }
 
-function Campo({
-  label,
-  error,
-  children,
-}: {
-  label: string
-  error?: string
-  children: ReactNode
-}) {
-  return (
-    <label className="grid gap-1 text-sm">
-      <span>{label}</span>
-      {children}
-      {error ? <span className="text-destructive">{error}</span> : null}
-    </label>
-  )
-}

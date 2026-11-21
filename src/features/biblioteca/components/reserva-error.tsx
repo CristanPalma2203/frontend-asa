@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { AlertCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { mensajeDeError } from '@/features/biblioteca/errores'
@@ -17,18 +18,24 @@ export function ReservaError({
   onRetry: () => void
 }) {
   return (
-    <div className="mt-3 text-sm">
-      <p>{mensajeDeError(code, fallback)}</p>
-      {code === 'reserva-duplicada' ? (
-        <Link to="/mis-reservas" className="mt-1 inline-block font-semibold text-verde underline">
-          Mis reservas
-        </Link>
-      ) : null}
-      {code === 'ejemplar-ya-reservado' ? (
-        <Button type="button" size="sm" className="mt-2" onClick={onRetry}>
-          Reintentar
-        </Button>
-      ) : null}
+    <div
+      role="alert"
+      className="border-rojo-600/20 bg-rojo-50 text-rojo-800 flex items-start gap-3 rounded-xl border p-4 text-sm"
+    >
+      <AlertCircle aria-hidden className="mt-0.5 size-[18px] flex-none" strokeWidth={2} />
+      <div className="flex flex-col items-start gap-2">
+        <p className="font-medium">{mensajeDeError(code, fallback)}</p>
+        {code === 'reserva-duplicada' ? (
+          <Link to="/mis-reservas" className="font-semibold underline underline-offset-4">
+            Mis reservas
+          </Link>
+        ) : null}
+        {code === 'ejemplar-ya-reservado' ? (
+          <Button type="button" size="sm" variant="outline" onClick={onRetry}>
+            Reintentar
+          </Button>
+        ) : null}
+      </div>
     </div>
   )
 }

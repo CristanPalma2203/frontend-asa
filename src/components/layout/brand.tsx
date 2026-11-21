@@ -1,0 +1,51 @@
+import { Link } from '@tanstack/react-router'
+
+import { cn } from '@/lib/utils'
+
+type Tono = 'oscuro' | 'claro'
+
+/** Logotipo «ASA Biblioteca». `oscuro` = sobre pino (sidebar, hero); `claro` = sobre hueso. */
+export function Brand({
+  tono = 'oscuro',
+  className,
+  onClick,
+}: {
+  tono?: Tono
+  className?: string
+  onClick?: () => void
+}) {
+  return (
+    <Link
+      to="/"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-2.5 rounded-lg no-underline hover:no-underline',
+        tono === 'oscuro' ? 'text-papel' : 'text-tinta',
+        className,
+      )}
+    >
+      <span
+        aria-hidden
+        className={cn(
+          'grid size-7 place-items-center rounded-lg text-sm font-bold',
+          tono === 'oscuro'
+            ? 'bg-lima-400 text-pino-800'
+            : 'bg-pino-950 text-lima-400',
+        )}
+      >
+        A
+      </span>
+      <span className="text-lg font-semibold tracking-[-0.02em]">
+        ASA{' '}
+        <span
+          className={cn(
+            'font-serif text-xl font-normal tracking-normal italic',
+            tono === 'oscuro' ? 'text-lima-400' : 'text-pino-800',
+          )}
+        >
+          Biblioteca
+        </span>
+      </span>
+    </Link>
+  )
+}

@@ -1,7 +1,8 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+
+import { ResumenAdminPage } from '@/features/admin/resumen-page'
 
 export const Route = createFileRoute('/admin/')({
-  beforeLoad: () => {
-    throw redirect({ to: '/admin/libros', search: { page: 1, pageSize: 12 } })
-  },
+  staticData: { title: 'Resumen · ASA Biblioteca' },
+  component: ResumenAdminPage,
 })

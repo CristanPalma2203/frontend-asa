@@ -1,8 +1,9 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect } from 'react'
 import { useForm, type UseFormReturn } from 'react-hook-form'
 
 import { Button } from '@/components/ui/button'
+import { Campo } from '@/components/ui/campo'
 import {
   Dialog,
   DialogContent,
@@ -11,7 +12,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import { libroSchema, type LibroForm } from '@/features/biblioteca/schemas/libro.schema'
 import type { Libro } from '@/features/biblioteca/types/api'
@@ -56,7 +56,7 @@ export function LibroFormDialog({
         <DialogHeader>
           <DialogTitle>{libro ? 'Editar libro' : 'Crear libro'}</DialogTitle>
         </DialogHeader>
-        <form className="grid gap-3" onSubmit={form.handleSubmit(onSubmit)}>
+        <form className="grid gap-4" onSubmit={form.handleSubmit(onSubmit)}>
           <Campo label="ISBN" error={form.formState.errors.isbn?.message}>
             <Input {...form.register('isbn')} />
           </Campo>
@@ -69,7 +69,10 @@ export function LibroFormDialog({
           <Campo label="Categoría" error={form.formState.errors.categoria?.message}>
             <Input {...form.register('categoria')} />
           </Campo>
-          <DialogFooter>
+          <DialogFooter className="mt-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={pending}>
               Guardar
             </Button>
@@ -91,20 +94,3 @@ function aplicarValidacion(form: UseFormReturn<LibroForm>, error: ApiError) {
   }
 }
 
-function Campo({
-  label,
-  error,
-  children,
-}: {
-  label: string
-  error?: string
-  children: ReactNode
-}) {
-  return (
-    <label className="grid gap-1 text-sm">
-      <Label>{label}</Label>
-      {children}
-      {error ? <span className="text-destructive">{error}</span> : null}
-    </label>
-  )
-}

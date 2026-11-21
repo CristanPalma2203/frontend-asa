@@ -14,18 +14,18 @@ export type EstiloBadge = {
   className?: string
 }
 
-const apagado = { variant: 'outline', className: 'bg-muted text-verde/70' } as const
+const apagado = { variant: 'secondary', className: 'border border-linea' } as const
 
 export const badgeEjemplar: Record<EstadoEjemplar, EstiloBadge> = {
   Disponible: { etiqueta: 'Disponible', variant: 'disponible' },
-  Reservado: { etiqueta: 'Reservado', variant: 'default' },
+  Reservado: { etiqueta: 'Reservado', variant: 'reservado' },
   Prestado: { etiqueta: 'Prestado', variant: 'outline' },
   Inactivo: { etiqueta: 'Inactivo', ...apagado },
 }
 
 export const badgeReserva: Record<EstadoReserva, EstiloBadge> = {
-  Activa: { etiqueta: 'Activa', variant: 'disponible' },
-  Cancelada: { etiqueta: 'Cancelada', ...apagado },
+  Activa: { etiqueta: 'Activa', variant: 'activa' },
+  Cancelada: { etiqueta: 'Cancelada', variant: 'destructive' },
   Completada: { etiqueta: 'Completada', variant: 'outline' },
 }
 

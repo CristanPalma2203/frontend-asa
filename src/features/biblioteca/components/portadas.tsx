@@ -1,104 +1,82 @@
-import { useState } from 'react'
-
+import { Hueso, PortadaConCarga } from '@/components/ui/hueso'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
+import { cn } from '@/lib/utils'
 
 // Portadas desde Open Library por ISBN. `?default=false` hace que responda 404 si no hay
-// portada, y en ese caso muestro un respaldo SVG con el título.
+// portada, y en ese caso se muestra el respaldo con el título.
 
 function isbnLimpio(isbn: string) {
   return isbn.replace(/[^0-9Xx]/g, '')
 }
 
-/** Portada mediana para las tarjetas del catálogo. */
-export function PortadaTarjeta({ isbn, titulo }: { isbn: string; titulo: string }) {
-  const [fallo, setFallo] = useState(false)
+/**
+ * Portada con el estilo Corelux. El tamaño lo pone `className` (ancho; el alto sale de la
+ * proporción 2:3). Mientras la imagen carga, shimmer de boneyard en el hueco (PortadaConCarga).
+ * Sin ISBN o sin portada en Open Library muestra el título sobre pino.
+ */
+export function PortadaLibro({
+  isbn,
+  titulo,
+  tamano = 'M',
+  className,
+}: {
+  isbn: string
+  titulo: string
+  tamano?: 'S' | 'M' | 'L'
+  className?: string
+}) {
   const limpio = isbnLimpio(isbn)
+  const base = cn('rounded-portada shadow-portada aspect-[2/3] shrink-0', className)
+  const respaldo = <PortadaRespaldo titulo={titulo} className={base} />
 
-  if (fallo || limpio.length === 0) {
-    return <PortadaTarjetaVacia titulo={titulo} />
-  }
+  if (limpio.length === 0) return respaldo
 
   return (
-    <img
-      src={`https://covers.openlibrary.org/b/isbn/${limpio}-M.jpg?default=false`}
-      alt=""
-      className="h-36 w-24 shrink-0 rounded-xl border-2 border-tinta object-cover"
-      onError={() => setFallo(true)}
+    <PortadaConCarga
+      src={`https://covers.openlibrary.org/b/isbn/${limpio}-${tamano}.jpg?default=false`}
+      className={cn(base, 'bg-pino-900')}
+      alto={tamano === 'L' ? 252 : 168}
+      radio={6}
+      respaldo={respaldo}
     />
   )
 }
 
-function PortadaTarjetaVacia({ titulo }: { titulo: string }) {
+function PortadaRespaldo({ titulo, className }: { titulo: string; className: string }) {
   return (
-    <svg
-      viewBox="0 0 96 144"
+    <div
       role="img"
       aria-label={titulo}
-      className="h-36 w-24 shrink-0 rounded-xl border-2 border-tinta"
+      className={cn(
+        className,
+        'bg-pino-900 @container flex items-end overflow-hidden p-[8%] ring-1 ring-white/10 ring-inset',
+      )}
     >
-      <rect width="96" height="144" fill="#1E3D2E" />
-      <rect x="8" y="8" width="80" height="128" fill="#FEF8EC" stroke="#111111" strokeWidth="2" />
-      <text
-        x="48"
-        y="72"
-        textAnchor="middle"
-        fill="#1E3D2E"
-        fontFamily="Fredoka, sans-serif"
-        fontSize="11"
-      >
-        {titulo.slice(0, 42)}
-      </text>
-    </svg>
+      <span className="text-papel line-clamp-4 font-serif text-[min(15px,14cqw)] leading-[1.1] italic">
+        {titulo}
+      </span>
+    </div>
   )
 }
 
-/** Portada grande de la ficha del libro. */
-export function PortadaFicha({ isbn, titulo }: { isbn: string; titulo: string }) {
-  const [fallo, setFallo] = useState(false)
-  const limpio = isbnLimpio(isbn)
-  if (fallo || limpio.length === 0) {
-    return (
-      <svg viewBox="0 0 160 240" role="img" aria-label={titulo} className="w-full rounded-2xl border-2 border-tinta shadow-cartoon">
-        <rect width="160" height="240" fill="#1E3D2E" />
-        <text x="80" y="120" textAnchor="middle" fill="#FEF8EC" fontFamily="Fredoka, sans-serif" fontSize="14">
-          {titulo.slice(0, 48)}
-        </text>
-      </svg>
-    )
-  }
-  return (
-    <img
-      src={`https://covers.openlibrary.org/b/isbn/${limpio}-L.jpg?default=false`}
-      alt=""
-      className="w-full rounded-2xl border-2 border-tinta object-cover shadow-cartoon"
-      onError={() => setFallo(true)}
-    />
-  )
-}
-
-/** Portada pequeña de una reserva. La reserva no trae ISBN, así que lo toma del detalle del libro. */
-export function MiniPortada({ idLibro, titulo }: { idLibro: number; titulo: string }) {
+/**
+ * Portada pequeña de una reserva. La reserva no trae ISBN: lo toma del detalle del libro y,
+ * mientras llega, deja el hueco con shimmer.
+ */
+export function MiniPortada({
+  idLibro,
+  titulo,
+  className,
+}: {
+  idLibro: number
+  titulo: string
+  className?: string
+}) {
   const libro = useLibro(idLibro)
-  const [fallo, setFallo] = useState(false)
-  const isbn = libro.data ? isbnLimpio(libro.data.isbn) : ''
-
-  if (!isbn || fallo) {
-    return (
-      <svg viewBox="0 0 64 96" role="img" aria-label={titulo} className="h-24 w-16 shrink-0 rounded-xl border-2 border-tinta">
-        <rect width="64" height="96" fill="#1E3D2E" />
-        <text x="32" y="50" textAnchor="middle" fill="#FEF8EC" fontFamily="Fredoka, sans-serif" fontSize="8">
-          {titulo.slice(0, 18)}
-        </text>
-      </svg>
-    )
+  if (libro.isPending) {
+    return <Hueso cargando ancho={56} alto={84} radio={6} className={cn('w-14 shrink-0', className)} />
   }
-
   return (
-    <img
-      src={`https://covers.openlibrary.org/b/isbn/${isbn}-S.jpg?default=false`}
-      alt=""
-      className="h-24 w-16 shrink-0 rounded-xl border-2 border-tinta object-cover"
-      onError={() => setFallo(true)}
-    />
+    <PortadaLibro isbn={libro.data?.isbn ?? ''} titulo={titulo} className={cn('w-14', className)} />
   )
 }

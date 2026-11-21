@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -6,6 +6,11 @@ import { describe, expect, it } from 'vitest'
 import { crearApiFake } from '@/test/api-fake'
 import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
+
+/** Peticiones del listado del catálogo (sin la muestra de categorías sugeridas, de pageSize 50). */
+function pedidosCatalogo(api: ReturnType<typeof crearApiFake>) {
+  return api.pedidos('/api/libros').filter((url) => url.searchParams.get('pageSize') === '12')
+}
 
 describe('catálogo', () => {
   it('renderiza los libros', async () => {
@@ -27,7 +32,7 @@ describe('catálogo', () => {
       expect(screen.queryByRole('heading', { name: 'El Principito' })).not.toBeInTheDocument(),
     )
     expect(screen.queryByRole('heading', { name: 'Dune' })).not.toBeInTheDocument()
-    const ultimo = api.pedidos('/api/libros').at(-1)
+    const ultimo = pedidosCatalogo(api).at(-1)
     expect(ultimo?.searchParams.get('search')).toBe('hobbit')
     expect(ultimo?.searchParams.has('buscar')).toBe(false)
     expect(ultimo?.searchParams.get('page')).toBe('1')
@@ -47,7 +52,7 @@ describe('catálogo', () => {
     expect(await screen.findByRole('heading', { name: 'El Hobbit' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'El Silmarillion' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Dune' })).not.toBeInTheDocument()
-    const ultimo = api.pedidos('/api/libros').at(-1)
+    const ultimo = pedidosCatalogo(api).at(-1)
     expect(ultimo?.searchParams.get('autor')).toBe('tolkien')
     expect(ultimo?.searchParams.get('page')).toBe('1')
   })
@@ -68,8 +73,40 @@ describe('catálogo', () => {
     expect(screen.queryByRole('heading', { name: 'Libro 01' })).not.toBeInTheDocument()
     expect(screen.getByText('15 libros · página 2 de 2')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Siguiente' })).toBeDisabled()
-    expect(api.pedidos('/api/libros').at(-1)?.searchParams.get('page')).toBe('2')
+    expect(pedidosCatalogo(api).at(-1)?.searchParams.get('page')).toBe('2')
     expect(router.state.location.search).toMatchObject({ page: 2 })
+  })
+
+  it('al pulsar una tarjeta abre el panel con el resumen y el enlace a la ficha', async () => {
+    const user = userEvent.setup()
+    await renderEn('/catalogo?page=1&pageSize=12')
+
+    await user.click(await screen.findByRole('button', { name: 'El Principito' }))
+
+    const panel = await screen.findByRole('dialog', { name: 'El Principito' })
+    expect(within(panel).getByText('2 disponibles')).toBeInTheDocument()
+    expect(within(panel).getByRole('link', { name: 'Ver ficha' })).toHaveAttribute(
+      'href',
+      '/libros/1',
+    )
+  })
+
+  it('el filtro de categoría escribe ?categoria= en la URL y lo manda a la API', async () => {
+    const user = userEvent.setup()
+    const api = crearApiFake([
+      { titulo: 'Dune', categoria: 'Ciencia ficción' },
+      { titulo: 'Cien años de soledad', categoria: 'Novela' },
+    ])
+    server.use(...api.handlers)
+    const { router } = await renderEn('/catalogo?page=1&pageSize=12')
+    await screen.findByRole('heading', { name: 'Dune' })
+
+    await user.type(screen.getByLabelText('Categoría'), 'Novela')
+
+    await waitFor(() => expect(router.state.location.search).toMatchObject({ categoria: 'Novela' }))
+    await waitFor(() =>
+      expect(pedidosCatalogo(api).at(-1)?.searchParams.get('categoria')).toBe('Novela'),
+    )
   })
 
   it('muestra el vacío', async () => {

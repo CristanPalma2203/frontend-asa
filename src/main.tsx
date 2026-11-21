@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { ApiError, setUnauthorizedHandler } from '@/lib/api/client'
 import { routeTree } from '@/routeTree.gen'
 
+import '@/lib/boneyard'
 import './index.css'
 
 const queryClient = new QueryClient({

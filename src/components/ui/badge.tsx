@@ -4,15 +4,18 @@ import * as React from 'react'
 import { cn } from '@/lib/utils'
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold',
+  'inline-flex h-[26px] items-center gap-1.5 rounded-full px-2.5 text-xs font-semibold whitespace-nowrap',
   {
     variants: {
       variant: {
         default: 'bg-primary text-primary-foreground',
-        secondary: 'bg-secondary text-secondary-foreground',
-        destructive: 'bg-destructive text-destructive-foreground',
-        outline: 'bg-background text-foreground',
-        disponible: 'border-tinta bg-lima text-verde',
+        secondary: 'bg-niebla text-niebla-fg',
+        destructive: 'bg-cancelada text-rojo-800',
+        outline: 'border border-linea-fuerte bg-papel text-texto-3',
+        /** Stock disponible: lima, solo para señalar disponibilidad. */
+        disponible: 'bg-lima-400 text-pino-800',
+        activa: 'bg-lima-100 text-activa-fg',
+        reservado: 'bg-ambar-100 text-ambar-800',
       },
     },
     defaultVariants: {

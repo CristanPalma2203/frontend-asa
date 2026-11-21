@@ -1,4 +1,4 @@
-import { act, screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -19,11 +19,6 @@ function problema(code: string) {
   )
 }
 
-function badgesDeEjemplares() {
-  // hidden: con el diálogo de reserva abierto, Radix marca el resto de la página con aria-hidden.
-  const titulo = screen.getByRole('heading', { name: 'Ejemplares', hidden: true })
-  return within(titulo.nextElementSibling as HTMLElement)
-}
 
 describe('ficha', () => {
   it('Reservar sin sesión manda a login', async () => {
@@ -41,24 +36,25 @@ describe('ficha', () => {
     server.use(...api.handlers)
     // El catálogo queda en caché con 3 disponibles antes de reservar.
     const { router } = await renderEn('/catalogo?page=1&pageSize=12', { staleTime: STALE_TIME_APP })
-    expect(await screen.findByText('Disponible (3)')).toBeInTheDocument()
+    expect(await screen.findByText('3 disponibles')).toBeInTheDocument()
 
     await act(() => router.navigate({ to: '/libros/$idLibro', params: { idLibro: '1' } }))
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
-    expect(badgesDeEjemplares().getAllByText('Disponible')).toHaveLength(3)
+    expect(screen.getByText('3 disponibles')).toBeInTheDocument()
+    expect(screen.getByText('3 de 3')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
 
     expect(await screen.findByText('Tu ejemplar: BIB-001')).toBeInTheDocument()
-    await waitFor(() => expect(badgesDeEjemplares().getAllByText('Disponible')).toHaveLength(2))
-    expect(badgesDeEjemplares().getByText('Reservado')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('2 de 3')).toBeInTheDocument())
     expect(api.pedidos('/api/libros/1')).toHaveLength(2)
 
     // Volver al catálogo: la lista se invalidó, así que se vuelve a pedir pese al staleTime.
     await act(() => router.navigate({ to: '/catalogo', search: { page: 1, pageSize: 12 } }))
-    expect(await screen.findByText('Disponible (2)')).toBeInTheDocument()
-    expect(api.pedidos('/api/libros')).toHaveLength(2)
+    expect(await screen.findByText('2 disponibles')).toBeInTheDocument()
+    const listados = api.pedidos('/api/libros').filter((url) => url.searchParams.get('pageSize') === '12')
+    expect(listados).toHaveLength(2)
   })
 
   it('muestra reserva-duplicada', async () => {
@@ -71,7 +67,9 @@ describe('ficha', () => {
       ),
     )
     await renderEn('/libros/1')
-    await user.click(await screen.findByRole('button', { name: 'Reservar' }))
+    // Mientras carga, «Reservar» ya se ve pero deshabilitado: se espera al libro.
+    await screen.findByRole('heading', { name: 'El Principito', level: 1 })
+    await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
     expect(await screen.findByText(mensajeDeError('reserva-duplicada', ''))).toBeInTheDocument()
   })
@@ -85,7 +83,7 @@ describe('ficha', () => {
     server.use(http.post('http://api.test/api/reservas', () => problema('sin-stock')), ...api.handlers)
     await renderEn('/libros/1', { staleTime: STALE_TIME_APP })
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
-    expect(badgesDeEjemplares().getAllByText('Disponible')).toHaveLength(1)
+    expect(screen.getByText('1 disponible')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
@@ -95,10 +93,30 @@ describe('ficha', () => {
     // Con el diálogo cerrado la página ya no queda aria-hidden: el mensaje es visible y accesible.
     expect(mensaje).toBeVisible()
     expect(mensaje.closest('[aria-hidden="true"]')).toBeNull()
-    expect(screen.getByRole('heading', { name: 'Ejemplares' })).toBeInTheDocument()
-    expect(badgesDeEjemplares().getAllByText('Disponible')).toHaveLength(1)
-    expect(badgesDeEjemplares().queryByText('Reservado')).not.toBeInTheDocument()
+    expect(screen.getByText('1 disponible')).toBeInTheDocument()
+    expect(screen.getByText('1 de 1')).toBeInTheDocument()
     expect(screen.queryByText(/Tu ejemplar:/)).not.toBeInTheDocument()
     expect(api.pedidos('/api/libros/1')).toHaveLength(1)
+  })
+
+  it('sin stock deshabilita Reservar y lo dice', async () => {
+    entrarComo('Lector')
+    const api = crearApiFake([{ titulo: 'El Principito', copias: 0 }])
+    server.use(...api.handlers)
+    await renderEn('/libros/1')
+    await screen.findByRole('heading', { name: 'El Principito', level: 1 })
+
+    const boton = screen.getByRole('button', { name: 'Reservar' })
+    expect(boton).toBeDisabled()
+    expect(boton).toHaveAccessibleDescription('Sin ejemplares disponibles')
+  })
+
+  it('el lector no ve la lista de ejemplares ni sus códigos', async () => {
+    entrarComo('Lector')
+    await renderEn('/libros/1')
+    await screen.findByRole('heading', { name: 'El Principito', level: 1 })
+
+    expect(screen.queryByText('BIB-001')).not.toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Ejemplares' })).not.toBeInTheDocument()
   })
 })

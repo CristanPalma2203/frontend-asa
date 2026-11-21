@@ -40,6 +40,9 @@ describe('admin de ejemplares', () => {
     const fila = (await screen.findByText('BIB-001')).closest('tr') as HTMLElement
 
     await user.click(within(fila).getByRole('button', { name: 'Inactivar' }))
+    // Inactivar pide confirmación.
+    const dialogo = await screen.findByRole('dialog', { name: 'Inactivar ejemplar' })
+    await user.click(within(dialogo).getByRole('button', { name: 'Inactivar' }))
 
     expect(await within(fila).findByText('Inactivo')).toBeInTheDocument()
     expect(api.libros[0]?.ejemplares[0]?.estado).toBe('Inactivo')
@@ -50,6 +53,27 @@ describe('admin de ejemplares', () => {
     // De vuelta a la lista: estaba en caché con 3 y se invalidó, así que se vuelve a pedir.
     await act(() => router.navigate({ to: '/admin/libros', search: { page: 1, pageSize: 12 } }))
     await waitFor(() => expect(celdaDisponibles('El Principito')).toHaveTextContent('2'))
-    expect(api.pedidos('/api/libros')).toHaveLength(2)
+    // Solo el listado de la tabla (pageSize 12); el contador del sidebar usa otra página.
+    const listados = api.pedidos('/api/libros').filter((url) => url.searchParams.get('pageSize') === '12')
+    expect(listados).toHaveLength(2)
+  })
+
+  it('el resumen muestra las métricas calculadas con los endpoints existentes', async () => {
+    entrarComo('Admin')
+    const api = crearApiFake([
+      { titulo: 'El Principito', copias: 3 },
+      { titulo: 'Dune', copias: 2 },
+    ])
+    server.use(...api.handlers)
+    await renderEn('/admin')
+
+    const metricas = await screen.findByRole('list', { name: 'Métricas' })
+    const valor = (etiqueta: string) =>
+      within(within(metricas).getByText(etiqueta).closest('li') as HTMLElement)
+
+    expect(await valor('Libros').findByText('2')).toBeInTheDocument()
+    expect(valor('Ejemplares disponibles').getByText('5')).toBeInTheDocument()
+    expect(valor('Ejemplares disponibles').getByText('de 5 ejemplares en total')).toBeInTheDocument()
+    expect(valor('Ejemplares reservados').getByText('0')).toBeInTheDocument()
   })
 })

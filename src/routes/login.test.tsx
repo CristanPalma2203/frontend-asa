@@ -16,4 +16,17 @@ describe('login', () => {
       mensajeDeError('credenciales-invalidas', ''),
     )
   })
+
+  it('el botón del ojo muestra y oculta la contraseña', async () => {
+    const user = userEvent.setup()
+    await renderEn('/login')
+    const password = screen.getByLabelText('Contraseña')
+    expect(password).toHaveAttribute('type', 'password')
+
+    await user.click(screen.getByRole('button', { name: 'Mostrar contraseña' }))
+    expect(password).toHaveAttribute('type', 'text')
+
+    await user.click(screen.getByRole('button', { name: 'Ocultar contraseña' }))
+    expect(password).toHaveAttribute('type', 'password')
+  })
 })

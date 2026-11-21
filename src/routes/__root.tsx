@@ -2,11 +2,12 @@ import { createRootRoute, Outlet, useRouterState } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
 import { AppShell } from '@/components/layout/app-shell'
-import { Card } from '@/components/ui/card'
+import { ErrorGeneral, PaginaNoEncontrada } from '@/components/layout/pantallas-estado'
 
 export const Route = createRootRoute({
   component: RootLayout,
-  notFoundComponent: NotFoundPage,
+  notFoundComponent: PaginaNoEncontrada,
+  errorComponent: ErrorGeneral,
 })
 
 function RootLayout() {
@@ -27,15 +28,4 @@ function Titulo() {
   }, [title])
 
   return null
-}
-
-function NotFoundPage() {
-  return (
-    <main className="mx-auto w-full max-w-3xl px-4 py-10">
-      <Card className="p-6 sm:p-8">
-        <h1 className="text-3xl sm:text-4xl">Página no encontrada</h1>
-        <p className="mt-2 text-sm text-tinta">Esa ruta no existe.</p>
-      </Card>
-    </main>
-  )
 }

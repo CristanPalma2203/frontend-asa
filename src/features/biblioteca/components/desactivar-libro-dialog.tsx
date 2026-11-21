@@ -29,9 +29,11 @@ export function DesactivarLibroDialog({
         <DialogHeader>
           <DialogTitle>Desactivar {libro?.titulo}</DialogTitle>
         </DialogHeader>
-        <p className="text-sm">El libro dejará de aparecer en el catálogo.</p>
+        <p className="text-texto-2 text-[15px] leading-relaxed">
+          El libro dejará de aparecer en el catálogo.
+        </p>
         {error instanceof ApiError ? (
-          <p className="text-sm text-destructive">
+          <p role="alert" className="border-rojo-600/20 bg-rojo-50 text-rojo-800 rounded-xl border px-4 py-3 text-sm font-medium">
             {mensajeDeError(error.code, error.detail || error.title)}
           </p>
         ) : null}

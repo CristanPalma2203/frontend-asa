@@ -1,9 +1,9 @@
 import { getRouteApi } from '@tanstack/react-router'
+import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
+import { BuscadorLista, EncabezadoPagina } from '@/components/layout/encabezado-pagina'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
 import { DesactivarLibroDialog } from '@/features/biblioteca/components/desactivar-libro-dialog'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import { LibroFormDialog } from '@/features/biblioteca/components/libro-form-dialog'
@@ -53,56 +53,69 @@ export function LibrosAdminPage() {
   const items = libros.data?.items ?? []
 
   return (
-    <section className="rounded-2xl border-2 border-tinta bg-white p-4 shadow-cartoon">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="font-display text-3xl text-verde">Libros</h1>
-        <Button type="button" onClick={() => setModo('crear')}>
-          Crear libro
-        </Button>
-      </div>
-      <Input
+    <main className="flex flex-col gap-6 pt-2">
+      <EncabezadoPagina
+        eyebrow="Gestión"
+        titulo="Libros del"
+        serif="catálogo"
+        detalle={libros.isSuccess ? `${libros.data.totalCount} títulos` : null}
+        accion={
+          <Button type="button" onClick={() => setModo('crear')}>
+            <Plus aria-hidden />
+            Crear libro
+          </Button>
+        }
+      />
+      <BuscadorLista
         value={texto}
         onChange={(event) => setTexto(event.target.value)}
         placeholder="Buscar título, autor o ISBN"
         aria-label="Buscar libros"
-        className="mt-4 bg-crema"
       />
-      {libros.isPending ? <Skeleton className="mt-4 h-40 rounded-2xl border-2 border-tinta" /> : null}
       {libros.isError ? (
-        <ErrorReintentar
-          error={libros.error}
-          onRetry={() => void libros.refetch()}
-        />
+        <div className="bg-card border-linea rounded-xl border p-6">
+          <ErrorReintentar error={libros.error} onRetry={() => void libros.refetch()} />
+        </div>
       ) : null}
       {libros.isSuccess && items.length === 0 ? (
-        <p className="mt-6 text-sm">No hay libros con esa búsqueda.</p>
+        <p className="bg-card border-linea text-texto-3 rounded-xl border px-6 py-10 text-center text-[15px]">
+          No hay libros con esa búsqueda.
+        </p>
       ) : null}
-      {libros.isSuccess && items.length > 0 ? (
+      {libros.isPending || (libros.isSuccess && items.length > 0) ? (
         <LibrosAdminTable
           libros={items}
+          cargando={libros.isPending}
           onEdit={setModo}
           onBaja={setBaja}
         />
       ) : null}
       {libros.isSuccess ? (
-        <div className="mt-4 flex justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={search.page <= 1}
-            onClick={() => void navigate({ search: { ...search, page: search.page - 1 } })}
-          >
-            Anterior
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={search.page >= (libros.data.totalPages || 1)}
-            onClick={() => void navigate({ search: { ...search, page: search.page + 1 } })}
-          >
-            Siguiente
-          </Button>
-        </div>
+        <nav aria-label="Paginación" className="flex items-center justify-between gap-3">
+          <p className="text-texto-3 text-sm">
+            Página {search.page} de {Math.max(libros.data.totalPages, 1)}
+          </p>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={search.page <= 1}
+              onClick={() => void navigate({ search: { ...search, page: search.page - 1 } })}
+            >
+              Anterior
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={search.page >= (libros.data.totalPages || 1)}
+              onClick={() => void navigate({ search: { ...search, page: search.page + 1 } })}
+            >
+              Siguiente
+            </Button>
+          </div>
+        </nav>
       ) : null}
       <LibroFormDialog
         abierto={modo !== null}
@@ -122,6 +135,6 @@ export function LibrosAdminPage() {
         error={desactivar.error}
         onConfirmar={(libro) => desactivar.mutate(libro.idLibro)}
       />
-    </section>
+    </main>
   )
 }

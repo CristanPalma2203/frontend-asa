@@ -17,6 +17,23 @@ export function useMisReservas(filtro: FiltroReservas = 'Activa', page = 1, page
   })
 }
 
+/**
+ * Reservas activas del lector, para contadores (cabecera y sidebar). Comparte caché con la
+ * pestaña «Activas» y cuenta por estado, así que refleja al instante la cancelación optimista.
+ */
+export function useReservasActivasCount() {
+  const lectorId = useAuthStore((state) => state.lectorId)
+  return useQuery({
+    queryKey: queryKeys.reservas.list('Activa', 1, 20),
+    queryFn: () => listarReservasDeLector(lectorId ?? 0, 'Activa', 1, 20),
+    enabled: lectorId != null,
+    select: (pagina) =>
+      pagina.totalPages > 1
+        ? pagina.totalCount
+        : pagina.items.filter((reserva) => reserva.estado === 'Activa').length,
+  })
+}
+
 export function useReservar() {
   const queryClient = useQueryClient()
 

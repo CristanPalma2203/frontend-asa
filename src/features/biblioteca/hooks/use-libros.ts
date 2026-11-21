@@ -13,6 +13,47 @@ export function useLibros(params: ListarLibrosParams) {
   })
 }
 
+/** Muestra del catálogo para la Home: una página de la API de la que salen las portadas y categorías. */
+const muestraHome = { page: 1, pageSize: 50 } satisfies ListarLibrosParams
+
+export type ResumenHome = {
+  totalTitulos: number
+  /** Portadas para la tira del hero: primero los que tienen stock. */
+  destacados: Libro[]
+  /** Categorías más frecuentes de la muestra, de mayor a menor. */
+  categorias: string[]
+}
+
+export function resumirHome(
+  pagina: { items: Libro[]; totalCount: number },
+  maxDestacados = 6,
+  maxCategorias = 6,
+): ResumenHome {
+  const destacados = [...pagina.items]
+    .sort((a, b) => Number(b.disponibles > 0) - Number(a.disponibles > 0))
+    .slice(0, maxDestacados)
+
+  const conteo = new Map<string, number>()
+  for (const libro of pagina.items) {
+    const categoria = libro.categoria.trim()
+    if (categoria) conteo.set(categoria, (conteo.get(categoria) ?? 0) + 1)
+  }
+  const categorias = [...conteo]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'))
+    .slice(0, maxCategorias)
+    .map(([categoria]) => categoria)
+
+  return { totalTitulos: pagina.totalCount, destacados, categorias }
+}
+
+export function useResumenHome() {
+  return useQuery({
+    queryKey: queryKeys.libros.list(muestraHome),
+    queryFn: () => listarLibros(muestraHome),
+    select: (pagina) => resumirHome(pagina),
+  })
+}
+
 export function useLibro(id: number) {
   return useQuery({
     queryKey: queryKeys.libros.detail(id),
