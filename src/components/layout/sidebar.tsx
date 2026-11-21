@@ -21,7 +21,6 @@ import {
   useTotalLectores,
   useTotalLibros,
 } from '@/features/biblioteca/hooks/use-resumen-admin'
-import { LuxiaBoton } from '@/features/luxia/components/luxia-boton'
 import { cn } from '@/lib/utils'
 
 const listaAdmin = { page: 1, pageSize: 12 } as const
@@ -125,7 +124,6 @@ export function Sidebar({ onNavegar }: { onNavegar?: () => void }) {
       </nav>
 
       <div className="relative mt-auto flex flex-col gap-3">
-        <LuxiaBoton variante="sidebar" onClick={onNavegar} />
         {sesion.visible ? (
           <div className="flex items-center gap-3 rounded-2xl bg-white/5 p-3.5">
             <span

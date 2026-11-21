@@ -4,6 +4,7 @@ import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
+import { LimiteError } from '@/components/layout/pantallas-estado'
 import { Toaster } from '@/components/ui/sonner'
 import { sesionExpiradaAlCargar } from '@/features/auth/store'
 import { olvidarLuxia } from '@/features/luxia/reset'
@@ -59,7 +60,9 @@ if (!root) {
 createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <LimiteError>
+        <RouterProvider router={router} />
+      </LimiteError>
       <Toaster />
       {import.meta.env.DEV ? (
         <ReactQueryDevtools initialIsOpen={false} />

@@ -9,21 +9,21 @@ export function Brand({
   tono = 'oscuro',
   className,
   onClick,
+  nativo = false,
 }: {
   tono?: Tono
   className?: string
   onClick?: () => void
+  /** `<a href="/">` en vez de Link: para pantallas fuera del router (límite de errores). */
+  nativo?: boolean
 }) {
-  return (
-    <Link
-      to="/"
-      onClick={onClick}
-      className={cn(
-        'inline-flex items-center gap-2.5 rounded-lg no-underline hover:no-underline',
-        tono === 'oscuro' ? 'text-papel' : 'text-tinta',
-        className,
-      )}
-    >
+  const clases = cn(
+    'inline-flex items-center gap-2.5 rounded-lg no-underline hover:no-underline',
+    tono === 'oscuro' ? 'text-papel' : 'text-tinta',
+    className,
+  )
+  const contenido = (
+    <>
       <span
         aria-hidden
         className={cn(
@@ -46,6 +46,17 @@ export function Brand({
           Biblioteca
         </span>
       </span>
+    </>
+  )
+  if (nativo)
+    return (
+      <a href="/" onClick={onClick} className={clases}>
+        {contenido}
+      </a>
+    )
+  return (
+    <Link to="/" onClick={onClick} className={clases}>
+      {contenido}
     </Link>
   )
 }

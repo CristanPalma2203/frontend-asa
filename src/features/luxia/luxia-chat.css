@@ -32,9 +32,13 @@
 .luxia-fab .luxia-fab__flyer[data-volando] .luxia-fab__btn {
   pointer-events: none;
 }
-/* Con una hoja (panel lateral del catálogo) o un diálogo abiertos, la mascota no tapa su
-   contenido (portadas, «Ver ficha»): se esconde hasta que se cierran. */
-body:has([data-slot='sheet-content'], [data-slot='dialog-content'])
+/* Con el menú móvil (data-slot sheet-content) o un diálogo abiertos, la mascota no tapa su
+   contenido: se esconde hasta que se cierran. */
+body:has(
+    [data-slot='sheet-content'],
+    [data-slot='dialog-content'],
+    [data-pantalla-error]
+  )
   .luxia-fab:not(.is-open)
   .luxia-fab__flyer {
   visibility: hidden;

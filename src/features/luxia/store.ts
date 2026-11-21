@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 
 /**
- * Estado compartido del chat de LuxIA: lo abren y cierran el botón flotante, el del sidebar y el
- * de la barra superior. `opener` es el botón que lo abrió, para devolverle el foco al cerrar.
+ * Estado del chat de LuxIA. Solo lo abre la mascota flotante; se cierra con ella, con Escape o al
+ * ir a una ficha. `opener` es el botón que lo abrió, para devolverle el foco al cerrar.
  */
 type LuxiaState = {
   abierto: boolean
@@ -10,7 +10,6 @@ type LuxiaState = {
   abrir: (opener?: HTMLElement | null) => void
   cerrar: () => void
   alternar: (opener?: HTMLElement | null) => void
-  setAbierto: (abierto: boolean) => void
   /** Vuelve al estado inicial (cerrado, sin opener). */
   reiniciar: () => void
 }
@@ -22,6 +21,5 @@ export const useLuxiaStore = create<LuxiaState>((set, get) => ({
   cerrar: () => set({ abierto: false }),
   alternar: (opener = null) =>
     get().abierto ? set({ abierto: false }) : set({ abierto: true, opener }),
-  setAbierto: (abierto) => set({ abierto }),
   reiniciar: () => set({ abierto: false, opener: null }),
 }))

@@ -1,16 +1,15 @@
+import { Link } from '@tanstack/react-router'
+
 import { Hueso } from '@/components/ui/hueso'
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { StockBadge } from '@/features/biblioteca/components/stock-badge'
 import type { Libro } from '@/features/biblioteca/types/api'
 
-/** Tarjeta del catálogo. Toda la tarjeta es clicable: el botón del título se estira encima. */
-export function LibroCard({
-  libro,
-  onAbrir,
-}: {
-  libro: Libro
-  onAbrir: (libro: Libro) => void
-}) {
+/**
+ * Tarjeta del catálogo. Toda la tarjeta lleva a la ficha: el enlace del título se estira encima
+ * (un solo elemento enfocable; el foco se ve en la tarjeta entera).
+ */
+export function LibroCard({ libro }: { libro: Libro }) {
   return (
     <article
       data-lift
@@ -26,13 +25,13 @@ export function LibroCard({
       <div className="flex flex-1 flex-col gap-1 px-2 pt-4 pb-2">
         <p className="eyebrow truncate">{libro.categoria}</p>
         <h2 className="text-tinta line-clamp-2 text-[17px] leading-snug tracking-[-0.02em]">
-          <button
-            type="button"
-            onClick={() => onAbrir(libro)}
-            className="cursor-pointer text-left outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
+          <Link
+            to="/libros/$idLibro"
+            params={{ idLibro: String(libro.idLibro) }}
+            className="outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
           >
             {libro.titulo}
-          </button>
+          </Link>
         </h2>
         <p className="text-texto-3 truncate text-sm">{libro.autor}</p>
         <div className="mt-auto pt-3">

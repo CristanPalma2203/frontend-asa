@@ -5,7 +5,6 @@ import { useRef, useState, type ReactNode } from 'react'
 
 import { Brand } from '@/components/layout/brand'
 import { Sidebar } from '@/components/layout/sidebar'
-import { LuxiaBoton } from '@/features/luxia/components/luxia-boton'
 import { LuxiaFab } from '@/features/luxia/components/luxia-fab'
 import { useMotion } from '@/hooks/use-motion'
 import { reveal, titleLines } from '@/lib/motion'
@@ -17,7 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
-  // 404 global (notFoundComponent de la raíz): se pinta dentro del shell, pero sin LuxIA.
+  // 404 global (notFoundComponent de la raíz): pantalla completa, sin sidebar ni LuxIA.
   const esNoEncontrada = useRouterState({
     select: (state) =>
       // Sin ruta hija que coincida solo queda la raíz: es el 404 global.
@@ -26,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   })
 
   // La Home lleva su propia navegación dentro del hero y el login es una pantalla partida.
-  if (pathname === '/login') return <>{children}</>
+  if (pathname === '/login' || esNoEncontrada) return <>{children}</>
   if (rutasSinSidebar.has(pathname)) {
     return (
       <div className="bg-background flex min-h-svh flex-col">
@@ -126,7 +125,6 @@ function Topbar() {
   return (
     <header className="flex h-[92px] items-center justify-between gap-6 px-14">
       <BuscadorGlobal />
-      <LuxiaBoton variante="barra" />
     </header>
   )
 }

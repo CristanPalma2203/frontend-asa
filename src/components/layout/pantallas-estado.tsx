@@ -1,86 +1,268 @@
-import { Link, type ErrorComponentProps } from '@tanstack/react-router'
+import {
+  Link,
+  useRouter,
+  type ErrorComponentProps,
+} from '@tanstack/react-router'
 import { ArrowLeft, RotateCcw } from 'lucide-react'
+import { Component, useRef, type ReactNode } from 'react'
 
 import { Brand } from '@/components/layout/brand'
+import { LibroError } from '@/components/layout/libro-error'
 import { Button, buttonVariants } from '@/components/ui/button'
+import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
+import { useMotion } from '@/hooks/use-motion'
+import { reveal, titleLines } from '@/lib/motion'
+import { cn } from '@/lib/utils'
 
-/** 404: ruta que no existe. Se pinta dentro del shell. */
-export function PaginaNoEncontrada() {
+type Tono = 'oscuro' | 'claro'
+
+/**
+ * Estructura común de las pantallas de error: pantalla completa (sin sidebar ni LuxIA), logo
+ * arriba, texto y botones a la izquierda, libro a la derecha (arriba en móvil) y pie.
+ */
+function PantallaError({
+  tono,
+  etiqueta,
+  linea1,
+  linea2,
+  texto,
+  acciones,
+  libro,
+  detalle,
+  logo,
+  encima = false,
+}: {
+  tono: Tono
+  etiqueta: string
+  linea1: string
+  linea2: string
+  texto: string
+  acciones: ReactNode
+  libro: { titulo: string; subtitulo: string }
+  detalle?: ReactNode
+  logo: ReactNode
+  /** Cubre toda la ventana aunque se pinte dentro del layout (ficha de un libro inexistente). */
+  encima?: boolean
+}) {
+  const ref = useRef<HTMLElement>(null)
+  useMotion(ref, (root) => {
+    titleLines(root.querySelector('h1'), 0.05)
+    reveal(root.querySelectorAll('[data-m]'), {
+      y: 14,
+      stagger: 0.07,
+      delay: 0.2,
+    })
+  })
+
+  const oscuro = tono === 'oscuro'
   return (
-    <main className="mx-auto flex w-full max-w-xl flex-col items-center px-5 py-20 text-center">
-      <p
-        aria-hidden
-        className="text-pino-800 font-serif text-[120px] leading-none italic sm:text-[160px]"
+    <div
+      data-pantalla-error
+      className={cn(
+        'pantalla-error relative isolate flex min-h-svh flex-col px-6 py-7 sm:px-12',
+        oscuro
+          ? 'pantalla-error--oscuro text-papel'
+          : 'pantalla-error--claro text-tinta',
+        encima && 'fixed inset-0 z-[1100] overflow-y-auto',
+      )}
+    >
+      <div className="self-start">{logo}</div>
+      <main
+        ref={ref}
+        className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16"
       >
-        4
-        <span className="text-lima-400 [-webkit-text-stroke:2px_var(--color-pino-800)]">
-          0
-        </span>
-        4
-      </p>
-      <p className="eyebrow mt-6">Error 404</p>
-      <h1 className="mt-2 text-[32px] leading-tight sm:text-[40px]">
-        Página no <span className="titulo-serif">encontrada</span>
-      </h1>
-      <p className="text-texto-3 mt-3 max-w-sm text-[15px]">
-        Esa ruta no existe o se movió. Vuelve al inicio o busca en el catálogo.
-      </p>
-      <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Link to="/" className={buttonVariants()}>
-          <ArrowLeft aria-hidden />
-          Volver al inicio
-        </Link>
-        <Link
-          to="/catalogo"
-          search={{ page: 1, pageSize: 12 }}
-          className={buttonVariants({ variant: 'outline' })}
-        >
-          Ir al catálogo
-        </Link>
-      </div>
-    </main>
+        <div className="order-2 flex flex-col items-start lg:order-1">
+          <p
+            data-m
+            className={cn(
+              'rounded-full border px-3 py-1 font-mono text-xs font-medium tracking-[0.14em]',
+              oscuro
+                ? 'border-lima-400/40 bg-lima-400/10 text-lima-400'
+                : 'border-rojo-600/25 bg-rojo-50 text-rojo-800',
+            )}
+          >
+            {etiqueta}
+          </p>
+          <h1 className="mt-6 text-[40px] leading-[1.04] font-semibold tracking-[-0.03em] sm:text-[56px] lg:text-[64px]">
+            <PalabrasAnimadas texto={linea1} />{' '}
+            <span
+              className={cn(
+                'titulo-serif block',
+                oscuro ? 'text-lima-400' : 'text-pino-800',
+              )}
+            >
+              <PalabrasAnimadas texto={linea2} cursiva />
+            </span>
+          </h1>
+          <p
+            data-m
+            className={cn(
+              'mt-5 max-w-md text-base leading-relaxed sm:text-[17px]',
+              oscuro ? 'text-white/72' : 'text-texto-3',
+            )}
+          >
+            {texto}
+          </p>
+          <div data-m className="mt-8 flex flex-wrap gap-3">
+            {acciones}
+          </div>
+          {detalle}
+        </div>
+        <div className="order-1 flex justify-center lg:order-2">
+          <LibroError
+            titulo={libro.titulo}
+            subtitulo={libro.subtitulo}
+            tono={tono}
+          />
+        </div>
+      </main>
+      <footer
+        className={cn('text-xs', oscuro ? 'text-white/55' : 'text-texto-3')}
+      >
+        Desarrollado por Alex Palma
+      </footer>
+    </div>
   )
 }
 
-/** Error no controlado de la app: pantalla completa con reintento y vuelta al inicio. */
-export function ErrorGeneral({ reset }: ErrorComponentProps) {
+/** 404: ruta que no existe (y ficha de un libro inexistente, con `encima`). */
+export function PaginaNoEncontrada({ encima = false }: { encima?: boolean }) {
   return (
-    <div className="bg-pino-950 text-papel relative isolate flex min-h-svh flex-col overflow-hidden px-5 py-8 sm:px-10">
-      <div
-        aria-hidden
-        className="bg-lima-glow pointer-events-none absolute top-1/3 left-1/2 -z-10 size-[520px] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-35 blur-[120px]"
-      />
-      <Brand tono="oscuro" />
-      <main className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center text-center">
-        <p className="text-[13px] font-semibold tracking-[0.12em] text-white/60 uppercase">
-          Algo salió mal
-        </p>
-        <h1 className="text-papel mt-3 text-[36px] leading-tight sm:text-[48px]">
-          No pudimos mostrar
-          <span className="titulo-serif text-lima-400 block">esta página.</span>
-        </h1>
-        <p className="mt-4 text-[15px] text-white/70">
-          Fue un error inesperado. Puedes intentarlo de nuevo o volver al
-          inicio.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-3">
-          <Button type="button" variant="accent" onClick={reset}>
-            <RotateCcw aria-hidden />
-            Reintentar
-          </Button>
-          <a
-            href="/"
+    <PantallaError
+      tono="oscuro"
+      encima={encima}
+      logo={<Brand tono="oscuro" />}
+      etiqueta="ERROR 404"
+      linea1="Esta página se"
+      linea2="perdió entre estantes"
+      texto="Puede que el enlace esté mal escrito o que la página ya no exista."
+      libro={{ titulo: 'Capítulo 404', subtitulo: 'Página no encontrada' }}
+      acciones={
+        <>
+          <Link to="/" className={buttonVariants({ variant: 'accent' })}>
+            <ArrowLeft aria-hidden />
+            Volver al inicio
+          </Link>
+          <Link
+            to="/catalogo"
+            search={{ page: 1, pageSize: 12 }}
             className={buttonVariants({
               variant: 'outline',
               className:
-                'text-papel border-white/25 bg-transparent hover:border-white/60',
+                'text-papel hover:text-papel border-white/30 bg-transparent hover:border-white/70 hover:bg-white/5',
             })}
           >
+            Ir al catálogo
+          </Link>
+        </>
+      }
+    />
+  )
+}
+
+/** Cuerpo de la 500, sin depender del router (lo usa también LimiteError, fuera de él). */
+function PaginaError({
+  error,
+  onReintentar,
+  logo,
+  inicio,
+}: {
+  error: unknown
+  onReintentar: () => void
+  logo: ReactNode
+  inicio: ReactNode
+}) {
+  return (
+    <PantallaError
+      tono="claro"
+      logo={logo}
+      etiqueta="ERROR 500"
+      linea1="Algo"
+      linea2="salió mal"
+      texto="No pudimos cargar esta página. Tus reservas están a salvo; inténtalo de nuevo en unos segundos."
+      libro={{ titulo: 'Fe de erratas', subtitulo: 'Error del servidor' }}
+      acciones={
+        <>
+          <Button type="button" onClick={onReintentar}>
+            <RotateCcw aria-hidden />
+            Reintentar
+          </Button>
+          {inicio}
+        </>
+      }
+      detalle={
+        // Solo en desarrollo: el usuario nunca ve el mensaje técnico ni el stack.
+        import.meta.env.DEV && error instanceof Error ? (
+          <details className="text-texto-3 mt-8 max-w-md text-xs">
+            <summary className="cursor-pointer">Detalle técnico</summary>
+            <pre className="mt-2 overflow-auto whitespace-pre-wrap">
+              {error.stack ?? error.message}
+            </pre>
+          </details>
+        ) : null
+      }
+    />
+  )
+}
+
+const claseInicio = buttonVariants({ variant: 'outline' })
+
+/** 500 dentro del router (errorComponent de la raíz): reintenta reseteando y recargando la ruta. */
+export function ErrorGeneral({ error, reset }: ErrorComponentProps) {
+  const router = useRouter()
+  return (
+    <PaginaError
+      error={error}
+      onReintentar={() => {
+        reset()
+        void router.invalidate()
+      }}
+      logo={<Brand tono="claro" />}
+      inicio={
+        <Link to="/" className={claseInicio}>
+          <ArrowLeft aria-hidden />
+          Volver al inicio
+        </Link>
+      }
+    />
+  )
+}
+
+/**
+ * Límite de errores fuera del router (lo que falle por encima de las rutas): la misma 500,
+ * con enlaces normales porque aquí no hay router. «Reintentar» llama a `onReset` (por
+ * defecto recarga la página) y vuelve a pintar los hijos.
+ */
+export class LimiteError extends Component<
+  { children: ReactNode; onReset?: () => void },
+  { error: unknown }
+> {
+  state: { error: unknown } = { error: null }
+
+  static getDerivedStateFromError(error: unknown) {
+    return { error }
+  }
+
+  reintentar = () => {
+    const onReset = this.props.onReset ?? (() => window.location.reload())
+    onReset()
+    this.setState({ error: null })
+  }
+
+  render() {
+    if (this.state.error === null) return this.props.children
+    return (
+      <PaginaError
+        error={this.state.error}
+        onReintentar={this.reintentar}
+        logo={<Brand tono="claro" nativo />}
+        inicio={
+          <a href="/" className={claseInicio}>
             <ArrowLeft aria-hidden />
             Volver al inicio
           </a>
-        </div>
-      </main>
-    </div>
-  )
+        }
+      />
+    )
+  }
 }

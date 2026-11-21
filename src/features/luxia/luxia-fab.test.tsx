@@ -346,22 +346,6 @@ describe('LuxIA', () => {
     expect(api.pedidos('/api/reservas')).toHaveLength(0)
   })
 
-  it('el botón «Pregúntale a LuxIA» del sidebar abre el mismo panel (uno solo)', async () => {
-    const user = userEvent.setup()
-    await renderEn(CATALOGO)
-    const [boton] = screen.getAllByRole('button', {
-      name: 'Pregúntale a LuxIA',
-    })
-    if (!boton) throw new Error('Falta el botón del sidebar')
-
-    await user.click(boton)
-
-    expect(
-      await screen.findAllByRole('dialog', { name: 'LuxIA' }),
-    ).toHaveLength(1)
-    expect(boton).toHaveAttribute('aria-expanded', 'true')
-  })
-
   it('con reduced-motion el muelle es instantáneo: sin vuelo ni fundido', async () => {
     vi.stubGlobal(
       'matchMedia',

@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
@@ -108,19 +108,48 @@ describe('catálogo', () => {
     expect(router.state.location.search).toMatchObject({ page: 2 })
   })
 
-  it('al pulsar una tarjeta abre el panel con el resumen y el enlace a la ficha', async () => {
+  it('pulsar una tarjeta lleva a la ficha y Atrás vuelve al catálogo con sus filtros', async () => {
     const user = userEvent.setup()
-    await renderEn('/catalogo?page=1&pageSize=12')
-
-    await user.click(
-      await screen.findByRole('button', { name: 'El Principito' }),
+    const { router } = await renderEn(
+      '/catalogo?page=1&pageSize=12&categoria=Infantil',
     )
 
-    const panel = await screen.findByRole('dialog', { name: 'El Principito' })
-    expect(within(panel).getByText('2 disponibles')).toBeInTheDocument()
+    const enlace = await screen.findByRole('link', { name: 'El Principito' })
+    expect(enlace).toHaveAttribute('href', '/libros/1')
+    // Sin hoja de vista previa.
+    await user.click(enlace)
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/libros/1'),
+    )
+    expect(screen.queryByRole('dialog')).toBeNull()
     expect(
-      within(panel).getByRole('link', { name: 'Ver ficha' }),
-    ).toHaveAttribute('href', '/libros/1')
+      await screen.findByRole('button', { name: 'Reservar' }),
+    ).toBeInTheDocument()
+
+    await act(() => router.history.back())
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/catalogo'),
+    )
+    expect(router.state.location.search).toMatchObject({
+      page: 1,
+      pageSize: 12,
+      categoria: 'Infantil',
+    })
+  })
+
+  it('la tarjeta se puede abrir con el teclado (Enter sobre el enlace)', async () => {
+    const user = userEvent.setup()
+    const { router } = await renderEn('/catalogo?page=1&pageSize=12')
+
+    const enlace = await screen.findByRole('link', { name: 'El Principito' })
+    enlace.focus()
+    expect(enlace).toHaveFocus()
+    await user.keyboard('{Enter}')
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/libros/1'),
+    )
   })
 
   it('el filtro de categoría escribe ?categoria= en la URL y lo manda a la API', async () => {

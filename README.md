@@ -81,7 +81,7 @@ src/
 **Lector**
 
 - Inicio con buscador, categorías y libros destacados.
-- Catálogo con búsqueda, filtros, paginación y un panel lateral con el resumen de cada libro.
+- Catálogo con búsqueda, filtros y paginación; cada tarjeta lleva a la ficha del libro.
 - Ficha del libro con su disponibilidad y el botón «Reservar».
 - Mis reservas: ver las activas y el historial, y cancelar.
 - LuxIA: chat de consulta sobre el catálogo.

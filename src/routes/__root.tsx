@@ -9,7 +9,7 @@ import {
 
 export const Route = createRootRoute({
   component: RootLayout,
-  notFoundComponent: PaginaNoEncontrada,
+  notFoundComponent: () => <PaginaNoEncontrada />,
   errorComponent: ErrorGeneral,
 })
 

@@ -187,7 +187,7 @@ export function LuxiaFab() {
 
   const kbOpen = useVisualViewportVars(open, rootRef, measureDock)
 
-  // Abrir y cerrar llegan por el store (botón flotante, sidebar, barra superior o Escape). La
+  // Abrir y cerrar llegan por el store (mascota flotante, Escape o un enlace del chat). La
   // reacción va en el listener del store, no en un efecto que mire `open`.
   useEffect(
     () =>

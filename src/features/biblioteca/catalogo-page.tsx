@@ -8,13 +8,11 @@ import {
   LibroCard,
   LibroCardFantasma,
 } from '@/features/biblioteca/components/libro-card'
-import { LibroResumenPanel } from '@/features/biblioteca/components/libro-resumen-panel'
 import {
   useLibros,
   useResumenHome,
 } from '@/features/biblioteca/hooks/use-libros'
 import type { CatalogoSearch } from '@/features/biblioteca/schemas/catalogo-search.schema'
-import type { Libro } from '@/features/biblioteca/types/api'
 import { useMotion } from '@/hooks/use-motion'
 import { cardsIn, lift, reveal } from '@/lib/motion'
 import { cn } from '@/lib/utils'
@@ -38,7 +36,6 @@ export function CatalogoPage() {
   const [filtrosUrl, setFiltrosUrl] = useState<Filtros>(() =>
     filtrosDeUrl(search),
   )
-  const [abierto, setAbierto] = useState<Libro | null>(null)
 
   // Si la URL cambia desde fuera (atrás/adelante, chips, buscador global), los inputs la siguen.
   const actualesUrl = filtrosDeUrl(search)
@@ -282,7 +279,7 @@ export function CatalogoPage() {
         >
           {items.map((libro) => (
             <li key={libro.idLibro}>
-              <LibroCard libro={libro} onAbrir={setAbierto} />
+              <LibroCard libro={libro} />
             </li>
           ))}
         </ul>
@@ -321,8 +318,6 @@ export function CatalogoPage() {
           </div>
         </nav>
       ) : null}
-
-      <LibroResumenPanel libro={abierto} onCerrar={() => setAbierto(null)} />
     </main>
   )
 }
