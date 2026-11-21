@@ -16,6 +16,20 @@ Aplicación web de la biblioteca ASA: los lectores buscan libros y los reservan,
 
 Sin iniciar sesión se puede navegar por el catálogo y ver las fichas; para reservar hay que entrar como lector.
 
+## Capturas
+
+| Inicio | Catálogo |
+| --- | --- |
+| ![Inicio](docs/home.png) | ![Catálogo](docs/catalogo.png) |
+
+| Ficha del libro | Mis reservas |
+| --- | --- |
+| ![Ficha del libro](docs/ficha.png) | ![Mis reservas](docs/mis-reservas.png) |
+
+| Resumen admin | Libros admin |
+| --- | --- |
+| ![Resumen admin](docs/dashboard.png) | ![Libros admin](docs/admin.png) |
+
 ## Stack
 
 - React 19, Vite y TypeScript
