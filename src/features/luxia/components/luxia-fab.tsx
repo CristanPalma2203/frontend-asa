@@ -1,11 +1,11 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 import {
   Fragment,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -36,12 +36,15 @@ import { useLuxiaStore } from '@/features/luxia/store'
 import { LuxiaLibroCard } from '@/features/luxia/components/luxia-libro-card'
 import { textos as t } from '@/features/luxia/textos'
 import type { ChatMsg } from '@/features/luxia/types/chat'
+import { dur } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 import '@/features/luxia/luxia-chat.css'
 
 /** Posición del muelle: `to` = destino actual (null = esquina) y `from` = de dónde sale el vuelo. */
 type Muelle = { from: Dock; to: Dock | null }
+
+gsap.registerPlugin(useGSAP)
 
 /**
  * LuxIA: panel propio, avatar flotante que vuela al header y
@@ -99,15 +102,23 @@ export function LuxiaFab() {
   const anchorRef = useRef<HTMLDivElement>(null)
   const rootRef = useRef<HTMLDivElement>(null)
   const panelCleanup = useRef<(() => void) | null>(null)
+  const panelElRef = useRef<HTMLElement | null>(null)
+  const dockRef = useRef<HTMLDivElement>(null)
+  const primerVuelo = useRef(true)
+
+  // El panel sigue montado mientras sale: se desmonta en el onComplete de su tween de salida.
+  // Al abrir se monta; se deriva del store durante el render, no en un efecto.
+  const [panelMontado, setPanelMontado] = useState(open)
+  const [abiertoPrevio, setAbiertoPrevio] = useState(open)
+  if (open !== abiertoPrevio) {
+    setAbiertoPrevio(open)
+    if (open) setPanelMontado(true)
+  }
 
   // El origen del vuelo viaja en el mismo estado que el destino (no en un ref leído en el render): cada cambio de muelle guarda de dónde sale.
   const [muelle, setMuelle] = useState<Muelle>({ from: ESQUINA, to: null })
   const dock = muelle.to
   const dockKey = claveDock(dock ?? ESQUINA)
-  const dockAnimation = useMemo(
-    () => dockAnim(muelle.to, muelle.from, reduced),
-    [muelle, reduced],
-  )
 
   /**
    * Destino del muelle = centro del hueco del header, medido con offsetLeft/offsetTop (layout
@@ -153,6 +164,7 @@ export function LuxiaFab() {
     (node: HTMLElement | null) => {
       panelCleanup.current?.()
       panelCleanup.current = null
+      panelElRef.current = node
       if (!node) return
       measureDock()
       window.addEventListener('resize', measureDock)
@@ -204,6 +216,85 @@ export function LuxiaFab() {
     setMuelle((m) => ({ from: m.to ?? ESQUINA, to: null }))
     setMood('idle')
   }, [setMood])
+
+  // Entrada y salida del panel (mismos valores que antes: entra 0.28 s ease-out desde y 12,
+  // sale 0.25 s ease-in hacia y 8). Con reduced-motion, sin desplazamiento y sin duración.
+  useGSAP(
+    () => {
+      const panel = panelElRef.current
+      if (!panel || !panelMontado) return
+      gsap.killTweensOf(panel)
+      if (open) {
+        gsap.fromTo(
+          panel,
+          { opacity: 0, y: reduced ? 0 : 12 },
+          { opacity: 1, y: 0, duration: dur(0.28), ease: 'power1.out' },
+        )
+        return
+      }
+      gsap.to(panel, {
+        opacity: 0,
+        y: reduced ? 0 : 8,
+        duration: dur(0.25),
+        ease: 'power1.in',
+        onComplete: () => {
+          setPanelMontado(false)
+          onPanelExited()
+        },
+      })
+    },
+    { scope: rootRef, dependencies: [open, panelMontado, reduced] },
+  )
+
+  // Vuelo del muelle entre la esquina y el hueco del header: arco muestreado en vuelo.ts
+  // (750 ms, la curva ya lleva el easing; cada tramo es lineal). El primer render solo coloca.
+  useGSAP(
+    () => {
+      const el = dockRef.current
+      if (!el) return
+      const vuelo = dockAnim(muelle.to, muelle.from, reduced)
+      // En la esquina el muelle no lleva transform: al llegar se limpia el estilo en línea.
+      const alaEsquina = muelle.to === null
+      const limpiar = alaEsquina ? 'transform,opacity' : undefined
+      gsap.killTweensOf(el)
+      if (primerVuelo.current) {
+        primerVuelo.current = false
+        if (alaEsquina) return
+        const fin =
+          vuelo.tipo === 'arco'
+            ? vuelo.poses[vuelo.poses.length - 1]
+            : { ...vuelo.destino, opacity: 1 }
+        gsap.set(el, { ...fin })
+        return
+      }
+      if (vuelo.tipo === 'fundido') {
+        gsap.set(el, vuelo.destino)
+        gsap.fromTo(
+          el,
+          { opacity: 0 },
+          {
+            opacity: 1,
+            duration: vuelo.duration,
+            ease: 'power1.out',
+            clearProps: limpiar,
+          },
+        )
+        return
+      }
+      const [inicio, ...resto] = vuelo.poses
+      const tramo = vuelo.duration / resto.length
+      gsap.set(el, { ...inicio })
+      gsap.to(el, {
+        keyframes: resto.map((pose) => ({
+          ...pose,
+          duration: tramo,
+          ease: 'none',
+        })),
+        clearProps: limpiar,
+      })
+    },
+    { scope: rootRef, dependencies: [muelle, reduced] },
+  )
 
   const buscar = useCallback(
     (params: ListarLibrosParams) =>
@@ -265,181 +356,166 @@ export function LuxiaFab() {
         }
       }}
     >
-      <AnimatePresence onExitComplete={onPanelExited}>
-        {open && (
-          <motion.section
-            key="luxia-chat"
-            ref={panelRef}
-            initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12 }}
-            animate={{
-              opacity: 1,
-              y: 0,
-              transition: { duration: 0.28, ease: 'easeOut' },
-            }}
-            exit={{
-              opacity: 0,
-              y: reduced ? 0 : 8,
-              transition: { duration: 0.25, ease: 'easeIn' },
-            }}
-            className="luxia-chat"
-            role="dialog"
-            aria-modal="false"
-            aria-labelledby="luxia-chat-title"
-          >
-            <header className="luxia-chat__head">
-              {/* Hueco donde aterriza (flotando) la LuxIA del botón; no es una copia. */}
-              <div
-                className="luxia-chat__slot"
-                ref={slotRef}
-                aria-hidden="true"
-                data-testid="luxia-chat-slot"
-              />
-              <div className="luxia-chat__title">
-                <h2 id="luxia-chat-title">LuxIA</h2>
-                <p data-testid="luxia-status">
-                  <span
-                    className={cn('luxia-chat__dot', error && 'is-off')}
-                    aria-hidden="true"
-                  />{' '}
-                  {busy ? t.typing : error ? t.offline : t.subtitle}
-                </p>
-              </div>
-              <button
-                type="button"
-                className="luxia-chat__close"
-                onClick={cerrar}
-                aria-label={t.close}
-              >
-                ×
-              </button>
-            </header>
+      {panelMontado && (
+        <section
+          ref={panelRef}
+          className="luxia-chat"
+          role="dialog"
+          aria-modal="false"
+          aria-labelledby="luxia-chat-title"
+        >
+          <header className="luxia-chat__head">
+            {/* Hueco donde aterriza (flotando) la LuxIA del botón; no es una copia. */}
             <div
-              className="luxia-chat__msgs"
-              ref={listRef}
-              role="log"
-              aria-live="polite"
-              aria-label={t.log}
-            >
-              <div
-                className="luxia-chat__msg is-assistant"
-                data-testid="luxia-chat-msg"
-              >
-                {t.greeting}
-              </div>
-              {msgs.map((m, i) => (
-                <Fragment key={i}>
-                  {m.text && (
-                    <div
-                      className={`luxia-chat__msg is-${m.role}`}
-                      data-testid="luxia-chat-msg"
-                    >
-                      {m.text}
-                    </div>
-                  )}
-                  {m.role === 'assistant' &&
-                  (m.libros?.length || m.consulta) ? (
-                    <div className="luxia-chat__links">
-                      {m.libros?.map((libro) => (
-                        <LuxiaLibroCard
-                          key={libro.idLibro}
-                          libro={libro}
-                          onNavegar={cerrar}
-                        />
-                      ))}
-                      {m.consulta && m.total ? (
-                        <Link
-                          to="/catalogo"
-                          search={{ page: 1, pageSize: 12, buscar: m.consulta }}
-                          className="luxia-chat__ver-todos"
-                          onClick={cerrar}
-                        >
-                          Ver todos en el catálogo
-                        </Link>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </Fragment>
-              ))}
-              {busy && (
-                <div
-                  className="luxia-chat__msg is-assistant luxia-chat__typing"
-                  aria-label={t.typing}
-                >
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              )}
-              {error && (
-                <div className="luxia-chat__error" role="alert">
-                  {t.errorGeneric}
-                  {canRetry && (
-                    <button
-                      type="button"
-                      className="luxia-chat__retry"
-                      onClick={retry}
-                    >
-                      {t.retry}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="luxia-chat__chips" data-testid="luxia-chips">
-              {t.chips.map((chip) => (
-                <button
-                  key={chip}
-                  type="button"
-                  className="luxia-chat__chip"
-                  disabled={busy}
-                  onClick={() => void send(chip)}
-                >
-                  {chip}
-                </button>
-              ))}
-            </div>
-            <form
-              className="luxia-chat__form"
-              onSubmit={(e) => {
-                e.preventDefault()
-                void send()
-              }}
-            >
-              <textarea
-                ref={inputRef}
-                rows={1}
-                value={draft}
-                maxLength={MAX_MESSAGE}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder={t.placeholder}
-                aria-label={t.inputAria}
-              />
-              <button
-                type="submit"
-                disabled={busy || !draft.trim()}
-                aria-label={t.send}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  width="20"
-                  height="20"
+              className="luxia-chat__slot"
+              ref={slotRef}
+              aria-hidden="true"
+              data-testid="luxia-chat-slot"
+            />
+            <div className="luxia-chat__title">
+              <h2 id="luxia-chat-title">LuxIA</h2>
+              <p data-testid="luxia-status">
+                <span
+                  className={cn('luxia-chat__dot', error && 'is-off')}
                   aria-hidden="true"
-                >
-                  <path
-                    d="M4 12h14M12 5l7 7-7 7"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.4"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                />{' '}
+                {busy ? t.typing : error ? t.offline : t.subtitle}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="luxia-chat__close"
+              onClick={cerrar}
+              aria-label={t.close}
+            >
+              ×
+            </button>
+          </header>
+          <div
+            className="luxia-chat__msgs"
+            ref={listRef}
+            role="log"
+            aria-live="polite"
+            aria-label={t.log}
+          >
+            <div
+              className="luxia-chat__msg is-assistant"
+              data-testid="luxia-chat-msg"
+            >
+              {t.greeting}
+            </div>
+            {msgs.map((m, i) => (
+              <Fragment key={i}>
+                {m.text && (
+                  <div
+                    className={`luxia-chat__msg is-${m.role}`}
+                    data-testid="luxia-chat-msg"
+                  >
+                    {m.text}
+                  </div>
+                )}
+                {m.role === 'assistant' && (m.libros?.length || m.consulta) ? (
+                  <div className="luxia-chat__links">
+                    {m.libros?.map((libro) => (
+                      <LuxiaLibroCard
+                        key={libro.idLibro}
+                        libro={libro}
+                        onNavegar={cerrar}
+                      />
+                    ))}
+                    {m.consulta && m.total ? (
+                      <Link
+                        to="/catalogo"
+                        search={{ page: 1, pageSize: 12, buscar: m.consulta }}
+                        className="luxia-chat__ver-todos"
+                        onClick={cerrar}
+                      >
+                        Ver todos en el catálogo
+                      </Link>
+                    ) : null}
+                  </div>
+                ) : null}
+              </Fragment>
+            ))}
+            {busy && (
+              <div
+                className="luxia-chat__msg is-assistant luxia-chat__typing"
+                aria-label={t.typing}
+              >
+                <span />
+                <span />
+                <span />
+              </div>
+            )}
+            {error && (
+              <div className="luxia-chat__error" role="alert">
+                {t.errorGeneric}
+                {canRetry && (
+                  <button
+                    type="button"
+                    className="luxia-chat__retry"
+                    onClick={retry}
+                  >
+                    {t.retry}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="luxia-chat__chips" data-testid="luxia-chips">
+            {t.chips.map((chip) => (
+              <button
+                key={chip}
+                type="button"
+                className="luxia-chat__chip"
+                disabled={busy}
+                onClick={() => void send(chip)}
+              >
+                {chip}
               </button>
-            </form>
-          </motion.section>
-        )}
-      </AnimatePresence>
+            ))}
+          </div>
+          <form
+            className="luxia-chat__form"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void send()
+            }}
+          >
+            <textarea
+              ref={inputRef}
+              rows={1}
+              value={draft}
+              maxLength={MAX_MESSAGE}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder={t.placeholder}
+              aria-label={t.inputAria}
+            />
+            <button
+              type="submit"
+              disabled={busy || !draft.trim()}
+              aria-label={t.send}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                aria-hidden="true"
+              >
+                <path
+                  d="M4 12h14M12 5l7 7-7 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+          </form>
+        </section>
+      )}
 
       {/* Siempre montada (un solo canvas): Rive recibe aparecer/desaparecer sin perder estado. */}
       <div
@@ -456,11 +532,7 @@ export function LuxiaFab() {
           data-dock-target={dockKey}
           data-closing={closing || undefined}
         >
-          <motion.div
-            className="luxia-fab__dock"
-            initial={false}
-            animate={dockAnimation}
-          >
+          <div ref={dockRef} className="luxia-fab__dock">
             <div
               className={cn(
                 'luxia-fab__bob',
@@ -493,7 +565,7 @@ export function LuxiaFab() {
                 />
               </button>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

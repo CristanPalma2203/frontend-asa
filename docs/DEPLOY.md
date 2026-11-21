@@ -80,7 +80,7 @@ docker run --rm -p 5173:80 --name frontend-asa frontend-asa
 - `useMotion` (`src/hooks/use-motion.ts`) usa `useGSAP` con el contenedor como scope y `revertOnUpdate`, así que todo se revierte al desmontar o al cambiar las dependencias.
 - Con `prefers-reduced-motion`, `dur()` devuelve 0 y el contenido queda visible al instante (`clearProps`).
 - Los diálogos siguen montados hasta que termina su animación de salida.
-- El fondo animado del hero (`hero-backdrop.tsx`) y el vuelo del avatar de LuxIA (framer-motion) van aparte de GSAP.
+- El vuelo del avatar de LuxIA también es GSAP: `services/vuelo.ts` muestrea el arco (Bézier, 750 ms, easing aplicado una vez) en 25 poses y `luxia-fab.tsx` las recorre como keyframes lineales; el panel entra y sale con `useGSAP` y se desmonta al terminar la salida. El fondo animado del hero (`hero-backdrop.tsx`) va aparte, con su propio shader.
 
 ## Tests en Windows
 

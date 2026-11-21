@@ -21,7 +21,7 @@ export function LoginPanel() {
           lugar.
         </p>
       </div>
-      <p className="relative text-xs text-white/60">ASA Biblioteca · Luxware</p>
+      <p className="relative text-xs text-white/60">ASA Biblioteca</p>
     </aside>
   )
 }

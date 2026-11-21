@@ -235,7 +235,7 @@ function MobileNav() {
 export function SiteFooter() {
   return (
     <footer className="text-texto-3 px-5 py-6 text-center text-xs lg:px-14">
-      Desarrollado por Alex Palma · Luxware
+      Desarrollado por Alex Palma
     </footer>
   )
 }

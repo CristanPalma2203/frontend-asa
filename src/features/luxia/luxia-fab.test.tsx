@@ -270,13 +270,25 @@ describe('LuxIA', () => {
     await abrir()
 
     const sinVuelo = dockAnim({ x: -286, y: -388, s: 0.667 }, ESQUINA, true)
-    expect(sinVuelo).toMatchObject({
-      opacity: [0, 1],
-      transition: { duration: 0.3 },
+    expect(sinVuelo).toEqual({
+      tipo: 'fundido',
+      destino: { x: -286, y: -388, scale: 0.667 },
+      duration: 0.3,
     })
-    expect(sinVuelo.transition).not.toHaveProperty('times')
     const conVuelo = dockAnim({ x: -286, y: -388, s: 0.667 }, ESQUINA, false)
-    expect((conVuelo.transition as { times: number[] }).times).toHaveLength(25)
+    if (conVuelo.tipo !== 'arco') throw new Error('se esperaba un arco')
+    expect(conVuelo.duration).toBe(0.75)
+    expect(conVuelo.poses).toHaveLength(25)
+    expect(conVuelo.poses[0]).toMatchObject({
+      x: expect.closeTo(0, 6),
+      y: expect.closeTo(0, 6),
+      scale: expect.closeTo(1, 6),
+      opacity: 1,
+    })
+    expect(conVuelo.poses.at(-1)).toMatchObject({ x: -286, y: -388 })
+    // Arco: a mitad de vuelo pasa por encima de la recta entre origen y destino (flota).
+    const medio = conVuelo.poses[12]
+    expect(medio?.y).toBeLessThan(-388 * 0.5)
   })
 
   it('no aparece en la Home, el login ni el 404', async () => {
