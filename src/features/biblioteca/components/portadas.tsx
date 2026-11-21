@@ -1,9 +1,50 @@
+import { BookOpen } from 'lucide-react'
+
 import { Hueso, PortadaConCarga } from '@/components/ui/hueso'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
 import { cn } from '@/lib/utils'
 
 // Portadas desde Open Library por ISBN. `?default=false` hace que responda 404 si no hay
-// portada, y en ese caso se muestra el respaldo con el título.
+// portada, y en ese caso se muestra el respaldo con iniciales.
+
+const ARTICULOS = new Set([
+  'el',
+  'la',
+  'los',
+  'las',
+  'un',
+  'una',
+  'unos',
+  'unas',
+  'de',
+  'del',
+  'y',
+  'o',
+  'a',
+  'en',
+  'the',
+  'an',
+  'of',
+])
+
+/** Hasta 2 iniciales del título (omite artículos). */
+function inicialesTitulo(titulo: string) {
+  const palabras = titulo
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+  const utiles = palabras.filter(
+    (p) => !ARTICULOS.has(p.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '')),
+  )
+  const base = utiles.length > 0 ? utiles : palabras
+  return base
+    .slice(0, 2)
+    .map((p) => {
+      const letra = [...p].find((c) => /\p{L}|\p{N}/u.test(c))
+      return letra?.toUpperCase() ?? ''
+    })
+    .join('')
+}
 
 function isbnLimpio(isbn: string) {
   return isbn.replace(/[^0-9Xx]/g, '')
@@ -12,7 +53,7 @@ function isbnLimpio(isbn: string) {
 /**
  * Portada de libro. El tamaño lo pone `className` (ancho; el alto sale de la
  * proporción 2:3). Mientras la imagen carga, shimmer de boneyard en el hueco (PortadaConCarga).
- * Sin ISBN o sin portada en Open Library muestra el título sobre pino.
+ * Sin ISBN o sin portada en Open Library: fallback verde suave con iniciales.
  */
 export function PortadaLibro({
   isbn,
@@ -27,7 +68,7 @@ export function PortadaLibro({
 }) {
   const limpio = isbnLimpio(isbn)
   const base = cn(
-    'rounded-portada shadow-portada aspect-[2/3] shrink-0',
+    'rounded-portada shadow-portada aspect-[2/3] w-full max-w-full shrink-0 overflow-hidden self-start',
     className,
   )
   const respaldo = <PortadaRespaldo titulo={titulo} className={base} />
@@ -37,7 +78,7 @@ export function PortadaLibro({
   return (
     <PortadaConCarga
       src={`https://covers.openlibrary.org/b/isbn/${limpio}-${tamano}.jpg?default=false`}
-      className={cn(base, 'bg-pino-900')}
+      className={cn(base, 'bg-lima-wash')}
       alto={tamano === 'L' ? 252 : 168}
       radio={6}
       respaldo={respaldo}
@@ -52,18 +93,31 @@ function PortadaRespaldo({
   titulo: string
   className: string
 }) {
+  const iniciales = inicialesTitulo(titulo)
+
   return (
     <div
       role="img"
       aria-label={titulo}
       className={cn(
         className,
-        'bg-pino-900 @container flex items-end overflow-hidden p-[8%] ring-1 ring-white/10 ring-inset',
+        'bg-lima-wash text-pino-800 @container flex items-center justify-center ring-1 ring-pino-800/10 ring-inset',
       )}
     >
-      <span className="text-papel line-clamp-4 font-serif text-[min(15px,14cqw)] leading-[1.1] italic">
-        {titulo}
-      </span>
+      {iniciales ? (
+        <span
+          aria-hidden
+          className="font-serif text-[min(1.75rem,42cqw)] leading-none font-medium tracking-tight"
+        >
+          {iniciales}
+        </span>
+      ) : (
+        <BookOpen
+          aria-hidden
+          className="size-[min(1.75rem,40cqw)]"
+          strokeWidth={1.6}
+        />
+      )}
     </div>
   )
 }
@@ -90,7 +144,7 @@ export function MiniPortada({
         alto={84}
         radio={6}
         llenar
-        className={cn('aspect-[2/3] w-14 shrink-0', className)}
+        className={cn('aspect-[2/3] w-14 shrink-0 self-start', className)}
       />
     )
   }

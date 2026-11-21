@@ -6,12 +6,12 @@ import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
-const PORTADA =
-  '!size-10 !aspect-square !h-10 !w-10 max-h-10 max-w-10 shrink-0 overflow-hidden rounded-md shadow-sm [&_*]:!text-[9px] [&_*]:leading-tight'
+/** Mini 40×60 (2/3). El fallback del componente compartido usa el mismo box. */
+const PORTADA_MINI = 'w-10 shrink-0'
 
 /**
  * Lista «Por agotarse», portado de «Running out» de Flito.
- * Grilla 2 cols; miniportada fija 40 px (mismo fallback para todos).
+ * Grilla 2 cols alineada; miniportada fija 2/3; botón centrado en vertical.
  */
 export function PorAgotarse({
   items,
@@ -47,19 +47,19 @@ export function PorAgotarse({
           Ningún título cerca de agotarse
         </p>
       ) : (
-        <ul className="grid gap-3 sm:grid-cols-2">
+        <ul className="grid items-stretch gap-3 sm:grid-cols-2">
           {items.map((libro) => {
             const agotado = libro.disponibles === 0
             return (
               <li
                 key={libro.libroId}
-                className="flex items-center gap-3"
+                className="flex min-h-14 items-center gap-3"
               >
                 <PortadaLibro
                   isbn={libro.isbn}
                   titulo={libro.titulo}
                   tamano="S"
-                  className={PORTADA}
+                  className={PORTADA_MINI}
                 />
                 <div className="min-w-0 flex-1">
                   <Link
@@ -85,7 +85,7 @@ export function PorAgotarse({
                   asChild
                   size="sm"
                   variant="outline"
-                  className="shrink-0 gap-1"
+                  className="shrink-0 gap-1 self-center"
                 >
                   <Link
                     to="/admin/libros/$idLibro"

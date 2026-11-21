@@ -65,7 +65,7 @@ export function MasReservados({
                     isbn={libro.isbn}
                     titulo={libro.titulo}
                     tamano="S"
-                    className="!size-10 !aspect-square !h-10 !w-10 shrink-0 overflow-hidden rounded-md shadow-sm"
+                    className="w-10 shrink-0"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="text-tinta group-hover:text-pino-800 block truncate text-sm font-medium transition-colors">
