@@ -1,6 +1,10 @@
 import { http, HttpResponse } from 'msw'
 
-import type { PagedResponse, Reserva, ReservaCreada } from '@/features/biblioteca/types/api'
+import type {
+  PagedResponse,
+  Reserva,
+  ReservaCreada,
+} from '@/features/biblioteca/types/api'
 
 import { detalleEjemplo, libroEjemplo } from './fixtures'
 
@@ -85,5 +89,7 @@ export const handlers = [
     if (cancelarFalla) return problema(409, 'reserva-no-activa')
     return new HttpResponse(null, { status: 204 })
   }),
-  http.post(`${base}/api/auth/login`, () => problema(401, 'credenciales-invalidas')),
+  http.post(`${base}/api/auth/login`, () =>
+    problema(401, 'credenciales-invalidas'),
+  ),
 ]

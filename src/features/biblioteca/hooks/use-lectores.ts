@@ -4,6 +4,7 @@ import { queryKeys } from '@/features/biblioteca/queryKeys'
 import type { LectorForm } from '@/features/biblioteca/schemas/lector.schema'
 import {
   crearLector,
+  activarLector,
   desactivarLector,
   editarLector,
 } from '@/features/biblioteca/services/lectores.mutation'
@@ -34,7 +35,8 @@ export function useLector(id: number | null) {
 
 /**
  * Crea un lector (con usuario si trae contraseña) o, si se pasa `lector`, edita sus datos.
- * Al editar, si el formulario lo marca Inactivo y antes no lo estaba, además lo da de baja.
+ * Al editar, si el estado cambia, después de guardar los datos lo desactiva o lo reactiva.
+ * Las queries de lectores se invalidan también si falla a medias (los datos ya se guardaron).
  */
 export function useGuardarLector(
   lector: LectorLista | null,
@@ -58,12 +60,16 @@ export function useGuardarLector(
         nombre: values.nombre,
         correo: values.correo,
       })
-      if (values.estado === 'Inactivo' && lector.estado !== 'Inactivo') {
+      const estabaInactivo = lector.estado === 'Inactivo'
+      if (values.estado === 'Inactivo' && !estabaInactivo) {
         await desactivarLector(lector.idLector)
       }
+      if (values.estado === 'Activo' && estabaInactivo) {
+        await activarLector(lector.idLector)
+      }
     },
-    onSuccess: async () => {
-      opciones.onSuccess?.()
+    onSuccess: () => opciones.onSuccess?.(),
+    onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: queryKeys.lectores.all })
     },
   })

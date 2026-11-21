@@ -64,7 +64,9 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     titulo: libro.titulo,
     autor: libro.autor,
     categoria: libro.categoria,
-    totalEjemplares: libro.ejemplares.length,
+    // Como el backend: el total solo cuenta los ejemplares activos.
+    totalEjemplares: libro.ejemplares.filter((e) => e.estado !== 'Inactivo')
+      .length,
     disponibles: disponibles(libro),
   })
   const detalle = (libro: LibroFake): LibroDetalle => ({
@@ -99,13 +101,16 @@ export function crearApiFake(semillas: LibroSemilla[]) {
         ''
       ).toLowerCase()
       const autor = (params.get('autor') ?? '').toLowerCase()
+      const categoria = params.get('categoria')
       const page = Number(params.get('page') ?? 1)
       const pageSize = Number(params.get('pageSize') ?? 10)
       const filtrados = libros.filter(
         (l) =>
           [l.titulo, l.autor, l.isbn].some((campo) =>
             campo.toLowerCase().includes(buscar),
-          ) && l.autor.toLowerCase().includes(autor),
+          ) &&
+          l.autor.toLowerCase().includes(autor) &&
+          (!categoria || l.categoria === categoria),
       )
       const respuesta: PagedResponse<Libro> = {
         items: filtrados

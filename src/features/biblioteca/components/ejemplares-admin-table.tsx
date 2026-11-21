@@ -30,7 +30,7 @@ export function EjemplaresAdminTable({
   onDesactivar?: (ejemplar: EjemplarLista) => void
 }) {
   return (
-    <Table>
+    <Table accionesFijas>
       <TableHeader>
         <TableRow>
           <TableHead>Código</TableHead>

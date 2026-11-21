@@ -20,6 +20,7 @@ function SheetContent({
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="bg-pino-950/35 data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 fixed inset-0 z-50 backdrop-blur-[2px]" />
       <DialogPrimitive.Content
+        data-slot="sheet-content"
         className={cn(
           'bg-card shadow-flotante data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col overflow-y-auto outline-none',
           'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 max-h-[88svh] rounded-t-[28px]',

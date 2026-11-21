@@ -35,7 +35,7 @@ export function LectoresTable({
   onToggle: (lector: LectorLista) => void
 }) {
   return (
-    <Table className="min-w-[44rem]">
+    <Table accionesFijas className="min-w-[44rem]">
       <TableHeader>
         <TableRow>
           <TableHead>Identificador</TableHead>

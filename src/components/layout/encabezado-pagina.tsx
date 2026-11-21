@@ -56,6 +56,7 @@ export function BuscadorLista({
       />
       <input
         type="search"
+        name="buscar"
         {...props}
         className="border-linea-fuerte bg-card text-texto placeholder:text-texto-4 hover:border-separador focus-visible:border-pino-800 focus-visible:shadow-foco h-11 w-full rounded-full border pr-4 pl-11 text-sm transition-[border-color,box-shadow] outline-none"
       />

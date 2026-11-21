@@ -21,6 +21,7 @@ import { EjemplaresAdminTable } from '@/features/biblioteca/components/ejemplare
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import { EstadoBadge } from '@/features/biblioteca/components/estado-badge'
 import { badgeLibro } from '@/features/biblioteca/components/estado-badge.styles'
+import { totalActivos } from '@/features/biblioteca/disponibilidad'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import {
   useCambiarEstadoEjemplar,
@@ -150,7 +151,7 @@ export function LibroAdminPage() {
             Ejemplares
           </h2>
           <p className="text-texto-3 font-mono text-[13px]">
-            {detalle.disponibles} de {filas.length} disponibles
+            {detalle.disponibles} de {totalActivos(filas)} disponibles
           </p>
         </div>
         {filas.length === 0 ? (

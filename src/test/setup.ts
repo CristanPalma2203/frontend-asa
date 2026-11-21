@@ -44,7 +44,8 @@ if (typeof globalThis.ResizeObserver === 'undefined') {
 }
 
 // jsdom no implementa canvas: sin esto cada getContext() avisa por consola.
-HTMLCanvasElement.prototype.getContext = (() => null) as HTMLCanvasElement['getContext']
+HTMLCanvasElement.prototype.getContext = (() =>
+  null) as HTMLCanvasElement['getContext']
 
 beforeAll(() => server.listen())
 

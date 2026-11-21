@@ -11,6 +11,10 @@ import {
   type KeyboardEvent,
 } from 'react'
 
+import {
+  muestraHome,
+  resumirHome,
+} from '@/features/biblioteca/hooks/use-libros'
 import { queryKeys } from '@/features/biblioteca/queryKeys'
 import { listarLibros } from '@/features/biblioteca/services/libros.read'
 import type { ListarLibrosParams } from '@/features/biblioteca/types/api'
@@ -267,24 +271,21 @@ export function LuxiaFab() {
         gsap.set(el, { ...fin })
         return
       }
-      if (vuelo.tipo === 'fundido') {
-        gsap.set(el, vuelo.destino)
-        gsap.fromTo(
-          el,
-          { opacity: 0 },
-          {
-            opacity: 1,
-            duration: vuelo.duration,
-            ease: 'power1.out',
-            clearProps: limpiar,
-          },
-        )
+      if (vuelo.tipo === 'quieto') {
+        // Movimiento reducido: el muelle cambia de sitio al instante, sin vuelo ni fundido.
+        if (alaEsquina) gsap.set(el, { clearProps: 'transform,opacity' })
+        else gsap.set(el, { ...vuelo.destino, opacity: 1 })
         return
       }
       const [inicio, ...resto] = vuelo.poses
       const tramo = vuelo.duration / resto.length
+      // Mientras vuela, el botón no recibe clics (luxia-chat.css, [data-volando]).
+      const flyer = el.closest<HTMLElement>('.luxia-fab__flyer')
       gsap.set(el, { ...inicio })
       gsap.to(el, {
+        onStart: () => flyer?.setAttribute('data-volando', ''),
+        onComplete: () => flyer?.removeAttribute('data-volando'),
+        onInterrupt: () => flyer?.removeAttribute('data-volando'),
         keyframes: resto.map((pose) => ({
           ...pose,
           duration: tramo,
@@ -305,6 +306,20 @@ export function LuxiaFab() {
     [queryClient],
   )
 
+  /** Categorías existentes: las de la misma muestra del catálogo que usa la Home (en caché). */
+  const categorias = useCallback(
+    async () =>
+      resumirHome(
+        await queryClient.fetchQuery({
+          queryKey: queryKeys.libros.list(muestraHome),
+          queryFn: () => listarLibros(muestraHome),
+        }),
+        0,
+        Number.POSITIVE_INFINITY,
+      ).categorias,
+    [queryClient],
+  )
+
   /** `base` = conversación previa (en reintento, sin el último mensaje fallido para no duplicarlo). */
   const send = async (preset?: string, base: ChatMsg[] = msgs) => {
     const text = (preset ?? draft).trim().slice(0, MAX_MESSAGE)
@@ -315,7 +330,7 @@ export function LuxiaFab() {
     setBusy(true)
     setMood('thinking')
     try {
-      const reply = await consultarLuxia(text, buscar)
+      const reply = await consultarLuxia(text, buscar, categorias)
       setMsgs((m) => [...m, reply])
       setMood('talking')
     } catch {
@@ -414,7 +429,8 @@ export function LuxiaFab() {
                     {m.text}
                   </div>
                 )}
-                {m.role === 'assistant' && (m.libros?.length || m.consulta) ? (
+                {m.role === 'assistant' &&
+                (m.libros?.length || m.consulta || m.categoria) ? (
                   <div className="luxia-chat__links">
                     {m.libros?.map((libro) => (
                       <LuxiaLibroCard
@@ -423,10 +439,16 @@ export function LuxiaFab() {
                         onNavegar={cerrar}
                       />
                     ))}
-                    {m.consulta && m.total ? (
+                    {(m.consulta || m.categoria) && m.total ? (
                       <Link
                         to="/catalogo"
-                        search={{ page: 1, pageSize: 12, buscar: m.consulta }}
+                        search={{
+                          page: 1,
+                          pageSize: 12,
+                          ...(m.categoria
+                            ? { categoria: m.categoria }
+                            : { buscar: m.consulta }),
+                        }}
                         className="luxia-chat__ver-todos"
                         onClick={cerrar}
                       >
@@ -484,6 +506,8 @@ export function LuxiaFab() {
           >
             <textarea
               ref={inputRef}
+              id="luxia-mensaje"
+              name="mensaje"
               rows={1}
               value={draft}
               maxLength={MAX_MESSAGE}

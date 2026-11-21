@@ -245,8 +245,16 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(58% 48% at 0% 18%, rgb(194 249 104 / 0.38), transparent 58%),
-      radial-gradient(52% 46% at 100% 88%, rgb(194 249 104 / 0.28), transparent 60%),
+      radial-gradient(
+        58% 48% at 0% 18%,
+        rgb(194 249 104 / 0.38),
+        transparent 58%
+      ),
+      radial-gradient(
+        52% 46% at 100% 88%,
+        rgb(194 249 104 / 0.28),
+        transparent 60%
+      ),
       var(--color-bosque);
   }
 
@@ -265,7 +273,11 @@
       linear-gradient(rgb(194 249 104 / 0.09) 1px, transparent 1px),
       linear-gradient(90deg, rgb(194 249 104 / 0.09) 1px, transparent 1px);
     background-size: 64px 64px;
-    mask-image: radial-gradient(ellipse 72% 58% at 50% 36%, #000 18%, transparent 78%);
+    mask-image: radial-gradient(
+      ellipse 72% 58% at 50% 36%,
+      #000 18%,
+      transparent 78%
+    );
   }
 
   .hero-fx__grid canvas {

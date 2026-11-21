@@ -185,6 +185,7 @@ function BuscadorGlobal({ className = 'w-[440px]' }: { className?: string }) {
       />
       <input
         type="search"
+        name="buscar"
         aria-label="Buscar en el catálogo"
         placeholder="Busca por título, autor o ISBN"
         value={texto}

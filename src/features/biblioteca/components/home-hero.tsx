@@ -177,6 +177,7 @@ function BuscadorHero() {
         />
         <input
           type="search"
+          name="buscar"
           aria-label="Buscar en el catálogo"
           placeholder="Título, autor o ISBN"
           value={texto}

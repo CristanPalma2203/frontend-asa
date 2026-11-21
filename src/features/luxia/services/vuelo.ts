@@ -35,11 +35,11 @@ export type Pose = { x: number; y: number; scale: number; opacity: number }
  * - `arco`: `poses[0]` es el punto de partida y el resto son keyframes con tiempos uniformes
  *   (duración `duration / (poses.length - 1)` cada uno, ease 'none'). El easing ya va aplicado al
  *   muestrear, una sola vez sobre el progreso global.
- * - `fundido` (reduced-motion): sin vuelo, aparece en su sitio con opacidad 0 → 1.
+ * - `quieto` (reduced-motion): sin vuelo ni fundido, pasa a su sitio al instante.
  */
 export type Vuelo =
   | { tipo: 'arco'; poses: Pose[]; duration: number }
-  | { tipo: 'fundido'; destino: Omit<Pose, 'opacity'>; duration: number }
+  | { tipo: 'quieto'; destino: Omit<Pose, 'opacity'> }
 
 /**
  * Vuelo en curva (Bézier cuadrática from→ctrl→to) muestreado en STEPS + 1 poses con tiempos
@@ -77,12 +77,8 @@ export function dockAnim(
 ): Vuelo {
   const to = dock || ESQUINA
   if (reduced) {
-    // Sin vuelo: aparece/desaparece en su nuevo sitio con un fundido.
-    return {
-      tipo: 'fundido',
-      destino: { x: to.x, y: to.y, scale: to.s },
-      duration: 0.3,
-    }
+    // Sin vuelo: pasa a su nuevo sitio al instante.
+    return { tipo: 'quieto', destino: { x: to.x, y: to.y, scale: to.s } }
   }
   const a = { ...from, o: 1 }
   const b = { ...to, o: 1 }

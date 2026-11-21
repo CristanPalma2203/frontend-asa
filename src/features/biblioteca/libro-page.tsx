@@ -16,7 +16,10 @@ import { LibroNoEncontrado } from '@/features/biblioteca/components/libro-no-enc
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { ReservaError } from '@/features/biblioteca/components/reserva-error'
 import { ReservarDialog } from '@/features/biblioteca/components/reservar-dialog'
-import { textoDisponibles } from '@/features/biblioteca/disponibilidad'
+import {
+  textoDisponibles,
+  totalActivos,
+} from '@/features/biblioteca/disponibilidad'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
 import {
   useMisReservas,
@@ -163,7 +166,7 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
               </Dato>
               <Dato etiqueta="Ejemplares" mono cargando={cargando}>
                 {detalle
-                  ? `${detalle.disponibles} de ${detalle.ejemplares.length}`
+                  ? `${detalle.disponibles} de ${totalActivos(detalle.ejemplares)}`
                   : null}
               </Dato>
             </dl>

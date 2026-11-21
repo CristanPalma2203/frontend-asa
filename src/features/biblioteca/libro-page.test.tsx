@@ -20,6 +20,17 @@ function problema(code: string) {
 }
 
 describe('ficha', () => {
+  it('el total de ejemplares solo cuenta los activos', async () => {
+    const api = crearApiFake([{ titulo: 'El Principito', copias: 3 }])
+    const inactivo = api.libros[0]?.ejemplares[2]
+    if (inactivo) inactivo.estado = 'Inactivo'
+    server.use(...api.handlers)
+    await renderEn('/libros/1')
+
+    await screen.findByRole('heading', { level: 1, name: 'El Principito' })
+    expect(await screen.findByText('2 de 2')).toBeInTheDocument()
+  })
+
   it('Reservar sin sesión manda a login', async () => {
     const user = userEvent.setup()
     const { router } = await renderEn('/libros/1')

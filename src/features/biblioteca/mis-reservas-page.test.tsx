@@ -49,6 +49,10 @@ describe('mis reservas', () => {
     )
     soltarCancelacion(true)
     expect(await screen.findByText('Activa')).toBeInTheDocument()
+    // El backend responde 409 `reserva-no-activa` (antes 422): el mensaje sale del code.
+    expect(
+      await screen.findByText('Solo se puede cancelar una reserva activa.'),
+    ).toBeInTheDocument()
   })
 
   it('muestra el contador de activas en la cabecera y en el sidebar', async () => {

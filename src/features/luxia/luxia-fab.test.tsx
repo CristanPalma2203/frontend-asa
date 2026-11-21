@@ -26,6 +26,48 @@ afterEach(() => {
 })
 
 describe('LuxIA', () => {
+  it.each([['¿qué libros de ciencia hay disponibles?'], ['Ciencia']])(
+    '«%s» busca por la categoría Ciencia',
+    async (pregunta) => {
+      const api = crearApiFake([
+        { titulo: 'Cosmos', autor: 'Carl Sagan', categoria: 'Ciencia' },
+        {
+          titulo: 'Breve historia del tiempo',
+          autor: 'Stephen Hawking',
+          categoria: 'Ciencia',
+        },
+        { titulo: 'Dune', autor: 'Frank Herbert', categoria: 'Novela' },
+      ])
+      server.use(...api.handlers)
+      await renderEn(CATALOGO)
+      const { user, panel } = await abrir()
+
+      await user.type(
+        within(panel).getByLabelText('Mensaje para LuxIA'),
+        `${pregunta}{Enter}`,
+      )
+
+      expect(
+        await within(panel).findByText(/Hay 2 libros de «Ciencia»/),
+      ).toBeInTheDocument()
+      expect(
+        within(panel).getByRole('link', { name: /Cosmos/ }),
+      ).toBeInTheDocument()
+      expect(
+        within(panel).getByRole('link', { name: /Breve historia del tiempo/ }),
+      ).toBeInTheDocument()
+      expect(within(panel).queryByRole('link', { name: /Dune/ })).toBeNull()
+      const ultima = api.pedidos('/api/libros').at(-1)
+      expect(ultima?.searchParams.get('categoria')).toBe('Ciencia')
+      expect(ultima?.searchParams.get('search')).toBeNull()
+      expect(
+        within(panel)
+          .getByRole('link', { name: 'Ver todos en el catálogo' })
+          .getAttribute('href'),
+      ).toContain('categoria=Ciencia')
+    },
+  )
+
   it('la respuesta de Tolkien muestra una tarjeta con portada, título y disponibles; al pulsarla va a la ficha y cierra', async () => {
     server.use(
       ...crearApiFake([
@@ -256,7 +298,7 @@ describe('LuxIA', () => {
     expect(boton).toHaveAttribute('aria-expanded', 'true')
   })
 
-  it('con reduced-motion no hay vuelo: solo fundido de 0,3 s', async () => {
+  it('con reduced-motion el muelle es instantáneo: sin vuelo ni fundido', async () => {
     vi.stubGlobal(
       'matchMedia',
       vi.fn().mockReturnValue({
@@ -271,9 +313,8 @@ describe('LuxIA', () => {
 
     const sinVuelo = dockAnim({ x: -286, y: -388, s: 0.667 }, ESQUINA, true)
     expect(sinVuelo).toEqual({
-      tipo: 'fundido',
+      tipo: 'quieto',
       destino: { x: -286, y: -388, scale: 0.667 },
-      duration: 0.3,
     })
     const conVuelo = dockAnim({ x: -286, y: -388, s: 0.667 }, ESQUINA, false)
     if (conVuelo.tipo !== 'arco') throw new Error('se esperaba un arco')

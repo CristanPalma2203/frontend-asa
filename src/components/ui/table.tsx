@@ -2,11 +2,23 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-function Table({ className, ...props }: React.ComponentProps<'table'>) {
+/**
+ * `accionesFijas`: la última columna (acciones) queda fija a la derecha cuando la tabla hace
+ * scroll horizontal (móvil), así los botones siempre se ven.
+ */
+function Table({
+  className,
+  accionesFijas = false,
+  ...props
+}: React.ComponentProps<'table'> & { accionesFijas?: boolean }) {
   return (
     <div
       data-slot="table-container"
-      className="bg-card border-linea shadow-card relative w-full overflow-auto rounded-xl border"
+      className={cn(
+        'bg-card border-linea shadow-card relative w-full overflow-auto rounded-xl border',
+        accionesFijas &&
+          '[&_td:last-child]:bg-card [&_th:last-child]:bg-hueso-claro [&_td:last-child]:sticky [&_td:last-child]:right-0 [&_td:last-child]:z-[1] [&_td:last-child]:shadow-[-8px_0_12px_-10px_rgba(4,44,36,0.25)] [&_th:last-child]:sticky [&_th:last-child]:right-0 [&_th:last-child]:z-[1]',
+      )}
     >
       <table
         data-slot="table"

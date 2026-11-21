@@ -61,3 +61,107 @@ export function interpretar(pregunta: string): Intencion {
     }
   return { tipo: tipoBase, consulta: texto }
 }
+
+/** Minúsculas y sin tildes («Ciencia» y «ciéncia» → «ciencia»). La ñ se conserva. */
+export function normalizar(texto: string) {
+  return texto
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/(?!̃)[̀-ͯ]/g, '')
+    .normalize('NFC')
+}
+
+/** Palabras que no dicen qué se busca: se quitan antes de comparar con las categorías. */
+const PALABRAS_VACIAS = new Set([
+  'que',
+  'cual',
+  'cuales',
+  'cuantos',
+  'cuantas',
+  'libro',
+  'libros',
+  'titulo',
+  'titulos',
+  'ejemplar',
+  'ejemplares',
+  'copias',
+  'de',
+  'del',
+  'la',
+  'las',
+  'el',
+  'los',
+  'un',
+  'una',
+  'unos',
+  'unas',
+  'sobre',
+  'en',
+  'y',
+  'o',
+  'a',
+  'al',
+  'hay',
+  'tienes',
+  'tienen',
+  'tiene',
+  'existe',
+  'existen',
+  'queda',
+  'quedan',
+  'disponible',
+  'disponibles',
+  'busco',
+  'buscar',
+  'busca',
+  'buscame',
+  'quiero',
+  'quisiera',
+  'necesito',
+  'me',
+  'mi',
+  'algun',
+  'alguno',
+  'alguna',
+  'algo',
+  'categoria',
+  'genero',
+  'tema',
+  'catalogo',
+  'hola',
+  'oye',
+  'luxia',
+  'por',
+  'favor',
+  'porfa',
+  'muestrame',
+  'dime',
+  'ver',
+  'puedes',
+  'podrias',
+  'para',
+  'leer',
+])
+
+/**
+ * Si, sin palabras vacías, la pregunta es el nombre de una categoría existente, la devuelve
+ * (con su escritura original); si no, null y se busca por texto.
+ * «¿Qué libros de ciencia hay disponibles?» y «Ciencia» → «Ciencia».
+ */
+export function categoriaDe(pregunta: string, categorias: string[]) {
+  const resto = sinPalabrasVacias(pregunta)
+  if (!resto) return null
+  return (
+    categorias.find((categoria) => sinPalabrasVacias(categoria) === resto) ??
+    null
+  )
+}
+
+/** Texto normalizado, sin signos ni palabras vacías («Historia del arte» → «historia arte»). */
+function sinPalabrasVacias(texto: string) {
+  return normalizar(texto)
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .split(/\s+/)
+    .filter((palabra) => palabra && !PALABRAS_VACIAS.has(palabra))
+    .join(' ')
+}

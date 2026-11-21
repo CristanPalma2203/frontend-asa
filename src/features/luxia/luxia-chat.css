@@ -23,6 +23,22 @@
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   z-index: 1002;
   will-change: transform, opacity;
+  /* El contenedor nunca captura clics: solo el botón, y tampoco mientras vuela. */
+  pointer-events: none;
+}
+.luxia-fab .luxia-fab__flyer .luxia-fab__btn {
+  pointer-events: auto;
+}
+.luxia-fab .luxia-fab__flyer[data-volando] .luxia-fab__btn {
+  pointer-events: none;
+}
+/* Con una hoja (panel lateral del catálogo) o un diálogo abiertos, la mascota no tapa su
+   contenido (portadas, «Ver ficha»): se esconde hasta que se cierran. */
+body:has([data-slot='sheet-content'], [data-slot='dialog-content'])
+  .luxia-fab:not(.is-open)
+  .luxia-fab__flyer {
+  visibility: hidden;
+  opacity: 0;
 }
 /* push-v7: oculta sin transform (Rive mide el canvas; con scale(0) quedaría 0×0). */
 .luxia-fab .luxia-fab__flyer.is-appear-pending {
@@ -373,6 +389,9 @@
   padding: 2px 16px 10px;
 }
 .luxia-fab .luxia-chat__chip {
+  /* Sin encoger: cada chip entero; la fila hace scroll horizontal (o wrap en móvil). */
+  flex: none;
+  white-space: nowrap;
   border: 1px solid #d4cfc6;
   background: #fff;
   color: var(--lx-green);
@@ -457,9 +476,18 @@
     right: calc(14px + env(safe-area-inset-right, 0px));
     bottom: calc(14px + env(safe-area-inset-bottom, 0px));
   }
+  /* 375 px: más pequeña para no tapar portadas ni botones del contenido. */
   .luxia-fab .luxia-fab__btn {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
+  }
+  .luxia-fab .luxia-fab__flyer {
+    right: calc(12px + env(safe-area-inset-right, 0px));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  }
+  .luxia-fab .luxia-chat__chips {
+    flex-wrap: wrap;
+    overflow-x: visible;
   }
   /* Teclado: --lx-kb = alto tapado bajo el viewport visible, --lx-vvh = alto visible. Sin JS → dvh. */
   .luxia-fab .luxia-chat {
@@ -526,4 +554,17 @@
   .luxia-fab .luxia-chat__typing span {
     animation: none !important;
   }
+}
+/* Movimiento reducido: nada depende de una transición para verse u ocultarse; cada pieza
+   (flyer, sombra, tarjetas) queda directamente en su estado final. */
+.luxia-fab.is-reduced .luxia-fab__flyer,
+.luxia-fab.is-reduced .luxia-fab__flyer.is-appear-css,
+.luxia-fab.is-reduced .luxia-fab__flyer.is-appear-css.is-hidden,
+.luxia-fab.is-reduced .luxia-fab__shadow,
+.luxia-fab.is-reduced .luxia-chat__card {
+  transition: none;
+}
+.luxia-fab.is-reduced .luxia-fab__bob,
+.luxia-fab.is-reduced .luxia-fab__dock {
+  animation: none;
 }

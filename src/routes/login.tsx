@@ -7,17 +7,24 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { iniciarSesion } from '@/features/auth/api'
-import { LoginFranjaMovil, LoginPanel } from '@/features/auth/components/login-panel'
+import {
+  LoginFranjaMovil,
+  LoginPanel,
+} from '@/features/auth/components/login-panel'
 import { PasswordInput } from '@/features/auth/components/password-input'
 import { isSessionActive, useAuthStore } from '@/features/auth/store'
 import { mensajeDeError } from '@/features/biblioteca/errores'
-import { loginSchema, type LoginForm } from '@/features/biblioteca/schemas/login.schema'
+import {
+  loginSchema,
+  type LoginForm,
+} from '@/features/biblioteca/schemas/login.schema'
 import { ApiError } from '@/lib/api/client'
 
 export const Route = createFileRoute('/login')({
   staticData: { title: 'Iniciar sesión · ASA Biblioteca' },
   validateSearch: (search: Record<string, unknown>): { redirect?: string } => {
-    if (typeof search.redirect !== 'string' || !search.redirect.startsWith('/')) return {}
+    if (typeof search.redirect !== 'string' || !search.redirect.startsWith('/'))
+      return {}
     if (search.redirect.startsWith('//')) return {}
     return { redirect: search.redirect }
   },
@@ -64,7 +71,7 @@ function LoginPage() {
       <div className="flex flex-col">
         <LoginFranjaMovil />
         <main className="-mt-10 flex flex-1 flex-col items-center justify-center px-5 pb-10 lg:mt-0 lg:px-10 lg:py-12">
-          <div className="bg-card border-linea shadow-flotante w-full max-w-[440px] rounded-[28px] border p-7 sm:p-9 lg:shadow-card">
+          <div className="bg-card border-linea shadow-flotante lg:shadow-card w-full max-w-[440px] rounded-[28px] border p-7 sm:p-9">
             <p className="eyebrow">Acceso</p>
             <h1 className="mt-2 text-[30px] leading-tight">
               Iniciar <span className="titulo-serif">sesión</span>
@@ -78,7 +85,10 @@ function LoginPage() {
               onSubmit={form.handleSubmit(onSubmit)}
             >
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="correo" className="text-texto-2 text-[13px] font-semibold">
+                <Label
+                  htmlFor="correo"
+                  className="text-texto-2 text-[13px] font-semibold"
+                >
                   Correo
                 </Label>
                 <Input
@@ -91,24 +101,35 @@ function LoginPage() {
                   {...form.register('correo')}
                 />
                 {errores.correo ? (
-                  <p id="correo-error" className="text-rojo-800 text-[13px] font-medium">
+                  <p
+                    id="correo-error"
+                    className="text-rojo-800 text-[13px] font-medium"
+                  >
                     {errores.correo.message}
                   </p>
                 ) : null}
               </div>
               <div className="flex flex-col gap-1.5">
-                <Label htmlFor="password" className="text-texto-2 text-[13px] font-semibold">
+                <Label
+                  htmlFor="password"
+                  className="text-texto-2 text-[13px] font-semibold"
+                >
                   Contraseña
                 </Label>
                 <PasswordInput
                   id="password"
                   autoComplete="current-password"
                   aria-invalid={errores.password ? true : undefined}
-                  aria-describedby={errores.password ? 'password-error' : undefined}
+                  aria-describedby={
+                    errores.password ? 'password-error' : undefined
+                  }
                   {...form.register('password')}
                 />
                 {errores.password ? (
-                  <p id="password-error" className="text-rojo-800 text-[13px] font-medium">
+                  <p
+                    id="password-error"
+                    className="text-rojo-800 text-[13px] font-medium"
+                  >
                     {errores.password.message}
                   </p>
                 ) : null}
@@ -121,14 +142,21 @@ function LoginPage() {
                   {errores.root.message}
                 </p>
               ) : null}
-              <Button type="submit" size="lg" className="mt-1 w-full" disabled={form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                size="lg"
+                className="mt-1 w-full"
+                disabled={form.formState.isSubmitting}
+              >
                 Entrar
               </Button>
             </form>
 
             {import.meta.env.DEV ? (
               <div className="border-linea mt-7 border-t pt-5">
-                <p className="text-texto-2 text-[13px] font-semibold">Cuentas demo</p>
+                <p className="text-texto-2 text-[13px] font-semibold">
+                  Cuentas demo
+                </p>
                 <p className="text-texto-3 mt-1 text-[13px]">
                   Solo rellena el correo. La contraseña no está en la app.
                 </p>
@@ -145,7 +173,9 @@ function LoginPage() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => form.setValue('correo', 'ana.lopez@demo.local')}
+                    onClick={() =>
+                      form.setValue('correo', 'ana.lopez@demo.local')
+                    }
                   >
                     ana.lopez@demo.local
                   </Button>

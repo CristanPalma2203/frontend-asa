@@ -5,7 +5,9 @@ import type { RefObject } from 'react'
 gsap.registerPlugin(useGSAP)
 
 /** Envuelve un callback (listener, observer) para que lo que anime se revierta con el contexto. */
-export type SeguroEnContexto = <F extends (...args: never[]) => unknown>(fn: F) => F
+export type SeguroEnContexto = <F extends (...args: never[]) => unknown>(
+  fn: F,
+) => F
 
 /**
  * Animaciones de un contenedor con useGSAP: `scope` es el ref del contenedor, todo lo creado

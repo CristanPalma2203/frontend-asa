@@ -21,7 +21,10 @@ export function useLibros(params: ListarLibrosParams) {
 }
 
 /** Muestra del catálogo para la Home: una página de la API de la que salen las portadas y categorías. */
-const muestraHome = { page: 1, pageSize: 50 } satisfies ListarLibrosParams
+export const muestraHome = {
+  page: 1,
+  pageSize: 50,
+} satisfies ListarLibrosParams
 
 export type ResumenHome = {
   totalTitulos: number

@@ -19,6 +19,11 @@ export const detalleEjemplo: LibroDetalle = {
   estado: 'Activo',
   disponibles: libroEjemplo.disponibles,
   ejemplares: [
-    { idEjemplar: 1, codigoInventario: 'BIB-001', estado: 'Disponible', rowVersion: 'AQID' },
+    {
+      idEjemplar: 1,
+      codigoInventario: 'BIB-001',
+      estado: 'Disponible',
+      rowVersion: 'AQID',
+    },
   ],
 }

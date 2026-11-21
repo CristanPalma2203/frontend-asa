@@ -121,7 +121,7 @@ export function LibrosAdminTable({
   })
 
   return (
-    <Table className="min-w-[44rem]">
+    <Table accionesFijas className="min-w-[44rem]">
       <TableHeader>
         {table.getHeaderGroups().map((group) => (
           <TableRow key={group.id}>
