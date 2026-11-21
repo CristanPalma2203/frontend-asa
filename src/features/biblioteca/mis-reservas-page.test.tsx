@@ -10,6 +10,34 @@ import { server } from '@/test/server'
 import { entrarComo } from '@/test/sesion'
 
 describe('mis reservas', () => {
+  it('tarjeta activa muestra el código del ejemplar y solo 3 stats', async () => {
+    entrarComo('Lector')
+    await renderEn('/mis-reservas')
+
+    const activa = await screen.findByRole('region', {
+      name: 'Reservas activas',
+    })
+    expect(within(activa).getByText('BIB-001')).toBeInTheDocument()
+    expect(
+      within(activa).getByRole('heading', { name: 'El Principito' }),
+    ).toBeInTheDocument()
+    expect(within(activa).getByText('Activa')).toBeInTheDocument()
+    expect(within(activa).getByText(/Solicitud/)).toBeInTheDocument()
+
+    const resumen = screen.getByRole('group', {
+      name: 'Resumen de tus reservas',
+    })
+    expect(within(resumen).getByText('Activas')).toBeInTheDocument()
+    expect(within(resumen).getByText('Total')).toBeInTheDocument()
+    expect(within(resumen).getByText('Canceladas')).toBeInTheDocument()
+    expect(
+      within(resumen).queryByText(/Libros leídos/i),
+    ).not.toBeInTheDocument()
+    expect(
+      within(resumen).queryByText(/En el historial/i),
+    ).not.toBeInTheDocument()
+  })
+
   it('muestra fechaSolicitud (UTC con Z) en hora de El Salvador', async () => {
     useAuthStore.getState().login({
       token: 'token-test',
@@ -20,52 +48,51 @@ describe('mis reservas', () => {
       correo: 'ana@demo.local',
     })
     await renderEn('/mis-reservas')
+    const activa = await screen.findByRole('region', {
+      name: 'Reservas activas',
+    })
     // 14:00Z = 8:00 en America/El_Salvador (UTC-6)
     expect(
-      await screen.findByText(/Solicitud 20 nov 2026.*8:00/),
+      within(activa).getByText(/Solicitud 20 nov 2026.*8:00/),
     ).toBeInTheDocument()
   })
 
-  it('cancela con update optimista y hace rollback si falla', async () => {
+  it('cancela con diálogo, update optimista y rollback si falla', async () => {
     const user = userEvent.setup()
-    useAuthStore.getState().login({
-      token: 'token-test',
-      expiresAt: Date.now() + 60_000,
-      rol: 'Lector',
-      nombre: 'Ana',
-      lectorId: 2,
-      correo: 'ana@demo.local',
-    })
+    entrarComo('Lector')
     bloquearCancelacion()
     await renderEn('/mis-reservas')
-    expect(await screen.findByText('Activa')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Cancelar reserva' }))
+    const activa = await screen.findByRole('region', {
+      name: 'Reservas activas',
+    })
+    expect(within(activa).getByText('Activa')).toBeInTheDocument()
+    await user.click(
+      within(activa).getByRole('button', { name: 'Cancelar reserva' }),
+    )
     const dialog = await screen.findByRole('dialog')
+    expect(dialog).toBeInTheDocument()
     await user.click(
       within(dialog).getByRole('button', { name: 'Cancelar reserva' }),
     )
     await waitFor(() =>
-      expect(screen.queryByText('Activa')).not.toBeInTheDocument(),
+      expect(
+        screen.queryByRole('region', { name: 'Reservas activas' }),
+      ).not.toBeInTheDocument(),
     )
     soltarCancelacion(true)
-    expect(await screen.findByText('Activa')).toBeInTheDocument()
-    // El backend responde 409 `reserva-no-activa` (antes 422): el mensaje sale del code.
     expect(
       await screen.findByText('Solo se puede cancelar una reserva activa.'),
     ).toBeInTheDocument()
+    // El diálogo sigue abierto (aria-hidden en el main); la reserva vuelve por rollback.
+    expect(
+      await screen.findByRole('region', {
+        name: 'Reservas activas',
+        hidden: true,
+      }),
+    ).toBeInTheDocument()
   })
 
-  it('muestra el contador de activas en la cabecera y en el sidebar', async () => {
-    entrarComo('Lector')
-    await renderEn('/mis-reservas')
-
-    expect(await screen.findByText('1 reserva activa')).toBeInTheDocument()
-    const nav = screen.getByRole('navigation', { name: 'Principal' })
-    const contador = within(nav).getByText(/reservas activas/).parentElement
-    expect(contador).toHaveTextContent('1 reservas activas')
-  })
-
-  it('Historial muestra las canceladas y no las activas', async () => {
+  it('filtros del historial viven en la URL', async () => {
     const user = userEvent.setup()
     entrarComo('Lector')
     const reserva = (
@@ -88,7 +115,108 @@ describe('mis reservas', () => {
           reserva(1, 'Dune', 'Activa'),
           reserva(2, 'Emma', 'Cancelada'),
         ]
-        const items = estado ? todas.filter((r) => r.estado === estado) : todas
+        const items =
+          !estado || estado === 'Todas'
+            ? todas
+            : todas.filter((r) => r.estado === estado)
+        return HttpResponse.json({
+          items,
+          page: 1,
+          pageSize: 20,
+          totalCount: items.length,
+          totalPages: 1,
+        })
+      }),
+    )
+    const { router } = await renderEn('/mis-reservas')
+
+    async function historial() {
+      return screen.findByRole('region', { name: 'Historial' })
+    }
+
+    expect(
+      within(await historial()).getByRole('heading', { name: 'Dune' }),
+    ).toBeInTheDocument()
+
+    await user.click(screen.getByRole('tab', { name: 'Canceladas' }))
+    expect(
+      await within(await historial()).findByRole('heading', { name: 'Emma' }),
+    ).toBeInTheDocument()
+    expect(
+      within(await historial()).queryByRole('heading', { name: 'Dune' }),
+    ).not.toBeInTheDocument()
+    expect(router.state.location.search).toEqual({ estado: 'Cancelada' })
+
+    await user.click(screen.getByRole('tab', { name: 'Activas' }))
+    expect(
+      await within(await historial()).findByRole('heading', { name: 'Dune' }),
+    ).toBeInTheDocument()
+    expect(
+      within(await historial()).queryByRole('heading', { name: 'Emma' }),
+    ).not.toBeInTheDocument()
+    expect(router.state.location.search).toEqual({ estado: 'Activa' })
+
+    await user.click(screen.getByRole('tab', { name: 'Todas' }))
+    expect(
+      await within(await historial()).findByRole('heading', { name: 'Emma' }),
+    ).toBeInTheDocument()
+    expect(
+      within(await historial()).getByRole('heading', { name: 'Dune' }),
+    ).toBeInTheDocument()
+    expect(router.state.location.search).toEqual({})
+  })
+
+  it('«Ver libro» de la tarjeta activa va a la ficha', async () => {
+    entrarComo('Lector')
+    await renderEn('/mis-reservas')
+    const activa = await screen.findByRole('region', {
+      name: 'Reservas activas',
+    })
+    const portada = await waitFor(() => {
+      const img = activa.querySelector('img')
+      expect(img).not.toBeNull()
+      return img as HTMLImageElement
+    })
+    expect(portada.getAttribute('src')).toContain(
+      'covers.openlibrary.org/b/isbn/',
+    )
+    expect(
+      await within(activa).findByText('Antoine de Saint-Exupéry'),
+    ).toBeInTheDocument()
+    expect(
+      within(activa).getByRole('link', { name: 'Ver libro: El Principito' }),
+    ).toHaveAttribute('href', '/libros/1')
+  })
+
+  it('cancelada en historial: fila compacta sin ticket oscuro', async () => {
+    const user = userEvent.setup()
+    entrarComo('Lector')
+    server.use(
+      http.get('http://api.test/api/lectores/:id/reservas', ({ request }) => {
+        const estado = new URL(request.url).searchParams.get('estado')
+        const cancelada = {
+          idReserva: 2,
+          idLibro: 2,
+          titulo: 'Emma',
+          codigoInventario: 'BIB-002',
+          estado: 'Cancelada' as const,
+          fechaSolicitud: '2026-11-20T14:00:00Z',
+          fechaCancelacion: '2026-11-21T14:00:00Z',
+        }
+        const activa = {
+          idReserva: 1,
+          idLibro: 1,
+          titulo: 'El Principito',
+          codigoInventario: 'BIB-001',
+          estado: 'Activa' as const,
+          fechaSolicitud: '2026-11-20T14:00:00Z',
+          fechaCancelacion: null,
+        }
+        const todas = [activa, cancelada]
+        const items =
+          !estado || estado === 'Todas'
+            ? todas
+            : todas.filter((r) => r.estado === estado)
         return HttpResponse.json({
           items,
           page: 1,
@@ -100,15 +228,68 @@ describe('mis reservas', () => {
     )
     await renderEn('/mis-reservas')
     expect(
-      await screen.findByRole('link', { name: 'Dune' }),
+      await screen.findByRole('region', { name: 'Reservas activas' }),
     ).toBeInTheDocument()
+    await user.click(
+      await screen.findByRole('tab', { name: 'Canceladas' }),
+    )
+    const historial = await screen.findByRole('region', { name: 'Historial' })
+    const fila = (
+      await within(historial).findByRole('heading', { name: 'Emma' })
+    ).closest('article') as HTMLElement
 
-    await user.click(screen.getByRole('tab', { name: 'Historial' }))
+    expect(within(fila).getByText('BIB-002')).toBeInTheDocument()
+    expect(within(fila).getByText('Cancelada')).toBeInTheDocument()
+    expect(within(fila).getByText(/Solicitud/)).toBeInTheDocument()
+    expect(within(fila).getByText(/Cancelación/)).toBeInTheDocument()
+    expect(within(fila).queryByText('Tu ejemplar')).not.toBeInTheDocument()
+    expect(
+      within(fila).getByRole('link', { name: 'Ver libro: Emma' }),
+    ).toHaveAttribute('href', '/libros/2')
+    // Ticket oscuro solo en la activa protagonista.
+    const activa = screen.getByRole('region', { name: 'Reservas activas' })
+    expect(within(activa).getByText('Tu ejemplar')).toBeInTheDocument()
+  })
+
+  it('sigue explorando muestra portadas con badge y va a la ficha', async () => {
+    entrarComo('Lector')
+    await renderEn('/mis-reservas')
+    const lista = await screen.findByRole('list', {
+      name: 'Libros recomendados',
+    })
+    const enlace = within(lista).getAllByRole('link')[0]
+    expect(enlace).toBeDefined()
+    expect(enlace?.getAttribute('href')).toMatch(/^\/libros\//)
+    expect(enlace?.textContent).toMatch(/disponible|Agotado|stock/i)
+  })
+
+  it('sin reservas: estado vacío y «Explorar catálogo»', async () => {
+    entrarComo('Lector')
+    server.use(
+      http.get('http://api.test/api/lectores/:id/reservas', () =>
+        HttpResponse.json({
+          items: [],
+          page: 1,
+          pageSize: 20,
+          totalCount: 0,
+          totalPages: 0,
+        }),
+      ),
+    )
+    await renderEn('/mis-reservas')
 
     expect(
-      await screen.findByRole('link', { name: 'Emma' }),
+      await screen.findByRole('heading', {
+        name: /Aún no tienes/,
+      }),
     ).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: 'Dune' })).not.toBeInTheDocument()
-    expect(screen.getByText('Cancelada')).toBeInTheDocument()
+    const enlace = screen.getAllByRole('link', {
+      name: 'Explorar catálogo',
+    })[0]
+    expect(enlace).toBeDefined()
+    expect(enlace?.getAttribute('href')).toContain('/catalogo')
+    expect(
+      screen.queryByRole('region', { name: 'Reservas activas' }),
+    ).not.toBeInTheDocument()
   })
 })

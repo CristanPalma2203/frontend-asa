@@ -84,12 +84,13 @@ export function MiniPortada({
   const libro = useLibro(idLibro)
   if (libro.isPending) {
     return (
+      // Mismo tamaño que tendrá la portada (ancho por `className`, alto por la proporción 2:3).
       <Hueso
         cargando
-        ancho={56}
         alto={84}
         radio={6}
-        className={cn('w-14 shrink-0', className)}
+        llenar
+        className={cn('aspect-[2/3] w-14 shrink-0', className)}
       />
     )
   }

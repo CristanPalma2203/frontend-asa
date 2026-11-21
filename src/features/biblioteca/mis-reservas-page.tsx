@@ -1,83 +1,111 @@
-import { Link } from '@tanstack/react-router'
+import { getRouteApi, Link } from '@tanstack/react-router'
 import { BookmarkX, ChevronLeft, ChevronRight } from 'lucide-react'
 import gsap from 'gsap'
 import { useRef, useState } from 'react'
 
 import { Button, buttonVariants } from '@/components/ui/button'
-import { CountUp } from '@/components/ui/count-up'
-import { Hueso } from '@/components/ui/hueso'
 import { CancelarReservaDialog } from '@/features/biblioteca/components/cancelar-reserva-dialog'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
+import { MisReservasExplorar } from '@/features/biblioteca/components/mis-reservas-explorar'
+import { MisReservasStats } from '@/features/biblioteca/components/mis-reservas-stats'
 import {
-  ReservaCard,
+  ReservaActivaCard,
+  ReservaActivaCardFantasma,
+} from '@/features/biblioteca/components/reserva-activa-card'
+import {
   ReservaCardFantasma,
+  ReservaHistorialLista,
 } from '@/features/biblioteca/components/reserva-card'
 import {
   useCancelarReserva,
   useMisReservas,
-  useReservasActivasCount,
 } from '@/features/biblioteca/hooks/use-reservas'
+import {
+  filtroHistorial,
+  type MisReservasSearch,
+} from '@/features/biblioteca/schemas/mis-reservas-search.schema'
 import type { Reserva } from '@/features/biblioteca/types/api'
+import type { FiltroReservas } from '@/features/biblioteca/types/estados'
 import { useMotion } from '@/hooks/use-motion'
-import { dur, prefersReducedMotion, reveal } from '@/lib/motion'
+import { cardsIn, dur, prefersReducedMotion, reveal } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
-type Pestana = 'activas' | 'historial'
+const Route = getRouteApi('/mis-reservas')
 
-function textoActivas(valor: number) {
-  const n = Math.round(valor)
-  return n === 1 ? '1 reserva activa' : `${n} reservas activas`
-}
-
-const pestanas: Array<{ id: Pestana; label: string }> = [
-  { id: 'activas', label: 'Activas' },
-  { id: 'historial', label: 'Historial' },
+const chips: Array<{ id: FiltroReservas; label: string }> = [
+  { id: 'Todas', label: 'Todas' },
+  { id: 'Activa', label: 'Activas' },
+  { id: 'Cancelada', label: 'Canceladas' },
 ]
 
 export function MisReservasPage() {
-  const [pestana, setPestana] = useState<Pestana>('activas')
+  const search = Route.useSearch()
+  const navigate = Route.useNavigate()
+  const filtro = filtroHistorial(search)
   const [page, setPage] = useState(1)
   const [elegida, setElegida] = useState<Reserva | null>(null)
-  // La API filtra por un solo estado: Historial pide todas y descarta las activas.
-  const reservas = useMisReservas(
-    pestana === 'activas' ? 'Activa' : 'Todas',
-    page,
-  )
-  const activas = useReservasActivasCount()
+
+  const activasQuery = useMisReservas('Activa', 1, 50)
+  const historial = useMisReservas(filtro, page)
   const cancelar = useCancelarReserva()
-  const listaRef = useRef<HTMLOListElement>(null)
 
-  const items = (reservas.data?.items ?? []).filter((reserva) =>
-    pestana === 'activas'
-      ? reserva.estado === 'Activa'
-      : reserva.estado !== 'Activa',
+  const activasRef = useRef<HTMLDivElement>(null)
+  const historialRef = useRef<HTMLOListElement>(null)
+  const headerRef = useRef<HTMLElement>(null)
+
+  const activas = (activasQuery.data?.items ?? []).filter(
+    (reserva) => reserva.estado === 'Activa',
   )
-  const totalPages = reservas.data?.totalPages ?? 0
-  const claveItems = `${pestana}|${page}|${items.map((r) => r.idReserva).join(',')}`
+  const items = historial.data?.items ?? []
+  const totalPages = historial.data?.totalPages ?? 0
+  const totalTodas = useMisReservas('Todas', 1, 1)
+  const sinNinguna =
+    totalTodas.isSuccess && (totalTodas.data?.totalCount ?? 0) === 0
 
-  // Ítems: reveal (y 10, stagger 0.03, delay 0.1), de nuevo al cambiar de pestaña o página.
+  const claveActivas = activas.map((r) => r.idReserva).join(',')
+  const claveHistorial = `${filtro}|${page}|${items.map((r) => r.idReserva).join(',')}`
+
+  useMotion(headerRef, (root) => reveal(root.children, { y: 10, stagger: 0.06 }), [
+    0,
+  ])
   useMotion(
-    listaRef,
-    (root) => reveal(root.children, { y: 10, stagger: 0.03, delay: 0.1 }),
-    [claveItems],
+    activasRef,
+    (root) => cardsIn(root.children, { stagger: 0.08, delay: 0.05 }),
+    [claveActivas],
+  )
+  useMotion(
+    historialRef,
+    (root) => cardsIn(root.children, { stagger: 0.05, delay: 0.08 }),
+    [claveHistorial],
   )
 
-  /** El ítem sale (opacity 0, y −8, 0.16 s power2.in) y al terminar se cancela de verdad. */
+  function irCon(cambios: Partial<MisReservasSearch>) {
+    setPage(1)
+    const estado = cambios.estado ?? filtro
+    void navigate({
+      search: estado === 'Todas' ? {} : { estado },
+      replace: false,
+    })
+  }
+
   function confirmarCancelacion(reserva: Reserva) {
     const cancelarYa = () =>
       cancelar.mutate(
         { idReserva: reserva.idReserva },
         {
           onSuccess: () => setElegida(null),
-          // Si falla, el ítem vuelve (rollback): se le quita el estilo de la salida.
           onError: () => {
             if (item) gsap.set(item, { clearProps: 'opacity,transform' })
           },
         },
       )
-    const item = listaRef.current?.querySelector<HTMLElement>(
-      `[data-reserva="${reserva.idReserva}"]`,
-    )
+    const item =
+      activasRef.current?.querySelector<HTMLElement>(
+        `[data-reserva="${reserva.idReserva}"]`,
+      ) ??
+      historialRef.current?.querySelector<HTMLElement>(
+        `[data-reserva="${reserva.idReserva}"]`,
+      )
     if (!item || prefersReducedMotion()) {
       cancelarYa()
       return
@@ -90,161 +118,234 @@ export function MisReservasPage() {
       onComplete: cancelarYa,
     })
   }
-  const totalActivas = activas.data
 
-  function cambiarPestana(id: Pestana) {
-    setPestana(id)
-    setPage(1)
-  }
+  const cargando =
+    activasQuery.isPending || historial.isPending || totalTodas.isPending
+  const error = activasQuery.isError
+    ? activasQuery.error
+    : historial.isError
+      ? historial.error
+      : null
 
   return (
-    <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-5 pt-6 pb-14 lg:px-14">
-      <header className="flex flex-col gap-3">
-        <p className="eyebrow">Tu cuenta</p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <main className="flex w-full flex-col gap-8 px-4 pt-6 pb-14 md:px-6 xl:px-8">
+      <header
+        ref={headerRef}
+        className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div className="flex flex-col gap-2">
+          <p className="eyebrow">Tu cuenta</p>
           <h1 className="text-[36px] leading-[1.02] sm:text-[48px]">
             Mis <span className="titulo-serif">reservas</span>
           </h1>
-          {activas.isPending && activas.fetchStatus !== 'idle' ? (
-            <div className="bg-card border-linea inline-flex h-9 items-center gap-2 self-start rounded-full border px-4 sm:self-auto">
-              <span aria-hidden className="bg-texto-5 size-2 rounded-full" />
-              <Hueso cargando ancho={20} alto={16} />
-              <span className="text-texto-2 text-sm font-medium">
-                reservas activas
-              </span>
-            </div>
-          ) : totalActivas !== undefined ? (
-            <p className="bg-card border-linea text-texto-2 inline-flex h-9 items-center gap-2 self-start rounded-full border px-4 text-sm font-medium sm:self-auto">
-              <span
-                aria-hidden
-                className={cn(
-                  'size-2 rounded-full',
-                  totalActivas > 0 ? 'bg-lima-400' : 'bg-texto-5',
-                )}
-              />
-              <CountUp value={totalActivas} format={textoActivas} />
-            </p>
-          ) : null}
+          <p className="text-texto-3 text-[15px]">
+            Tus reservas activas y el historial de las que cancelaste.
+          </p>
         </div>
+        <Link
+          to="/catalogo"
+          search={{ page: 1, pageSize: 12 }}
+          className={buttonVariants({ className: 'self-start sm:self-auto' })}
+        >
+          Explorar catálogo
+        </Link>
       </header>
 
-      <div
-        role="tablist"
-        aria-label="Reservas"
-        className="border-linea flex gap-6 border-b"
-      >
-        {pestanas.map((item) => {
-          const seleccionada = pestana === item.id
-          return (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={seleccionada}
-              onClick={() => cambiarPestana(item.id)}
-              className={cn(
-                'focus-visible:shadow-foco relative -mb-px h-11 cursor-pointer border-b-2 text-[15px] font-semibold transition-colors outline-none',
-                seleccionada
-                  ? 'border-pino-800 text-tinta'
-                  : 'text-texto-3 hover:text-tinta border-transparent',
-              )}
-            >
-              {item.label}
-            </button>
-          )
-        })}
-      </div>
+      <MisReservasStats />
 
-      <section
-        role="tabpanel"
-        aria-label={pestana === 'activas' ? 'Activas' : 'Historial'}
-      >
-        {reservas.isPending ? (
-          <ol
+      {error ? (
+        <div className="bg-card border-linea shadow-card rounded-xl border p-8">
+          <h2 className="text-xl">
+            No pudimos cargar tus{' '}
+            <span className="titulo-serif">reservas</span>
+          </h2>
+          <ErrorReintentar
+            error={error}
+            onRetry={() => {
+              void activasQuery.refetch()
+              void historial.refetch()
+              void totalTodas.refetch()
+            }}
+          />
+        </div>
+      ) : null}
+
+      {!error && cargando ? (
+        <>
+          <div
             aria-busy
-            aria-label="Cargando reservas"
-            className="before:bg-linea relative flex flex-col gap-4 before:absolute before:top-4 before:bottom-4 before:left-[10px] before:w-px"
+            aria-label="Cargando reservas activas"
+            className="grid gap-4 md:grid-cols-2"
           >
-            {Array.from({ length: 3 }, (_, i) => (
-              <li key={i}>
-                <ReservaCardFantasma />
-              </li>
-            ))}
-          </ol>
-        ) : null}
-
-        {reservas.isError ? (
-          <div className="bg-card border-linea shadow-card rounded-xl border p-8">
-            <h2 className="text-xl">No se pudieron cargar las reservas</h2>
-            <ErrorReintentar
-              error={reservas.error}
-              onRetry={() => void reservas.refetch()}
-            />
+            <ReservaActivaCardFantasma />
           </div>
-        ) : null}
-
-        {reservas.isSuccess && items.length === 0 ? (
-          <div className="bg-card border-linea flex flex-col items-center gap-3 rounded-xl border px-6 py-14 text-center">
-            <span className="bg-lima-wash text-pino-800 grid size-14 place-items-center rounded-full">
-              <BookmarkX aria-hidden className="size-6" strokeWidth={2} />
-            </span>
-            <h2 className="mt-2 text-xl">Sin reservas</h2>
-            <p className="text-texto-3 max-w-sm text-[15px]">
-              {pestana === 'activas'
-                ? 'No tienes reservas activas. Busca un libro y resérvalo desde su ficha.'
-                : 'Aquí verás las reservas canceladas o completadas.'}
-            </p>
-            <Link
-              to="/catalogo"
-              search={{ page: 1, pageSize: 12 }}
-              className={buttonVariants({ className: 'mt-3' })}
-            >
-              Explorar catálogo
-            </Link>
+          <div aria-busy aria-label="Cargando historial">
+            <ReservaCardFantasma filas={2} />
           </div>
-        ) : null}
+        </>
+      ) : null}
 
-        {reservas.isSuccess && items.length > 0 ? (
-          <ol
-            ref={listaRef}
-            className="before:bg-linea relative flex flex-col gap-4 before:absolute before:top-4 before:bottom-4 before:left-[10px] before:w-px"
+      {!error && !cargando && sinNinguna ? (
+        <div className="bg-card border-linea flex flex-col items-center gap-3 rounded-xl border px-6 py-14 text-center">
+          <span className="bg-lima-wash text-pino-800 grid size-14 place-items-center rounded-full">
+            <BookmarkX aria-hidden className="size-6" strokeWidth={2} />
+          </span>
+          <h2 className="mt-2 text-xl">
+            Aún no tienes <span className="titulo-serif">reservas</span>
+          </h2>
+          <p className="text-texto-3 max-w-sm text-[15px]">
+            Busca un libro en el catálogo y resérvalo. Aquí verás el código de
+            tu ejemplar.
+          </p>
+          <Link
+            to="/catalogo"
+            search={{ page: 1, pageSize: 12 }}
+            className={buttonVariants({ className: 'mt-3' })}
           >
-            {items.map((reserva) => (
-              <li key={reserva.idReserva} data-reserva={reserva.idReserva}>
-                <ReservaCard
-                  reserva={reserva}
-                  onCancelar={() => setElegida(reserva)}
-                />
-              </li>
-            ))}
-          </ol>
-        ) : null}
+            Explorar catálogo
+          </Link>
+        </div>
+      ) : null}
 
-        {reservas.isSuccess && totalPages > 1 ? (
-          <nav aria-label="Paginación" className="mt-6 flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page <= 1}
-              onClick={() => setPage(page - 1)}
-            >
-              <ChevronLeft aria-hidden />
-              Anterior
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={page >= totalPages}
-              onClick={() => setPage(page + 1)}
-            >
-              Siguiente
-              <ChevronRight aria-hidden />
-            </Button>
-          </nav>
-        ) : null}
-      </section>
+      {!error && !cargando && !sinNinguna ? (
+        <>
+          {activas.length > 0 ? (
+            <section aria-label="Reservas activas" className="flex flex-col gap-4">
+              <h2 className="text-xl tracking-[-0.02em]">
+                {activas.length === 1 ? (
+                  <>
+                    Tu reserva <span className="titulo-serif">activa</span>
+                  </>
+                ) : (
+                  <>
+                    Tus reservas <span className="titulo-serif">activas</span>
+                  </>
+                )}
+              </h2>
+              <div
+                ref={activasRef}
+                className={cn(
+                  'grid gap-4',
+                  activas.length > 1 ? 'md:grid-cols-2' : 'grid-cols-1',
+                )}
+              >
+                {activas.map((reserva) => (
+                  <ReservaActivaCard
+                    key={reserva.idReserva}
+                    reserva={reserva}
+                    onCancelar={() => setElegida(reserva)}
+                  />
+                ))}
+              </div>
+            </section>
+          ) : (
+            <div className="bg-card border-linea flex flex-col items-center gap-3 rounded-xl border px-6 py-10 text-center">
+              <h2 className="text-xl">No tienes reservas activas</h2>
+              <p className="text-texto-3 max-w-sm text-[15px]">
+                Busca un libro y resérvalo desde su ficha: el sistema te asigna
+                un ejemplar.
+              </p>
+              <Link
+                to="/catalogo"
+                search={{ page: 1, pageSize: 12 }}
+                className={buttonVariants({ className: 'mt-1' })}
+              >
+                Explorar catálogo
+              </Link>
+            </div>
+          )}
+
+          <section
+            aria-label="Historial"
+            className="flex flex-col gap-4"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-xl tracking-[-0.02em]">Historial</h2>
+              <div
+                role="tablist"
+                aria-label="Filtro del historial"
+                className="bg-niebla flex gap-1 self-start rounded-full p-1"
+              >
+                {chips.map((chip) => {
+                  const seleccionada = filtro === chip.id
+                  return (
+                    <button
+                      key={chip.id}
+                      type="button"
+                      role="tab"
+                      aria-selected={seleccionada}
+                      onClick={() => irCon({ estado: chip.id })}
+                      className={cn(
+                        'focus-visible:shadow-foco h-9 cursor-pointer rounded-full px-4 text-sm outline-none transition-colors',
+                        seleccionada
+                          ? 'bg-card text-tinta shadow-sm font-semibold'
+                          : 'text-texto-3 hover:text-tinta font-medium',
+                      )}
+                    >
+                      {chip.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {historial.isSuccess && items.length === 0 ? (
+              <div className="border-linea rounded-xl border border-dashed px-6 py-12 text-center">
+                <h3 className="text-base font-semibold">
+                  {filtro === 'Activa'
+                    ? 'No tienes reservas activas'
+                    : filtro === 'Cancelada'
+                      ? 'Sin reservas canceladas'
+                      : 'Tu historial está vacío'}
+                </h3>
+                <p className="text-texto-3 mt-1 text-sm">
+                  {filtro === 'Activa'
+                    ? 'Cuando reserves un libro aparecerá aquí.'
+                    : 'Las reservas que canceles quedarán en este historial.'}
+                </p>
+              </div>
+            ) : null}
+
+            {historial.isSuccess && items.length > 0 ? (
+              <ReservaHistorialLista
+                items={items}
+                listRef={historialRef}
+                onCancelar={setElegida}
+              />
+            ) : null}
+
+            {historial.isSuccess && totalPages > 1 ? (
+              <nav
+                aria-label="Paginación"
+                className="flex justify-end gap-2"
+              >
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page <= 1}
+                  onClick={() => setPage(page - 1)}
+                >
+                  <ChevronLeft aria-hidden />
+                  Anterior
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage(page + 1)}
+                >
+                  Siguiente
+                  <ChevronRight aria-hidden />
+                </Button>
+              </nav>
+            ) : null}
+          </section>
+        </>
+      ) : null}
+
+      <MisReservasExplorar />
 
       <CancelarReservaDialog
         reserva={elegida}
