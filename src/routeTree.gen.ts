@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as Char91__errorChar93RouteImport } from './routes/[__error]'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CatalogoRouteImport } from './routes/catalogo'
 import { Route as LoginRouteImport } from './routes/login'
@@ -24,6 +25,11 @@ import { Route as AdminLibrosIdLibroRouteImport } from './routes/admin/libros.$i
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Char91__errorChar93Route = Char91__errorChar93RouteImport.update({
+  id: '/__error',
+  path: '/__error',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -79,6 +85,7 @@ const AdminLibrosIdLibroRoute = AdminLibrosIdLibroRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/__error': typeof Char91__errorChar93Route
   '/admin': typeof AdminRouteWithChildren
   '/catalogo': typeof CatalogoRoute
   '/login': typeof LoginRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/__error': typeof Char91__errorChar93Route
   '/catalogo': typeof CatalogoRoute
   '/login': typeof LoginRoute
   '/mis-reservas': typeof MisReservasRoute
@@ -104,6 +112,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/__error': typeof Char91__errorChar93Route
   '/admin': typeof AdminRouteWithChildren
   '/catalogo': typeof CatalogoRoute
   '/login': typeof LoginRoute
@@ -119,6 +128,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/__error'
     | '/admin'
     | '/catalogo'
     | '/login'
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/__error'
     | '/catalogo'
     | '/login'
     | '/mis-reservas'
@@ -143,6 +154,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/__error'
     | '/admin'
     | '/catalogo'
     | '/login'
@@ -157,6 +169,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  Char91__errorChar93Route: typeof Char91__errorChar93Route
   AdminRoute: typeof AdminRouteWithChildren
   CatalogoRoute: typeof CatalogoRoute
   LoginRoute: typeof LoginRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/__error': {
+      id: '/__error'
+      path: '/__error'
+      fullPath: '/__error'
+      preLoaderRoute: typeof Char91__errorChar93RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -276,6 +296,7 @@ const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  Char91__errorChar93Route: Char91__errorChar93Route,
   AdminRoute: AdminRouteWithChildren,
   CatalogoRoute: CatalogoRoute,
   LoginRoute: LoginRoute,

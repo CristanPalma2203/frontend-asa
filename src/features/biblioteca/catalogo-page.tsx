@@ -1,8 +1,13 @@
 import { getRouteApi, Link } from '@tanstack/react-router'
-import { ChevronLeft, ChevronRight, Search, SearchX, X } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { ChevronLeft, ChevronRight, SearchX, X } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 import { Button, buttonVariants } from '@/components/ui/button'
+import { aplicarVistaCatalogo } from '@/features/biblioteca/catalogo-vista'
+import {
+  BarraCatalogo,
+  ChipsCategorias,
+} from '@/features/biblioteca/components/catalogo-filtros'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import {
   LibroCard,
@@ -14,38 +19,20 @@ import {
 } from '@/features/biblioteca/hooks/use-libros'
 import type { CatalogoSearch } from '@/features/biblioteca/schemas/catalogo-search.schema'
 import { useMotion } from '@/hooks/use-motion'
-import { cardsIn, lift, reveal } from '@/lib/motion'
-import { cn } from '@/lib/utils'
+import { cardsIn, lift } from '@/lib/motion'
 
 const Route = getRouteApi('/catalogo')
-
-type Filtros = { buscar: string; categoria: string; autor: string }
-
-function filtrosDeUrl(search: CatalogoSearch): Filtros {
-  return {
-    buscar: search.buscar ?? '',
-    categoria: search.categoria ?? '',
-    autor: search.autor ?? '',
-  }
-}
 
 export function CatalogoPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
-  const [filtros, setFiltros] = useState<Filtros>(() => filtrosDeUrl(search))
-  const [filtrosUrl, setFiltrosUrl] = useState<Filtros>(() =>
-    filtrosDeUrl(search),
-  )
+  const [texto, setTexto] = useState(search.buscar ?? '')
+  const [textoUrl, setTextoUrl] = useState(search.buscar)
 
-  // Si la URL cambia desde fuera (atrás/adelante, chips, buscador global), los inputs la siguen.
-  const actualesUrl = filtrosDeUrl(search)
-  if (
-    actualesUrl.buscar !== filtrosUrl.buscar ||
-    actualesUrl.categoria !== filtrosUrl.categoria ||
-    actualesUrl.autor !== filtrosUrl.autor
-  ) {
-    setFiltrosUrl(actualesUrl)
-    setFiltros(actualesUrl)
+  // Si la URL cambia desde fuera (atrás/adelante, buscador del Home), el input la sigue.
+  if (search.buscar !== textoUrl) {
+    setTextoUrl(search.buscar)
+    setTexto(search.buscar ?? '')
   }
 
   const libros = useLibros({
@@ -55,50 +42,39 @@ export function CatalogoPage() {
     autor: search.autor,
     categoria: search.categoria,
   })
-  // Muestra del catálogo (misma consulta que la Home) para sugerir categorías.
-  const categorias = useResumenHome().data?.categorias ?? []
+  // Muestra del catálogo (misma consulta que la Home): categorías con su conteo y total.
+  const resumen = useResumenHome()
+
+  /** Cambia filtros en la URL; cualquier filtro nuevo vuelve a la página 1. */
+  function irCon(cambios: Partial<CatalogoSearch>, reemplazar = false) {
+    const siguiente: CatalogoSearch = { ...search, ...cambios, page: 1 }
+    for (const clave of Object.keys(siguiente) as (keyof CatalogoSearch)[])
+      if (siguiente[clave] === undefined) delete siguiente[clave]
+    void navigate({ replace: reemplazar, search: siguiente })
+  }
 
   // Lo escrito pasa a la URL con 300 ms de espera; la URL es la que dispara la consulta.
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      const buscar = filtros.buscar.trim() || undefined
-      const categoria = filtros.categoria.trim() || undefined
-      const autor = filtros.autor.trim() || undefined
-      if (
-        buscar === search.buscar &&
-        categoria === search.categoria &&
-        autor === search.autor
-      ) {
-        return
-      }
-      void navigate({
-        replace: true,
-        search: {
-          page: 1,
-          pageSize: search.pageSize,
-          ...(buscar ? { buscar } : {}),
-          ...(categoria ? { categoria } : {}),
-          ...(autor ? { autor } : {}),
-        },
-      })
+      const buscar = texto.trim() || undefined
+      if (buscar === search.buscar) return
+      const siguiente: CatalogoSearch = { ...search, buscar, page: 1 }
+      if (!buscar) delete siguiente.buscar
+      void navigate({ replace: true, search: siguiente })
     }, 300)
-
     return () => window.clearTimeout(timer)
-  }, [
-    filtros,
-    navigate,
-    search.autor,
-    search.buscar,
-    search.categoria,
-    search.pageSize,
-  ])
+  }, [texto, navigate, search])
 
-  const items = libros.data?.items ?? []
+  const recibidos = libros.data?.items ?? []
+  // Disponibilidad y orden: la API no los soporta, se aplican sobre esta página.
+  const items = aplicarVistaCatalogo(recibidos, {
+    disponibilidad: search.disponibilidad,
+    orden: search.orden,
+  })
   const gridRef = useRef<HTMLUListElement>(null)
-  const chipsRef = useRef<HTMLUListElement>(null)
-  // Clave de los resultados: cada búsqueda, filtro o página nueva vuelve a hacer cardsIn.
+  // Clave de los resultados: cada búsqueda, filtro, orden o página nueva vuelve a hacer cardsIn.
   const claveResultados = libros.isSuccess
-    ? `${search.page}|${search.buscar ?? ''}|${search.categoria ?? ''}|${search.autor ?? ''}|${items.map((l) => l.idLibro).join(',')}`
+    ? items.map((l) => l.idLibro).join(',') + `|${search.page}`
     : ''
 
   // Tarjetas: cardsIn (stagger 0.05) y [data-lift] al pasar el puntero.
@@ -110,116 +86,59 @@ export function CatalogoPage() {
     },
     [claveResultados],
   )
-  // Chips de categoría: reveal en horizontal.
-  useMotion(
-    chipsRef,
-    (root) => reveal(root.children, { x: 10, y: 0, stagger: 0.05 }),
-    [categorias.length],
-  )
   const totalPages = libros.data?.totalPages ?? 0
   const totalCount = libros.data?.totalCount ?? 0
-  const hayFiltros = Boolean(search.buscar || search.categoria || search.autor)
+  const hayFiltros = Boolean(
+    search.buscar || search.categoria || search.autor || search.disponibilidad,
+  )
 
   function irAPagina(page: number) {
     void navigate({ search: { ...search, page } })
   }
 
-  function elegirCategoria(categoria: string) {
-    setFiltros((actual) => ({
-      ...actual,
-      categoria: actual.categoria === categoria ? '' : categoria,
-    }))
-  }
-
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-col gap-8 px-5 pt-6 pb-14 lg:px-14">
+    <main className="flex w-full flex-col gap-6 px-4 pt-6 pb-14 md:px-6 xl:px-8">
       <header className="flex flex-col gap-3">
-        <p className="eyebrow">Biblioteca</p>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <h1 className="text-[36px] leading-[1.02] sm:text-[48px]">
-            Nuestro <span className="titulo-serif">catálogo</span>
-          </h1>
-          {libros.isSuccess ? (
-            <p className="text-texto-3 text-sm">
-              {totalCount.toLocaleString('es')}{' '}
-              {totalCount === 1 ? 'título' : 'títulos'}
-              {hayFiltros ? ' con estos filtros' : ''}
-            </p>
-          ) : null}
-        </div>
+        <h1 className="text-[36px] leading-[1.02] sm:text-[48px]">
+          Todo el <span className="titulo-serif">catálogo</span>
+        </h1>
       </header>
 
       <section aria-label="Filtros" className="flex flex-col gap-4">
-        <form
-          role="search"
-          className="grid gap-3 md:grid-cols-[1fr_13rem_13rem]"
-          onSubmit={(event) => event.preventDefault()}
-        >
-          <Campo id="buscar-libros" etiqueta="Buscar" icono>
-            <input
-              id="buscar-libros"
-              type="search"
-              value={filtros.buscar}
-              onChange={(event) =>
-                setFiltros({ ...filtros, buscar: event.target.value })
-              }
-              placeholder="Título, autor o ISBN"
-              className={claseInput('pl-11')}
-            />
-          </Campo>
-          <Campo id="filtro-categoria" etiqueta="Categoría">
-            <input
-              id="filtro-categoria"
-              value={filtros.categoria}
-              onChange={(event) =>
-                setFiltros({ ...filtros, categoria: event.target.value })
-              }
-              placeholder="Todas"
-              className={claseInput()}
-            />
-          </Campo>
-          <Campo id="filtro-autor" etiqueta="Autor">
-            <input
-              id="filtro-autor"
-              value={filtros.autor}
-              onChange={(event) =>
-                setFiltros({ ...filtros, autor: event.target.value })
-              }
-              placeholder="Todos"
-              className={claseInput()}
-            />
-          </Campo>
-        </form>
-
-        {categorias.length > 0 ? (
-          <ul
-            ref={chipsRef}
-            aria-label="Categorías sugeridas"
-            className="flex flex-wrap gap-2"
-          >
-            {categorias.map((categoria) => {
-              const activa =
-                search.categoria?.toLowerCase() === categoria.toLowerCase()
-              return (
-                <li key={categoria}>
-                  <button
-                    type="button"
-                    aria-pressed={activa}
-                    onClick={() => elegirCategoria(categoria)}
-                    className={cn(
-                      'focus-visible:shadow-foco flex h-9 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[13px] font-medium transition-colors outline-none',
-                      activa
-                        ? 'bg-pino-950 text-papel border-pino-950'
-                        : 'border-linea-fuerte bg-card text-texto-2 hover:border-separador hover:text-tinta',
-                    )}
-                  >
-                    {categoria}
-                    {activa ? <X aria-hidden className="size-3.5" /> : null}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
+        <ChipsCategorias
+          total={resumen.data?.totalTitulos}
+          categorias={resumen.data?.conteoCategorias ?? []}
+          activa={search.categoria}
+          onElegir={(categoria) => irCon({ categoria })}
+        />
+        <BarraCatalogo
+          texto={texto}
+          onTexto={setTexto}
+          disponibilidad={search.disponibilidad}
+          onDisponibilidad={(disponibilidad) => irCon({ disponibilidad })}
+          orden={search.orden}
+          onOrden={(orden) => irCon({ orden })}
+          totalLibros={libros.isSuccess ? totalCount : undefined}
+        />
+        {search.autor ? (
+          <p className="flex">
+            <button
+              type="button"
+              onClick={() => irCon({ autor: undefined })}
+              className="border-pino-800 bg-pino-800/8 text-pino-800 focus-visible:shadow-foco flex h-9 cursor-pointer items-center gap-2 rounded-full border px-3.5 text-[13px] font-medium outline-none"
+            >
+              Autor: {search.autor}
+              <X aria-hidden className="size-3.5" />
+              <span className="sr-only">(quitar filtro)</span>
+            </button>
+          </p>
+        ) : null}
+        {search.disponibilidad && libros.isSuccess ? (
+          <p className="text-texto-3 text-[13px]">
+            Mostrando {items.length} de los {recibidos.length} libros de esta
+            página ({search.disponibilidad === 'disponibles' ? 'con' : 'sin'}{' '}
+            ejemplares disponibles).
+          </p>
         ) : null}
       </section>
 
@@ -227,7 +146,7 @@ export function CatalogoPage() {
         <ul
           aria-label="Cargando libros"
           aria-busy
-          className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"
+          className="grid grid-cols-2 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] lg:gap-5"
         >
           {Array.from({ length: search.pageSize }, (_, i) => (
             <li key={i}>
@@ -275,7 +194,7 @@ export function CatalogoPage() {
       {libros.isSuccess && items.length > 0 ? (
         <ul
           ref={gridRef}
-          className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"
+          className="grid grid-cols-2 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] lg:gap-5"
         >
           {items.map((libro) => (
             <li key={libro.idLibro}>
@@ -319,42 +238,5 @@ export function CatalogoPage() {
         </nav>
       ) : null}
     </main>
-  )
-}
-
-function claseInput(extra?: string) {
-  return cn(
-    'border-linea-fuerte bg-card text-texto placeholder:text-texto-4 hover:border-separador focus-visible:border-pino-800 focus-visible:shadow-foco h-12 w-full rounded-[12px] border px-4 text-[15px] transition-[border-color,box-shadow] outline-none',
-    extra,
-  )
-}
-
-function Campo({
-  id,
-  etiqueta,
-  icono = false,
-  children,
-}: {
-  id: string
-  etiqueta: string
-  icono?: boolean
-  children: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-texto-2 text-[13px] font-semibold">
-        {etiqueta}
-      </label>
-      <div className="relative">
-        {icono ? (
-          <Search
-            aria-hidden
-            className="text-texto-4 pointer-events-none absolute top-1/2 left-4 size-[18px] -translate-y-1/2"
-            strokeWidth={2}
-          />
-        ) : null}
-        {children}
-      </div>
-    </div>
   )
 }

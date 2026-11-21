@@ -224,3 +224,21 @@ export function magnetic(root: Element) {
   })
   return () => quitar.forEach((fn) => fn())
 }
+
+/** Mensaje nuevo de un chat: fundido + 8 px hacia arriba en 0.25 s (0 con movimiento reducido). */
+export function entradaMensaje(nodos: Nodos, delay = 0) {
+  const els = lista(nodos)
+  if (!els.length) return
+  gsap.fromTo(
+    els,
+    { opacity: 0, y: 8 },
+    {
+      opacity: 1,
+      y: 0,
+      duration: dur(0.25),
+      ease: 'power2.out',
+      delay: dur(delay),
+      clearProps: 'transform,opacity',
+    },
+  )
+}

@@ -1,16 +1,15 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog'
-import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
-import { ArrowUpRight, Menu, Search, X } from 'lucide-react'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
+import { Menu, Search, X } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
 
 import { Brand } from '@/components/layout/brand'
 import { Sidebar } from '@/components/layout/sidebar'
+import { useSesion } from '@/components/layout/use-sesion'
+import { VistaPill } from '@/components/layout/vista-pill'
 import { LuxiaFab } from '@/features/luxia/components/luxia-fab'
 import { useMotion } from '@/hooks/use-motion'
 import { reveal, titleLines } from '@/lib/motion'
-
-/** Rutas con cabecera propia (hero o pantalla partida), sin sidebar. */
-const rutasSinSidebar = new Set(['/', '/login'])
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({
@@ -24,16 +23,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       state.matches.some((match) => match.status === 'notFound'),
   })
 
-  // La Home lleva su propia navegación dentro del hero y el login es una pantalla partida.
+  // El login es una pantalla partida; la Home va con sidebar (su panel hace de cabecera).
   if (pathname === '/login' || esNoEncontrada) return <>{children}</>
-  if (rutasSinSidebar.has(pathname)) {
-    return (
-      <div className="bg-background flex min-h-svh flex-col">
-        <div className="flex-1">{children}</div>
-        <SiteFooter />
-      </div>
-    )
-  }
 
   return (
     <LayoutConSidebar pathname={pathname} conLuxia={!esNoEncontrada}>
@@ -106,7 +97,11 @@ function LayoutConSidebar({
       <div className="flex min-h-svh min-w-0 flex-1 flex-col">
         <MobileNav />
         <div ref={barraRef} className="hidden lg:block">
-          {enAdmin ? <AdminTopbar pathname={pathname} /> : <Topbar />}
+          {enAdmin ? (
+            <AdminTopbar pathname={pathname} />
+          ) : (
+            <Topbar enInicio={pathname === '/'} />
+          )}
         </div>
         {/* No es <main>: cada pantalla ya trae el suyo. */}
         <div ref={rutaRef} data-ruta className="flex-1 overflow-clip">
@@ -114,17 +109,23 @@ function LayoutConSidebar({
         </div>
         <SiteFooter />
       </div>
-      {/* LuxIA solo vive en las pantallas con sidebar: nunca en la Home, el login ni el 404. */}
+      {/* LuxIA (la mascota) vive en las pantallas con sidebar: nunca en el login ni el 404. */}
       {conLuxia ? <LuxiaFab /> : null}
     </div>
   )
 }
 
-/** Barra superior del área de lector: buscador que lleva al catálogo. */
-function Topbar() {
+/**
+ * Barra superior del área de lector: buscador que lleva al catálogo y, para el admin, la pill
+ * Panel/Biblioteca centrada. En el Inicio el buscador ya está en el panel: solo queda la pill.
+ */
+function Topbar({ enInicio }: { enInicio: boolean }) {
+  const sesion = useSesion()
+  if (enInicio && !sesion.isAdmin) return null
   return (
-    <header className="flex h-[92px] items-center justify-between gap-6 px-14">
-      <BuscadorGlobal />
+    <header className="relative flex h-[92px] items-center justify-between gap-6 px-14">
+      {enInicio ? <span /> : <BuscadorGlobal />}
+      <VistaPill className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
     </header>
   )
 }
@@ -136,7 +137,7 @@ function AdminTopbar({ pathname }: { pathname: string }) {
       ? 'Libros'
       : 'Resumen'
   return (
-    <header className="flex h-[84px] items-center justify-between gap-6 px-14">
+    <header className="relative flex h-[84px] items-center justify-between gap-6 px-14">
       <nav
         aria-label="Ruta"
         className="text-texto-3 flex items-center gap-2 text-[13px] font-medium"
@@ -147,14 +148,7 @@ function AdminTopbar({ pathname }: { pathname: string }) {
         </span>
         <span className="text-tinta">{seccion}</span>
       </nav>
-      <Link
-        to="/catalogo"
-        search={{ page: 1, pageSize: 12 }}
-        className="border-linea-fuerte bg-papel text-tinta hover:border-tinta flex h-10 items-center gap-2 rounded-full border px-4 text-[13px] font-semibold transition-colors"
-      >
-        Ver catálogo público
-        <ArrowUpRight className="size-3.5" strokeWidth={2.2} />
-      </Link>
+      <VistaPill className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
     </header>
   )
 }
@@ -219,7 +213,7 @@ function MobileNav() {
           <DialogPrimitive.Title className="sr-only">
             Menú
           </DialogPrimitive.Title>
-          <Sidebar onNavegar={() => setAbierto(false)} />
+          <Sidebar onNavegar={() => setAbierto(false)} conVistaPill />
           <DialogPrimitive.Close
             aria-label="Cerrar menú"
             className="absolute top-6 right-4 grid size-9 cursor-pointer place-items-center rounded-full text-white/70 hover:bg-white/8 hover:text-white"

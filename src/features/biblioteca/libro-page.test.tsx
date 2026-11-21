@@ -1,10 +1,11 @@
-import { act, screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import { crearApiFake } from '@/test/api-fake'
+import { detalleEjemplo } from '@/test/fixtures'
 import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
 import { entrarComo } from '@/test/sesion'
@@ -28,7 +29,10 @@ describe('ficha', () => {
     await renderEn('/libros/1')
 
     await screen.findByRole('heading', { level: 1, name: 'El Principito' })
-    expect(await screen.findByText('2 de 2')).toBeInTheDocument()
+    expect(
+      await screen.findByText('2 de 2 ejemplares activos'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('2 activos')).toBeInTheDocument()
   })
 
   it('Reservar sin sesión manda a login', async () => {
@@ -56,14 +60,25 @@ describe('ficha', () => {
       router.navigate({ to: '/libros/$idLibro', params: { idLibro: '1' } }),
     )
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
-    expect(screen.getByText('3 disponibles')).toBeInTheDocument()
-    expect(screen.getByText('3 de 3')).toBeInTheDocument()
+    expect(screen.getByTestId('estado-disponibilidad')).toHaveTextContent(
+      '3 disponibles',
+    )
+    expect(screen.getByText('3 de 3 ejemplares activos')).toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
 
-    expect(await screen.findByText('Tu ejemplar: BIB-001')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText('2 de 3')).toBeInTheDocument())
+    expect(await screen.findByTestId('tu-ejemplar')).toHaveTextContent(
+      'Tu ejemplar: BIB-001',
+    )
+    expect(screen.getByTestId('estado-disponibilidad')).toHaveTextContent(
+      'Reservado por ti',
+    )
+    await waitFor(() =>
+      expect(
+        screen.getByText('Tienes 1 de 3 · quedan 2 disponibles'),
+      ).toBeInTheDocument(),
+    )
     expect(api.pedidos('/api/libros/1')).toHaveLength(2)
 
     // Volver al catálogo: la lista se invalidó, así que se vuelve a pedir pese al staleTime.
@@ -116,7 +131,9 @@ describe('ficha', () => {
     )
     await renderEn('/libros/1', { staleTime: STALE_TIME_APP })
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
-    expect(screen.getByText('1 disponible')).toBeInTheDocument()
+    expect(screen.getByTestId('estado-disponibilidad')).toHaveTextContent(
+      '1 disponible',
+    )
 
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
@@ -130,9 +147,11 @@ describe('ficha', () => {
     // Con el diálogo cerrado la página ya no queda aria-hidden: el mensaje es visible y accesible.
     expect(mensaje).toBeVisible()
     expect(mensaje.closest('[aria-hidden="true"]')).toBeNull()
-    expect(screen.getByText('1 disponible')).toBeInTheDocument()
-    expect(screen.getByText('1 de 1')).toBeInTheDocument()
-    expect(screen.queryByText(/Tu ejemplar:/)).not.toBeInTheDocument()
+    expect(screen.getByTestId('estado-disponibilidad')).toHaveTextContent(
+      '1 disponible',
+    )
+    expect(screen.getByText('1 de 1 ejemplares activos')).toBeInTheDocument()
+    expect(screen.queryByTestId('tu-ejemplar')).not.toBeInTheDocument()
     expect(api.pedidos('/api/libros/1')).toHaveLength(1)
   })
 
@@ -150,6 +169,10 @@ describe('ficha', () => {
 
   it('el lector no ve la lista de ejemplares ni sus códigos', async () => {
     entrarComo('Lector')
+    // Sin reservas previas: el único código que vería sería el de su propia reserva.
+    server.use(
+      ...crearApiFake([{ titulo: 'El Principito', copias: 3 }]).handlers,
+    )
     await renderEn('/libros/1')
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
 
@@ -157,5 +180,117 @@ describe('ficha', () => {
     expect(
       screen.queryByRole('heading', { name: 'Ejemplares' }),
     ).not.toBeInTheDocument()
+  })
+
+  it('cargando: la tarjeta ya se ve con «Reservar» deshabilitado y huecos en los datos', async () => {
+    server.use(
+      http.get('http://api.test/api/libros/:id', () => new Promise(() => {})),
+    )
+    await renderEn('/libros/1')
+
+    expect(
+      await screen.findByRole('button', { name: 'Reservar' }),
+    ).toBeDisabled()
+    expect(screen.getByLabelText('Cargando libro')).toHaveAttribute(
+      'aria-busy',
+      'true',
+    )
+    expect(screen.queryByRole('heading', { level: 1 })).toBeNull()
+  })
+
+  it('ya reservado: «Tu ejemplar» con su código y enlace a Mis reservas, sin «Reservar»', async () => {
+    entrarComo('Lector')
+    // handlers.ts: el lector tiene una reserva activa de El Principito con BIB-001.
+    await renderEn('/libros/1')
+    await screen.findByRole('heading', { name: 'El Principito', level: 1 })
+
+    expect(await screen.findByTestId('tu-ejemplar')).toHaveTextContent(
+      'Tu ejemplar: BIB-001',
+    )
+    expect(
+      screen.getByRole('link', { name: 'Ver en Mis reservas' }),
+    ).toHaveAttribute('href', '/mis-reservas')
+    expect(screen.getByTestId('estado-disponibilidad')).toHaveTextContent(
+      'Reservado por ti',
+    )
+    expect(screen.queryByRole('button', { name: 'Reservar' })).toBeNull()
+  })
+
+  it('oculta sinopsis, páginas, año y editorial si no vienen, y los muestra si llegan', async () => {
+    const { unmount } = await renderEn('/libros/1')
+    await screen.findByRole('heading', { name: 'El Principito', level: 1 })
+    expect(screen.queryByRole('heading', { name: 'Sinopsis' })).toBeNull()
+    expect(screen.queryByText('Editorial')).toBeNull()
+    unmount()
+
+    server.use(
+      http.get('http://api.test/api/libros/:id', () =>
+        HttpResponse.json({
+          ...detalleEjemplo,
+          sinopsis:
+            'Un aviador cae en el desierto y conoce a un pequeño príncipe.',
+          paginas: 96,
+          anioPublicacion: 1943,
+          editorial: 'Salamandra',
+        }),
+      ),
+    )
+    await renderEn('/libros/1')
+    expect(
+      await screen.findByRole('heading', { name: 'Sinopsis' }),
+    ).toBeInTheDocument()
+    expect(screen.getByText(/conoce a un pequeño príncipe/)).toBeInTheDocument()
+    expect(screen.getByText('96')).toBeInTheDocument()
+    expect(screen.getByText('1943')).toBeInTheDocument()
+    expect(screen.getByText('Salamandra')).toBeInTheDocument()
+  })
+
+  it('«Más de esta categoría» muestra hasta 6 de la misma categoría, sin el actual, con enlace a su ficha', async () => {
+    const user = userEvent.setup()
+    const api = crearApiFake([
+      { titulo: 'Cien años de soledad', categoria: 'Novela' },
+      ...Array.from({ length: 7 }, (_, i) => ({
+        titulo: `Novela ${i + 1}`,
+        categoria: 'Novela',
+      })),
+      { titulo: 'Cosmos', categoria: 'Ciencia' },
+    ])
+    server.use(...api.handlers)
+    const { router } = await renderEn('/libros/1')
+    await screen.findByRole('heading', {
+      name: 'Cien años de soledad',
+      level: 1,
+    })
+
+    const lista = await screen.findByRole('list', {
+      name: 'Más libros de Novela',
+    })
+    const enlaces = await within(lista).findAllByRole('link')
+    expect(enlaces).toHaveLength(6)
+    expect(within(lista).queryByText('Cien años de soledad')).toBeNull()
+    expect(within(lista).queryByText('Cosmos')).toBeNull()
+    expect(
+      api
+        .pedidos('/api/libros')
+        .some((url) => url.searchParams.get('categoria') === 'Novela'),
+    ).toBe(true)
+
+    await user.click(
+      within(lista).getByRole('link', { name: 'Novela 1, 3 disponibles' }),
+    )
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/libros/2'),
+    )
+  })
+
+  it('sin otros libros de la categoría, la sección no aparece', async () => {
+    server.use(...crearApiFake([{ titulo: 'El Principito' }]).handlers)
+    await renderEn('/libros/1')
+    await screen.findByRole('heading', { name: 'El Principito', level: 1 })
+    await waitFor(() =>
+      expect(
+        screen.queryByRole('heading', { name: 'Más de esta categoría' }),
+      ).toBeNull(),
+    )
   })
 })

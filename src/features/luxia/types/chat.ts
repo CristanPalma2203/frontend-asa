@@ -16,6 +16,8 @@ export interface ChatMsg {
   libros?: ChatLibro[]
   /** Con varios resultados: búsqueda para «Ver todos en el catálogo». */
   consulta?: string
+  /** Siguiente pregunta propuesta tras esta respuesta (un solo chip). */
+  sugerencia?: string
   /** Con varios resultados de una categoría: la abre en el catálogo. */
   categoria?: string
   total?: number

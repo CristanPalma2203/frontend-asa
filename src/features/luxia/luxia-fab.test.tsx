@@ -1,5 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import gsap from 'gsap'
 import { http, HttpResponse } from 'msw'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -26,6 +27,138 @@ afterEach(() => {
 })
 
 describe('LuxIA', () => {
+  it('auto-scroll al final de la lista con cada mensaje nuevo', async () => {
+    server.use(...crearApiFake([{ titulo: 'Dune', copias: 3 }]).handlers)
+    await renderEn(CATALOGO)
+    const { user, panel } = await abrir()
+    const log = within(panel).getByRole('log')
+    // jsdom no tiene layout: alto de contenido 1000 y visible 300.
+    Object.defineProperty(log, 'scrollHeight', {
+      configurable: true,
+      get: () => 1000,
+    })
+    log.scrollTop = 0
+
+    await user.type(
+      within(panel).getByLabelText('Mensaje para LuxIA'),
+      'Dune{Enter}',
+    )
+    expect(
+      await within(log).findByText('Quedan 3 ejemplares de «Dune».'),
+    ).toBeInTheDocument()
+    await waitFor(() => expect(log.scrollTop).toBe(1000))
+  })
+
+  it('sin conversación: un solo chip, el inicial, bajo el saludo', async () => {
+    await renderEn(CATALOGO)
+    const { panel } = await abrir()
+    const chips = within(panel).getAllByTestId('luxia-sugerencia')
+    expect(chips).toHaveLength(1)
+    expect(chips[0]).toHaveTextContent('¿Hay libros de Tolkien?')
+  })
+
+  it('con historial guardado: exactamente un chip, debajo de la última respuesta', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        { role: 'user', text: 'Dune' },
+        {
+          role: 'assistant',
+          text: 'Quedan 3 ejemplares de «Dune».',
+          sugerencia: '¿Cómo reservo Dune?',
+        },
+      ]),
+    )
+    await renderEn(CATALOGO)
+    const { panel } = await abrir()
+
+    const chips = within(panel).getAllByTestId('luxia-sugerencia')
+    expect(chips).toHaveLength(1)
+    expect(chips[0]).toHaveTextContent('¿Cómo reservo Dune?')
+    const ultima = within(panel).getByText('Quedan 3 ejemplares de «Dune».')
+    expect(
+      ultima.compareDocumentPosition(chips[0] as Node) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+  })
+
+  it('mientras LuxIA responde: sin chip y con «escribiendo» (3 puntos); luego, un chip contextual', async () => {
+    let soltar: (() => void) | null = null
+    const api = crearApiFake([{ titulo: 'Dune', copias: 3 }])
+    server.use(
+      http.get('*/api/libros', ({ request }) => {
+        if (new URL(request.url).searchParams.get('search') !== 'Dune')
+          return undefined
+        return new Promise<undefined>((resolve) => {
+          soltar = () => resolve(undefined)
+        })
+      }),
+      ...api.handlers,
+    )
+    await renderEn(CATALOGO)
+    const { user, panel } = await abrir()
+
+    await user.type(
+      within(panel).getByLabelText('Mensaje para LuxIA'),
+      'Dune{Enter}',
+    )
+    await waitFor(() => expect(soltar).not.toBeNull())
+    expect(within(panel).queryByTestId('luxia-sugerencia')).toBeNull()
+    const escribiendo = within(panel).getByLabelText('LuxIA está escribiendo')
+    expect(escribiendo.querySelectorAll('span')).toHaveLength(3)
+
+    await act(async () => soltar?.())
+    expect(
+      await within(panel).findByTestId('luxia-sugerencia'),
+    ).toHaveTextContent('¿Cómo reservo Dune?')
+    expect(within(panel).getAllByTestId('luxia-sugerencia')).toHaveLength(1)
+  })
+
+  it('los mensajes nuevos entran con fundido y 8 px (GSAP); el historial al abrir, no', async () => {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify([
+        { role: 'user', text: 'Hola' },
+        { role: 'assistant', text: 'Hola, ¿qué buscas?' },
+      ]),
+    )
+    server.use(...crearApiFake([{ titulo: 'Dune', copias: 3 }]).handlers)
+    const desde = vi.spyOn(gsap, 'fromTo')
+    try {
+      await renderEn(CATALOGO)
+      const { user, panel } = await abrir()
+      const entradas = () =>
+        desde.mock.calls.filter(
+          ([, de]) =>
+            (de as { y?: number; opacity?: number }).y === 8 &&
+            (de as { opacity?: number }).opacity === 0,
+        )
+      const historial = within(panel).getByText('Hola, ¿qué buscas?')
+      expect(
+        entradas().some(([objetivo]) =>
+          (objetivo as Element[]).includes?.(historial),
+        ),
+      ).toBe(false)
+
+      await user.type(
+        within(panel).getByLabelText('Mensaje para LuxIA'),
+        'Dune{Enter}',
+      )
+      const respuesta = await within(panel).findByText(
+        'Quedan 3 ejemplares de «Dune».',
+      )
+      await waitFor(() =>
+        expect(
+          entradas().some(([objetivo]) =>
+            Array.from(objetivo as ArrayLike<Element>).includes(respuesta),
+          ),
+        ).toBe(true),
+      )
+    } finally {
+      desde.mockRestore()
+    }
+  })
+
   it('abrir y cerrar el chat (con vuelo real al header y vuelta) no deja errores en consola', async () => {
     // Con movimiento y con layout: jsdom no mide nada, así que se simula un tamaño para que
     // el muelle se mida y LuxIA vuele de verdad (GSAP con su ticker real).
@@ -46,6 +179,7 @@ describe('LuxIA', () => {
           return prop === 'offsetParent' ? this.parentElement : 48
         },
       })
+    const aGsap = vi.spyOn(gsap, 'to')
     const errores: unknown[] = []
     const consola = vi
       .spyOn(console, 'error')
@@ -60,6 +194,14 @@ describe('LuxIA', () => {
         expect(screen.getByTestId('luxia-anchor')).toHaveAttribute(
           'data-dock',
           'header',
+        ),
+      )
+      // El vuelo es un gsap.to con los keyframes del arco sobre el muelle de la mascota.
+      const dock = document.querySelector('.luxia-fab__dock')
+      await waitFor(() =>
+        expect(aGsap).toHaveBeenCalledWith(
+          dock,
+          expect.objectContaining({ keyframes: expect.any(Array) }),
         ),
       )
       // Deja correr el vuelo de ida (750 ms).
@@ -82,6 +224,7 @@ describe('LuxIA', () => {
     } finally {
       window.removeEventListener('error', alError)
       consola.mockRestore()
+      aGsap.mockRestore()
       medidas.forEach((prop, i) => {
         const original = originales[i]
         if (original)
@@ -225,16 +368,15 @@ describe('LuxIA', () => {
     )
   })
 
-  it('un chip envía su texto y la respuesta de /api/libros aparece en el log con enlace a la ficha', async () => {
+  it('una pregunta escrita y la respuesta de /api/libros aparece en el log con enlace a la ficha', async () => {
     const api = crearApiFake([{ titulo: 'Dune', copias: 3 }])
     server.use(...api.handlers)
     await renderEn(CATALOGO)
     const { user, panel } = await abrir()
 
-    await user.click(
-      within(panel).getByRole('button', {
-        name: '¿Cuántos ejemplares quedan de Dune?',
-      }),
+    await user.type(
+      within(panel).getByLabelText('Mensaje para LuxIA'),
+      '¿Cuántos ejemplares quedan de Dune?{Enter}',
     )
 
     const log = within(panel).getByRole('log')
@@ -331,10 +473,9 @@ describe('LuxIA', () => {
     await renderEn(CATALOGO)
     const { user, panel } = await abrir()
 
-    await user.click(
-      within(panel).getByRole('button', {
-        name: '¿Cómo reservo El Principito?',
-      }),
+    await user.type(
+      within(panel).getByLabelText('Mensaje para LuxIA'),
+      '¿Cómo reservo El Principito?{Enter}',
     )
 
     expect(
@@ -380,8 +521,11 @@ describe('LuxIA', () => {
     expect(medio?.y).toBeLessThan(-388 * 0.5)
   })
 
-  it('no aparece en la Home, el login ni el 404', async () => {
-    for (const ruta of ['/', '/login', '/no-existe']) {
+  it('la mascota está en la Home (que lleva sidebar), pero no en el login ni el 404', async () => {
+    const home = await renderEn('/')
+    expect(await screen.findByTestId('luxia-fab')).toBeInTheDocument()
+    home.unmount()
+    for (const ruta of ['/login', '/no-existe']) {
       const { unmount } = await renderEn(ruta)
       await act(async () => {})
       expect(screen.queryByTestId('luxia-fab')).toBeNull()

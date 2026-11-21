@@ -45,6 +45,9 @@ export function loadHistory(): ChatMsg[] {
           ? { libros: m.libros.filter(esLibro).map(libroGuardado) }
           : {}),
         ...(typeof m.consulta === 'string' ? { consulta: m.consulta } : {}),
+        ...(typeof m.sugerencia === 'string'
+          ? { sugerencia: m.sugerencia }
+          : {}),
         ...(typeof m.categoria === 'string' ? { categoria: m.categoria } : {}),
         ...(typeof m.total === 'number' ? { total: m.total } : {}),
       }))

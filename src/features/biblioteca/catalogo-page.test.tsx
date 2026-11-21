@@ -1,5 +1,6 @@
 import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
@@ -36,12 +37,19 @@ describe('catálogo', () => {
     await user.type(screen.getByLabelText('Buscar'), 'hobbit')
 
     expect(
-      await screen.findByRole('heading', { name: 'El Hobbit' }),
+      await screen.findByRole(
+        'heading',
+        { name: 'El Hobbit' },
+        { timeout: 3000 },
+      ),
     ).toBeInTheDocument()
-    await waitFor(() =>
-      expect(
-        screen.queryByRole('heading', { name: 'El Principito' }),
-      ).not.toBeInTheDocument(),
+    // Búsqueda diferida + petición: con la máquina cargada puede pasar de 1 s.
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByRole('heading', { name: 'El Principito' }),
+        ).not.toBeInTheDocument(),
+      { timeout: 3000 },
     )
     expect(
       screen.queryByRole('heading', { name: 'Dune' }),
@@ -152,17 +160,24 @@ describe('catálogo', () => {
     )
   })
 
-  it('el filtro de categoría escribe ?categoria= en la URL y lo manda a la API', async () => {
+  it('los chips de categoría muestran su conteo, escriben ?categoria= en la URL y lo mandan a la API', async () => {
     const user = userEvent.setup()
     const api = crearApiFake([
       { titulo: 'Dune', categoria: 'Ciencia ficción' },
       { titulo: 'Cien años de soledad', categoria: 'Novela' },
+      { titulo: 'Rayuela', categoria: 'Novela' },
     ])
     server.use(...api.handlers)
     const { router } = await renderEn('/catalogo?page=1&pageSize=12')
     await screen.findByRole('heading', { name: 'Dune' })
 
-    await user.type(screen.getByLabelText('Categoría'), 'Novela')
+    const chips = await screen.findByRole('group', { name: 'Categorías' })
+    expect(
+      await within(chips).findByRole('button', { name: /^Todos\s*3$/ }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await user.click(
+      within(chips).getByRole('button', { name: /^Novela\s*2$/ }),
+    )
 
     await waitFor(() =>
       expect(router.state.location.search).toMatchObject({
@@ -174,6 +189,48 @@ describe('catálogo', () => {
         'Novela',
       ),
     )
+  })
+
+  it('los chips rápidos y «Ordenar» van a la URL y se aplican sobre la página', async () => {
+    const user = userEvent.setup()
+    const api = crearApiFake([
+      { titulo: 'Zeta', autor: 'Ana', copias: 1 },
+      { titulo: 'Alfa', autor: 'Zoe', copias: 3 },
+      { titulo: 'Media', autor: 'Luis', copias: 0 },
+    ])
+    server.use(...api.handlers)
+    const { router } = await renderEn('/catalogo?page=1&pageSize=12')
+    await screen.findByRole('heading', { name: 'Zeta' })
+    const titulos = () =>
+      screen
+        .getAllByRole('heading', { level: 2 })
+        .map((h) => h.textContent)
+        .filter((t) => ['Zeta', 'Alfa', 'Media'].includes(t ?? ''))
+
+    await user.selectOptions(screen.getByLabelText('Ordenar'), 'titulo')
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({ orden: 'titulo' }),
+    )
+    await waitFor(() => expect(titulos()).toEqual(['Alfa', 'Media', 'Zeta']))
+
+    await user.selectOptions(screen.getByLabelText('Ordenar'), 'disponibles')
+    await waitFor(() => expect(titulos()).toEqual(['Alfa', 'Zeta', 'Media']))
+
+    await user.click(screen.getByRole('button', { name: /Agotados/ }))
+    await waitFor(() =>
+      expect(router.state.location.search).toMatchObject({
+        disponibilidad: 'agotados',
+        orden: 'disponibles',
+        page: 1,
+      }),
+    )
+    await waitFor(() => expect(titulos()).toEqual(['Media']))
+    // La API no recibe parámetros inventados: el filtro es del cliente.
+    const ultimo = pedidosCatalogo(api).at(-1)
+    expect(ultimo?.searchParams.has('disponibilidad')).toBe(false)
+    expect(ultimo?.searchParams.has('orden')).toBe(false)
+    // El total sigue siendo el de la API.
+    expect(screen.getByText('3 libros')).toBeInTheDocument()
   })
 
   it('muestra el vacío', async () => {

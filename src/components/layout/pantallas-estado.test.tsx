@@ -131,3 +131,39 @@ describe('500', () => {
     }
   })
 })
+
+describe('/__error (solo desarrollo)', () => {
+  it('en desarrollo lanza a propósito y muestra la 500', async () => {
+    const consola = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      await renderEn('/__error')
+      expect(
+        await screen.findByRole('heading', {
+          level: 1,
+          name: 'Algo salió mal',
+        }),
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Reintentar' }),
+      ).toBeInTheDocument()
+    } finally {
+      consola.mockRestore()
+    }
+  })
+
+  it('fuera de desarrollo no existe: responde con la 404', async () => {
+    vi.stubEnv('DEV', false)
+    try {
+      await renderEn('/__error')
+      expect(
+        await screen.findByRole('heading', {
+          level: 1,
+          name: 'Esta página se perdió entre estantes',
+        }),
+      ).toBeInTheDocument()
+      expect(screen.queryByText('ERROR 500')).toBeNull()
+    } finally {
+      vi.unstubAllEnvs()
+    }
+  })
+})

@@ -31,6 +31,11 @@ export type LibroDetalle = {
   estado: EstadoLibro
   disponibles: number
   ejemplares: Ejemplar[]
+  /** Aún no los envía el backend: la ficha oculta su sección mientras no lleguen. */
+  sinopsis?: string | null
+  paginas?: number | null
+  anioPublicacion?: number | null
+  editorial?: string | null
 }
 
 export type Reserva = {

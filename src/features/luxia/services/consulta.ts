@@ -4,6 +4,7 @@ import type {
   PagedResponse,
 } from '@/features/biblioteca/types/api'
 import { categoriaDe, interpretar } from '@/features/luxia/interpretar'
+import { sugerenciaTrasBusqueda } from '@/features/luxia/services/sugerencia'
 import type { ChatMsg } from '@/features/luxia/types/chat'
 
 /** Cuántas tarjetas de libro muestra LuxIA en una respuesta. */
@@ -62,6 +63,14 @@ export async function consultarLuxia(
           ? textoCategoria(categoria, pagina.items, pagina.totalCount)
           : textoBusqueda(intencion.consulta, pagina.items, pagina.totalCount),
     ...(libros.length > 0 ? { libros } : {}),
+    ...(sugerenciaTrasBusqueda(libros[0]?.titulo, intencion.tipo === 'reservar')
+      ? {
+          sugerencia: sugerenciaTrasBusqueda(
+            libros[0]?.titulo,
+            intencion.tipo === 'reservar',
+          ),
+        }
+      : {}),
     ...(pagina.totalCount > 1
       ? {
           ...(categoria ? { categoria } : { consulta: intencion.consulta }),

@@ -8,6 +8,7 @@ import { Component, useRef, type ReactNode } from 'react'
 
 import { Brand } from '@/components/layout/brand'
 import { LibroError } from '@/components/layout/libro-error'
+import { HeroBackdrop } from '@/features/biblioteca/components/hero-backdrop'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
 import { useMotion } from '@/hooks/use-motion'
@@ -59,23 +60,27 @@ function PantallaError({
     <div
       data-pantalla-error
       className={cn(
-        'pantalla-error relative isolate flex min-h-svh flex-col px-6 py-7 sm:px-12',
+        'pantalla-error relative isolate flex min-h-svh flex-col overflow-hidden px-6 py-7 sm:px-12 sm:py-9',
         oscuro
           ? 'pantalla-error--oscuro text-papel'
           : 'pantalla-error--claro text-tinta',
         encima && 'fixed inset-0 z-[1100] overflow-y-auto',
       )}
     >
-      <div className="self-start">{logo}</div>
+      {/* El mismo fondo animado del hero; con movimiento reducido queda estático. */}
+      <HeroBackdrop variante={oscuro ? 'oscuro' : 'celeste'} />
+      <div className="relative z-10 mx-auto w-full max-w-[72rem] origin-left [&>a]:origin-left [&>a]:scale-[1.15]">
+        {logo}
+      </div>
       <main
         ref={ref}
-        className="mx-auto grid w-full max-w-6xl flex-1 items-center gap-10 py-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16"
+        className="relative z-10 mx-auto grid w-full max-w-[72rem] flex-1 items-center gap-10 py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] lg:gap-20"
       >
         <div className="order-2 flex flex-col items-start lg:order-1">
           <p
             data-m
             className={cn(
-              'rounded-full border px-3 py-1 font-mono text-xs font-medium tracking-[0.14em]',
+              'rounded-full border px-4 py-1.5 font-mono text-[0.8rem] font-medium tracking-[0.14em]',
               oscuro
                 ? 'border-lima-400/40 bg-lima-400/10 text-lima-400'
                 : 'border-rojo-600/25 bg-rojo-50 text-rojo-800',
@@ -83,7 +88,12 @@ function PantallaError({
           >
             {etiqueta}
           </p>
-          <h1 className="mt-6 text-[40px] leading-[1.04] font-semibold tracking-[-0.03em] sm:text-[56px] lg:text-[64px]">
+          <h1
+            className={cn(
+              'mt-6 text-[clamp(2.5rem,6vw,5.5rem)] leading-[1.02] font-semibold tracking-[-0.035em]',
+              oscuro ? 'text-papel' : 'text-tinta',
+            )}
+          >
             <PalabrasAnimadas texto={linea1} />{' '}
             <span
               className={cn(
@@ -97,8 +107,8 @@ function PantallaError({
           <p
             data-m
             className={cn(
-              'mt-5 max-w-md text-base leading-relaxed sm:text-[17px]',
-              oscuro ? 'text-white/72' : 'text-texto-3',
+              'mt-6 max-w-[32rem] text-lg leading-relaxed lg:text-xl',
+              oscuro ? 'text-white/80' : 'text-texto-2',
             )}
           >
             {texto}
@@ -112,12 +122,15 @@ function PantallaError({
           <LibroError
             titulo={libro.titulo}
             subtitulo={libro.subtitulo}
-            tono={tono}
+            tono={oscuro ? 'oscuro' : 'celeste'}
           />
         </div>
       </main>
       <footer
-        className={cn('text-xs', oscuro ? 'text-white/55' : 'text-texto-3')}
+        className={cn(
+          'relative z-10 mx-auto w-full max-w-[72rem] text-sm',
+          oscuro ? 'text-white/70' : 'text-texto-3',
+        )}
       >
         Desarrollado por Alex Palma
       </footer>
@@ -139,7 +152,10 @@ export function PaginaNoEncontrada({ encima = false }: { encima?: boolean }) {
       libro={{ titulo: 'Capítulo 404', subtitulo: 'Página no encontrada' }}
       acciones={
         <>
-          <Link to="/" className={buttonVariants({ variant: 'accent' })}>
+          <Link
+            to="/"
+            className={buttonVariants({ variant: 'accent', size: 'lg' })}
+          >
             <ArrowLeft aria-hidden />
             Volver al inicio
           </Link>
@@ -148,8 +164,9 @@ export function PaginaNoEncontrada({ encima = false }: { encima?: boolean }) {
             search={{ page: 1, pageSize: 12 }}
             className={buttonVariants({
               variant: 'outline',
+              size: 'lg',
               className:
-                'text-papel hover:text-papel border-white/30 bg-transparent hover:border-white/70 hover:bg-white/5',
+                'border-white/80 bg-transparent text-white hover:border-white hover:bg-white/12 hover:text-white',
             })}
           >
             Ir al catálogo
@@ -183,7 +200,7 @@ function PaginaError({
       libro={{ titulo: 'Fe de erratas', subtitulo: 'Error del servidor' }}
       acciones={
         <>
-          <Button type="button" onClick={onReintentar}>
+          <Button type="button" size="lg" onClick={onReintentar}>
             <RotateCcw aria-hidden />
             Reintentar
           </Button>
@@ -205,7 +222,7 @@ function PaginaError({
   )
 }
 
-const claseInicio = buttonVariants({ variant: 'outline' })
+const claseInicio = buttonVariants({ variant: 'outline', size: 'lg' })
 
 /** 500 dentro del router (errorComponent de la raíz): reintenta reseteando y recargando la ruta. */
 export function ErrorGeneral({ error, reset }: ErrorComponentProps) {

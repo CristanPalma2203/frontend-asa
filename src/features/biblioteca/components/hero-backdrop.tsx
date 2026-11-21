@@ -14,9 +14,10 @@ import {
   loseWebGlCanvases,
 } from '@/features/biblioteca/components/hero-backdrop.webgl'
 
-// Fondo animado del hero.
-// Capas: wash (radiales lima sobre bosque) · MeshGradient (WebGL, lazy) · rejilla con celdas
-// lima en canvas · viñeta. Los estilos viven en index.css (`.hero-fx*`).
+// Fondo animado compartido: hero de la Home, login y pantallas de error (404 y 500).
+// Capas: wash (radiales lima) · MeshGradient (WebGL, lazy, solo en oscuro) · rejilla con celdas
+// en canvas · viñeta. Variante `celeste` (500): mismo movimiento sobre fondo celeste claro, con
+// glow y celdas celestes y sin shader (su mezcla en `screen` no se ve sobre claro). Estilos en index.css (`.hero-fx*`).
 
 const MeshGradientLazy = lazy(() =>
   import('@paper-design/shaders-react').then((mod) => ({
@@ -99,7 +100,11 @@ function MeshGradientHost({ live }: { live: boolean }) {
   )
 }
 
-export function HeroBackdrop() {
+export function HeroBackdrop({
+  variante = 'oscuro',
+}: {
+  variante?: 'oscuro' | 'celeste'
+} = {}) {
   const reduce = useSyncExternalStore(
     suscribirMovimiento,
     movimientoReducido,
@@ -117,7 +122,7 @@ export function HeroBackdrop() {
 
   const staticHero = reduce || software
   const live = !staticHero && visible && enPantalla
-  const shaderOn = shaderListo && !staticHero
+  const shaderOn = shaderListo && !staticHero && variante === 'oscuro'
 
   // El shader entra a los 800 ms para no competir con la carga inicial.
   useEffect(() => {
@@ -144,10 +149,20 @@ export function HeroBackdrop() {
   }, [])
 
   return (
-    <div ref={rootRef} aria-hidden="true" className="hero-fx">
+    <div
+      ref={rootRef}
+      aria-hidden="true"
+      className={
+        variante === 'oscuro' ? 'hero-fx' : `hero-fx hero-fx--${variante}`
+      }
+    >
       <div className="hero-fx__wash" />
       {shaderOn ? <MeshGradientHost live={live} /> : null}
-      <HeroGrid paused={!live} staticCells={staticHero} />
+      <HeroGrid
+        paused={!live}
+        staticCells={staticHero}
+        rgbCeldas={variante === 'celeste' ? '124, 196, 232' : '194, 249, 104'}
+      />
       <div className="hero-fx__vignette" />
     </div>
   )
@@ -177,9 +192,12 @@ type Celda = {
 function HeroGrid({
   paused,
   staticCells,
+  rgbCeldas,
 }: {
   paused: boolean
   staticCells: boolean
+  /** Color de las celdas que se encienden, «r, g, b» (lima; celeste en la 500). */
+  rgbCeldas: string
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const pausedRef = useRef(paused)
@@ -206,7 +224,7 @@ function HeroGrid({
     let lastSpawn = 0
 
     const paintCell = (col: number, row: number, alpha: number) => {
-      ctx.fillStyle = `rgba(194, 249, 104, ${alpha})`
+      ctx.fillStyle = `rgba(${rgbCeldas}, ${alpha})`
       ctx.fillRect(col * CELL + 1, row * CELL + 1, CELL - 1, CELL - 1)
     }
 
@@ -282,7 +300,7 @@ function HeroGrid({
       window.cancelAnimationFrame(raf)
       window.removeEventListener('resize', resize)
     }
-  }, [staticCells])
+  }, [staticCells, rgbCeldas])
 
   useEffect(() => {
     pausedRef.current = paused

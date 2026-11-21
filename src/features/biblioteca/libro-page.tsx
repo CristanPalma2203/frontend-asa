@@ -1,35 +1,24 @@
 import { getRouteApi, Link } from '@tanstack/react-router'
-import { ArrowLeft, CheckCircle2 } from 'lucide-react'
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef } from 'react'
 
-import { Button, buttonVariants } from '@/components/ui/button'
 import { Hueso } from '@/components/ui/hueso'
 import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
-import {
-  isSessionActive,
-  selectIsAdmin,
-  selectIsLector,
-  useAuthStore,
-} from '@/features/auth/store'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
+import { FichaDatos } from '@/features/biblioteca/components/ficha-datos'
+import {
+  FichaReserva,
+  FichaReservaCargando,
+} from '@/features/biblioteca/components/ficha-reserva'
+import { FichaSinopsis } from '@/features/biblioteca/components/ficha-sinopsis'
 import { LibroNoEncontrado } from '@/features/biblioteca/components/libro-no-encontrado'
+import { MasDeCategoria } from '@/features/biblioteca/components/mas-de-categoria'
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
-import { ReservaError } from '@/features/biblioteca/components/reserva-error'
-import { ReservarDialog } from '@/features/biblioteca/components/reservar-dialog'
-import {
-  textoDisponibles,
-  totalActivos,
-} from '@/features/biblioteca/disponibilidad'
+import { totalActivos } from '@/features/biblioteca/disponibilidad'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
-import {
-  useMisReservas,
-  useReservar,
-} from '@/features/biblioteca/hooks/use-reservas'
 import type { LibroDetalle } from '@/features/biblioteca/types/api'
 import { useMotion } from '@/hooks/use-motion'
 import { ApiError } from '@/lib/api/client'
-import { cardsIn, magnetic, pop, reveal, titleLines } from '@/lib/motion'
-import { cn } from '@/lib/utils'
+import { cardsIn, magnetic, reveal, titleLines } from '@/lib/motion'
 
 const Route = getRouteApi('/libros/$idLibro')
 
@@ -43,9 +32,7 @@ export function LibroPage() {
   }, [libro.data])
 
   // Mientras carga se pinta la ficha entera; solo los huecos de los datos hacen shimmer.
-  if (libro.isPending) {
-    return <Ficha />
-  }
+  if (libro.isPending) return <Ficha />
 
   if (libro.isError) {
     const error = libro.error
@@ -68,12 +55,18 @@ export function LibroPage() {
   return <Ficha detalle={libro.data} />
 }
 
+/**
+ * Ficha editorial: tarjeta con portada, categoría, título, autor, datos y reserva; debajo la
+ * sinopsis (solo si llega) y «Más de esta categoría». En móvil todo va centrado y en una
+ * columna, con «Reservar» fijo abajo.
+ */
 function Ficha({ detalle }: { detalle?: LibroDetalle }) {
   const cargando = !detalle
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLElement>(null)
+  const total = detalle ? totalActivos(detalle.ejemplares) : 0
 
-  // Al llegar el libro: portada (cardsIn), título por palabras y metadatos + bloque Reservar
-  // (reveal, y 14, stagger 0.07, t 0.12). «Reservar» magnético.
+  // Al llegar el libro: portada (cardsIn), título por palabras, datos y reserva (reveal) y las
+  // secciones de abajo. «Reservar» magnético. Con movimiento reducido todo aparece al instante.
   useMotion(
     ref,
     (root) => {
@@ -85,36 +78,67 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
         stagger: 0.07,
         delay: 0.12,
       })
+      reveal(root.querySelectorAll('[data-m="seccion"]'), {
+        y: 14,
+        stagger: 0.12,
+        delay: 0.24,
+      })
       return magnetic(root)
     },
     [cargando],
   )
 
   return (
-    <main className="px-5 pt-4 pb-14 lg:px-14">
-      <Link
-        to="/catalogo"
-        search={{ page: 1, pageSize: 12 }}
-        className="text-texto-3 hover:text-tinta mb-5 inline-flex items-center gap-1.5 text-sm font-medium transition-colors"
-      >
-        <ArrowLeft aria-hidden className="size-4" strokeWidth={2.2} />
-        Catálogo
-      </Link>
-
-      <article className="bg-arena relative overflow-hidden rounded-2xl">
-        <div className="bg-lima-glow pointer-events-none absolute -top-40 -left-40 size-[420px] rounded-full opacity-40 blur-[110px]" />
-
-        <div
-          ref={ref}
-          className="relative grid gap-10 p-6 sm:p-10 md:grid-cols-[minmax(0,300px)_1fr] md:gap-14 lg:p-14"
+    <main
+      ref={ref}
+      // Móvil: hueco abajo para la barra fija de «Reservar».
+      className="flex flex-col gap-16 px-0 pt-0 pb-32 md:gap-20 md:px-5 md:pt-4 md:pb-14 lg:px-12"
+    >
+      {detalle ? (
+        <nav
+          aria-label="Ruta"
+          className="text-texto-3 hidden items-center gap-2 text-sm font-medium md:flex"
         >
+          <Link
+            to="/catalogo"
+            search={{ page: 1, pageSize: 12 }}
+            className="text-pino-800"
+          >
+            Catálogo
+          </Link>
+          <span aria-hidden className="text-separador">
+            /
+          </span>
+          <Link
+            to="/catalogo"
+            search={{ page: 1, pageSize: 12, categoria: detalle.categoria }}
+            className="text-pino-800"
+          >
+            {detalle.categoria}
+          </Link>
+          <span aria-hidden className="text-separador">
+            /
+          </span>
+          <span aria-current="page" className="text-tinta truncate">
+            {detalle.titulo}
+          </span>
+        </nav>
+      ) : null}
+
+      <article className="bg-arena relative overflow-hidden rounded-b-[28px] md:mt-0 md:rounded-[32px] md:shadow-[0_1px_2px_rgb(4_44_36/0.04),0_20px_50px_-30px_rgb(4_44_36/0.25)]">
+        <div
+          aria-hidden
+          className="bg-lima-glow pointer-events-none absolute -top-24 left-1/2 size-[420px] -translate-x-1/2 rounded-full opacity-40 blur-[90px] md:-top-20 md:-left-20 md:size-[640px] md:translate-x-0"
+        />
+
+        <div className="relative grid items-start gap-8 px-5 pt-8 pb-7 text-center md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:gap-14 md:p-12 md:text-left lg:gap-16 lg:p-14">
           <div data-m="portada" className="flex justify-center md:block">
             {detalle ? (
               <PortadaLibro
                 isbn={detalle.isbn}
                 titulo={detalle.titulo}
                 tamano="L"
-                className="w-[220px] shadow-[0_2px_4px_rgb(4_44_36/0.1),0_32px_56px_-20px_rgb(4_44_36/0.55)] md:w-full"
+                className="w-[184px] shadow-[0_2px_4px_rgb(4_44_36/0.12),0_46px_70px_-28px_rgb(4_44_36/0.6)] transition-transform duration-500 ease-out hover:[transform:perspective(1200px)_translateY(-8px)_rotateY(-6deg)] motion-reduce:transition-none motion-reduce:hover:transform-none md:w-full"
               />
             ) : (
               <Hueso
@@ -122,275 +146,77 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
                 alto={330}
                 radio={6}
                 llenar
-                className="aspect-[2/3] w-[220px] md:w-full"
+                className="aspect-[2/3] w-[184px] md:w-full"
               />
             )}
           </div>
 
-          <div className="flex min-w-0 flex-col">
+          <div className="flex min-w-0 flex-col gap-7 md:pt-2">
             {detalle ? (
-              <>
-                <p className="eyebrow">{detalle.categoria}</p>
-                <h1 className="mt-3 text-[34px] leading-[1.04] sm:text-[48px]">
+              <div className="flex flex-col items-center gap-3 md:items-start md:gap-4">
+                <Link
+                  to="/catalogo"
+                  search={{
+                    page: 1,
+                    pageSize: 12,
+                    categoria: detalle.categoria,
+                  }}
+                  className="bg-pino-800/8 text-pino-800 hover:bg-pino-800/14 inline-flex h-7 items-center rounded-full px-3 text-[11px] font-semibold tracking-[0.12em] uppercase hover:no-underline"
+                >
+                  {detalle.categoria}
+                </Link>
+                <h1 className="text-[32px] leading-[1.02] font-semibold tracking-[-0.04em] text-balance md:text-[48px] lg:text-[64px] lg:leading-none">
                   <PalabrasAnimadas texto={detalle.titulo} />
                 </h1>
-                <p className="text-texto-2 mt-3 text-lg">
-                  <span className="text-texto-3">de </span>
-                  {detalle.autor}
+                <p className="flex items-baseline justify-center gap-2.5 md:justify-start">
+                  <span className="text-texto-3 text-[13px] font-medium md:text-[15px]">
+                    de
+                  </span>
+                  <Link
+                    to="/catalogo"
+                    search={{ page: 1, pageSize: 12, autor: detalle.autor }}
+                    className="titulo-serif text-[23px] decoration-1 underline-offset-[6px] hover:underline md:text-[34px]"
+                  >
+                    {detalle.autor}
+                  </Link>
                 </p>
-              </>
+              </div>
             ) : (
               <div
                 aria-busy
                 aria-label="Cargando libro"
-                className="flex flex-col"
+                className="flex flex-col items-center gap-3 md:items-start"
               >
-                <Hueso cargando ancho={96} alto={11} />
-                <div className="mt-4 flex flex-col gap-2.5">
-                  <Hueso cargando ancho="85%" alto={40} radio={6} />
-                  <Hueso cargando ancho="55%" alto={40} radio={6} />
-                </div>
-                <Hueso cargando ancho="40%" alto={18} className="mt-4" />
+                <Hueso cargando ancho={96} alto={26} radio={999} />
+                <Hueso cargando ancho="80%" alto={44} radio={8} />
+                <Hueso cargando ancho="45%" alto={24} radio={6} />
               </div>
             )}
 
-            <dl
-              data-m="meta"
-              className="border-linea-fuerte/70 mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-y py-5 sm:grid-cols-3"
-            >
-              <Dato etiqueta="ISBN" mono cargando={cargando}>
-                {detalle?.isbn}
-              </Dato>
-              <Dato etiqueta="Categoría" cargando={cargando}>
-                {detalle?.categoria}
-              </Dato>
-              <Dato etiqueta="Ejemplares" mono cargando={cargando}>
-                {detalle
-                  ? `${detalle.disponibles} de ${totalActivos(detalle.ejemplares)}`
-                  : null}
-              </Dato>
-            </dl>
+            <div className="text-left max-md:-mx-1">
+              <FichaDatos detalle={detalle} totalActivos={total} />
+            </div>
 
-            <div data-m="meta">
+            <div className="text-left">
               {detalle ? (
-                <AccionReserva detalle={detalle} />
+                <FichaReserva detalle={detalle} total={total} />
               ) : (
-                <AccionReservaCargando />
+                <FichaReservaCargando />
               )}
             </div>
           </div>
         </div>
       </article>
-    </main>
-  )
-}
 
-function Dato({
-  etiqueta,
-  mono = false,
-  cargando = false,
-  children,
-}: {
-  etiqueta: string
-  mono?: boolean
-  cargando?: boolean
-  children: ReactNode
-}) {
-  return (
-    <div className="min-w-0">
-      <dt className="text-texto-3 text-xs font-medium">{etiqueta}</dt>
-      <dd
-        className={cn(
-          'text-texto mt-1 truncate',
-          mono ? 'font-mono text-[13px]' : 'text-[15px]',
-        )}
-      >
-        {cargando ? (
-          <Hueso cargando ancho="70%" alto={16} className="mt-0.5" />
-        ) : (
-          children
-        )}
-      </dd>
-    </div>
-  )
-}
-
-/** «Reservar» visible desde el inicio, deshabilitado hasta que llega el libro. */
-function AccionReservaCargando() {
-  return (
-    <div className="mt-8 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
-      <Button type="button" size="lg" disabled>
-        Reservar
-      </Button>
-      <Hueso cargando ancho={128} alto={16} />
-    </div>
-  )
-}
-
-/**
- * Un solo botón «Reservar»: el backend asigna el ejemplar con `{ lectorId, libroId }`.
- * Sin sesión lleva a /login y vuelve a la ficha.
- */
-function AccionReserva({ detalle }: { detalle: LibroDetalle }) {
-  const reservar = useReservar()
-  const activas = useMisReservas('Activa', 1, 50)
-  const [abierto, setAbierto] = useState(false)
-  const [codigo, setCodigo] = useState<string | null>(null)
-  const isAdmin = useAuthStore(selectIsAdmin)
-  const isLector = useAuthStore(selectIsLector)
-  const sesion = useAuthStore(isSessionActive)
-  const lectorId = useAuthStore((state) => state.lectorId)
-
-  if (isAdmin) return null
-
-  const yaReservado =
-    isLector &&
-    activas.data?.items.some(
-      (reserva) =>
-        reserva.idLibro === detalle.idLibro && reserva.estado === 'Activa',
-    )
-  const errorReserva =
-    reservar.error instanceof ApiError ? reservar.error : null
-  const sinStock = detalle.disponibles === 0
-  const idDisponibilidad = `disponibilidad-${detalle.idLibro}`
-
-  function confirmarReserva() {
-    if (!lectorId) return
-    reservar.mutate(
-      { lectorId, libroId: detalle.idLibro },
-      {
-        onSuccess: (reserva) => {
-          setAbierto(false)
-          setCodigo(reserva.codigoInventario)
-        },
-        // Sin stock no hay nada que confirmar: cierro el diálogo y queda a la vista el mensaje.
-        onError: (error) => {
-          if (error instanceof ApiError && error.code === 'sin-stock')
-            setAbierto(false)
-        },
-      },
-    )
-  }
-
-  const disponibilidad = (
-    <p
-      id={idDisponibilidad}
-      className={cn(
-        'flex items-center gap-2 text-sm font-medium',
-        sinStock ? 'text-texto-3' : 'text-pino-800',
-      )}
-    >
-      <span
-        aria-hidden
-        className={cn(
-          'size-2 rounded-full',
-          sinStock
-            ? 'bg-texto-5'
-            : 'bg-lima-400 shadow-[0_0_0_3px_var(--color-lima-glow)]',
-        )}
-      />
-      {sinStock
-        ? 'Sin ejemplares disponibles'
-        : textoDisponibles(detalle.disponibles)}
-    </p>
-  )
-
-  return (
-    <div className="mt-8 flex flex-col gap-4">
-      {codigo ? <ExitoReserva codigo={codigo} /> : null}
-
-      {codigo ? null : yaReservado ? (
-        <p className="text-texto-2 text-[15px]">
-          Ya lo tienes reservado.{' '}
-          <Link
-            to="/mis-reservas"
-            className="text-pino-800 font-semibold underline-offset-4 hover:underline"
-          >
-            Mis reservas
-          </Link>
-        </p>
-      ) : (
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
-          {sinStock ? (
-            <Button
-              type="button"
-              size="lg"
-              disabled
-              aria-describedby={idDisponibilidad}
-            >
-              Reservar
-            </Button>
-          ) : !sesion ? (
-            <Link
-              to="/login"
-              search={{ redirect: `/libros/${detalle.idLibro}` }}
-              aria-describedby={idDisponibilidad}
-              data-magnetic
-              className={buttonVariants({ size: 'lg' })}
-            >
-              Reservar
-            </Link>
-          ) : isLector ? (
-            <Button
-              type="button"
-              size="lg"
-              data-magnetic
-              aria-describedby={idDisponibilidad}
-              onClick={() => setAbierto(true)}
-            >
-              Reservar
-            </Button>
-          ) : null}
-          {disponibilidad}
+      {detalle ? (
+        <div className="flex flex-col gap-16 px-5 md:gap-20 md:px-0">
+          <FichaSinopsis sinopsis={detalle.sinopsis} />
+          <MasDeCategoria
+            categoria={detalle.categoria}
+            idActual={detalle.idLibro}
+          />
         </div>
-      )}
-
-      {errorReserva && !codigo ? (
-        <ReservaError
-          code={errorReserva.code}
-          fallback={errorReserva.detail || errorReserva.title}
-          onRetry={confirmarReserva}
-        />
       ) : null}
-
-      <ReservarDialog
-        abierto={abierto}
-        onOpenChange={setAbierto}
-        titulo={detalle.titulo}
-        deshabilitado={reservar.isPending || !lectorId}
-        onConfirmar={confirmarReserva}
-      />
-    </div>
-  )
-}
-
-/** «Tu ejemplar: …» con el código real de la API; entra con pop. */
-function ExitoReserva({ codigo }: { codigo: string }) {
-  const ref = useRef<HTMLDivElement>(null)
-  useMotion(ref, (root) => pop(root))
-  return (
-    <div
-      ref={ref}
-      role="status"
-      className="bg-card border-linea shadow-card flex items-start gap-3 rounded-xl border p-4"
-    >
-      <CheckCircle2
-        aria-hidden
-        className="text-exito-600 mt-0.5 size-5 flex-none"
-      />
-      <div className="flex flex-col gap-1">
-        <p className="text-tinta font-semibold">Tu ejemplar: {codigo}</p>
-        <p className="text-texto-3 text-sm">
-          Lo encontrarás en{' '}
-          <Link
-            to="/mis-reservas"
-            className="text-pino-800 font-semibold underline-offset-4 hover:underline"
-          >
-            Mis reservas
-          </Link>
-          .
-        </p>
-      </div>
-    </div>
+    </main>
   )
 }

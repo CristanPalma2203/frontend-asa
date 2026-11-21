@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import { createRouter, RouterProvider } from '@tanstack/react-router'
-import { StrictMode } from 'react'
+import { lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 
 import { LimiteError } from '@/components/layout/pantallas-estado'
@@ -13,6 +12,16 @@ import { routeTree } from '@/routeTree.gen'
 
 import '@/lib/boneyard'
 import './index.css'
+
+// Devtools de TanStack Query solo en desarrollo: en producción la condición es `false` y Vite
+// elimina el import dinámico, así que el paquete ni siquiera entra en el bundle.
+const QueryDevtools = import.meta.env.DEV
+  ? lazy(() =>
+      import('@tanstack/react-query-devtools').then((mod) => ({
+        default: mod.ReactQueryDevtools,
+      })),
+    )
+  : null
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -64,8 +73,10 @@ createRoot(root).render(
         <RouterProvider router={router} />
       </LimiteError>
       <Toaster />
-      {import.meta.env.DEV ? (
-        <ReactQueryDevtools initialIsOpen={false} />
+      {QueryDevtools ? (
+        <Suspense fallback={null}>
+          <QueryDevtools initialIsOpen={false} />
+        </Suspense>
       ) : null}
     </QueryClientProvider>
   </StrictMode>,

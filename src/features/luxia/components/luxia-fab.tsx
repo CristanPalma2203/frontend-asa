@@ -24,6 +24,7 @@ import { usePrefersReducedMotion } from '@/features/luxia/hooks/use-prefers-redu
 import { useVisualViewportVars } from '@/features/luxia/hooks/use-visual-viewport-vars'
 import { RIVE_SRC, canUseRive } from '@/features/luxia/services/avatar'
 import { consultarLuxia } from '@/features/luxia/services/consulta'
+import { elegirSugerencia } from '@/features/luxia/services/sugerencia'
 import {
   MAX_MESSAGE,
   loadHistory,
@@ -40,7 +41,8 @@ import { useLuxiaStore } from '@/features/luxia/store'
 import { LuxiaLibroCard } from '@/features/luxia/components/luxia-libro-card'
 import { textos as t } from '@/features/luxia/textos'
 import type { ChatMsg } from '@/features/luxia/types/chat'
-import { dur } from '@/lib/motion'
+import { useMotion } from '@/hooks/use-motion'
+import { dur, entradaMensaje } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 import '@/features/luxia/luxia-chat.css'
@@ -213,6 +215,24 @@ export function LuxiaFab() {
     const el = listRef.current
     if (el) el.scrollTop = el.scrollHeight
   }, [msgs, busy, open])
+
+  // Una sola sugerencia, debajo de la última respuesta de LuxIA (nunca mientras responde).
+  const sugerencia = elegirSugerencia(msgs, busy)
+
+  // Entrada de lo nuevo (no del historial al abrir): el último mensaje, el indicador de
+  // «escribiendo» y el chip con un pequeño retraso. Con movimiento reducido, al instante.
+  const [baseHistorial] = useState(msgs.length)
+  useMotion(
+    listRef,
+    (root) => {
+      const ultimo = msgs.length - 1
+      if (ultimo >= baseHistorial)
+        entradaMensaje(root.querySelectorAll(`[data-msg="${ultimo}"]`))
+      entradaMensaje(root.querySelector('[data-m="escribiendo"]'))
+      entradaMensaje(root.querySelector('[data-m="sugerencia"]'), 0.15)
+    },
+    [msgs.length, busy, sugerencia, open],
+  )
 
   /** Panel ya desvanecido → ahora sí LuxIA vuelve a su esquina y queda en reposo. */
   const onPanelExited = useCallback(() => {
@@ -424,6 +444,7 @@ export function LuxiaFab() {
                 {m.text && (
                   <div
                     className={`luxia-chat__msg is-${m.role}`}
+                    data-msg={i}
                     data-testid="luxia-chat-msg"
                   >
                     {m.text}
@@ -459,9 +480,22 @@ export function LuxiaFab() {
                 ) : null}
               </Fragment>
             ))}
+            {sugerencia ? (
+              <div className="luxia-chat__sugerencia" data-m="sugerencia">
+                <button
+                  type="button"
+                  className="luxia-chat__chip"
+                  data-testid="luxia-sugerencia"
+                  onClick={() => void send(sugerencia)}
+                >
+                  {sugerencia}
+                </button>
+              </div>
+            ) : null}
             {busy && (
               <div
                 className="luxia-chat__msg is-assistant luxia-chat__typing"
+                data-m="escribiendo"
                 aria-label={t.typing}
               >
                 <span />
@@ -483,19 +517,6 @@ export function LuxiaFab() {
                 )}
               </div>
             )}
-          </div>
-          <div className="luxia-chat__chips" data-testid="luxia-chips">
-            {t.chips.map((chip) => (
-              <button
-                key={chip}
-                type="button"
-                className="luxia-chat__chip"
-                disabled={busy}
-                onClick={() => void send(chip)}
-              >
-                {chip}
-              </button>
-            ))}
           </div>
           <form
             className="luxia-chat__form"

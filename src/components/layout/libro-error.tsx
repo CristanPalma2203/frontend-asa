@@ -18,8 +18,8 @@ export function LibroError({
 }: {
   titulo: string
   subtitulo: string
-  /** Fondo sobre el que va: cambia solo la sombra y el brillo. */
-  tono?: 'oscuro' | 'claro'
+  /** Fondo sobre el que va: cambia solo la sombra y el brillo (celeste en la 500). */
+  tono?: 'oscuro' | 'celeste'
   className?: string
 }) {
   const ref = useRef<HTMLDivElement>(null)

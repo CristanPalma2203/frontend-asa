@@ -233,10 +233,12 @@ body:has(
   outline: 2px solid var(--lx-green);
 }
 
+/* Solo la lista de mensajes hace scroll; cabecera, chip y formulario quedan fijos. */
 .luxia-fab .luxia-chat__msgs {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 14px 16px 10px;
   display: flex;
   flex-direction: column;
@@ -383,14 +385,14 @@ body:has(
   outline-offset: 2px;
 }
 
-.luxia-fab .luxia-chat__chips {
-  flex: none;
-  display: flex;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-  scrollbar-width: none;
-  gap: 6px;
-  padding: 2px 16px 10px;
+/* La única sugerencia: un chip con el texto completo debajo de la última respuesta. */
+.luxia-fab .luxia-chat__sugerencia {
+  align-self: flex-start;
+  max-width: 86%;
+}
+.luxia-fab .luxia-chat__sugerencia .luxia-chat__chip {
+  white-space: normal;
+  text-align: left;
 }
 .luxia-fab .luxia-chat__chip {
   /* Sin encoger: cada chip entero; la fila hace scroll horizontal (o wrap en móvil). */
@@ -489,10 +491,6 @@ body:has(
     right: calc(12px + env(safe-area-inset-right, 0px));
     bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   }
-  .luxia-fab .luxia-chat__chips {
-    flex-wrap: wrap;
-    overflow-x: visible;
-  }
   /* Teclado: --lx-kb = alto tapado bajo el viewport visible, --lx-vvh = alto visible. Sin JS → dvh. */
   .luxia-fab .luxia-chat {
     left: 0;
@@ -509,9 +507,6 @@ body:has(
   }
   .luxia-fab.is-kb .luxia-chat {
     padding-bottom: 0;
-  }
-  .luxia-fab.is-kb .luxia-chat__chips {
-    padding-bottom: 6px;
   }
   .luxia-fab .luxia-chat__form {
     margin-bottom: 8px;

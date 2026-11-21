@@ -6,32 +6,55 @@ import {
   LayoutDashboard,
   LogIn,
   LogOut,
-  ShieldCheck,
   Users,
   type LucideIcon,
 } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 
 import { Brand } from '@/components/layout/brand'
 import { CountUp } from '@/components/ui/count-up'
 import { Hueso } from '@/components/ui/hueso'
 import { useSesion } from '@/components/layout/use-sesion'
+import { VistaPill } from '@/components/layout/vista-pill'
 import { useReservasActivasCount } from '@/features/biblioteca/hooks/use-reservas'
 import {
   useTotalLectores,
   useTotalLibros,
 } from '@/features/biblioteca/hooks/use-resumen-admin'
+import { useMotion } from '@/hooks/use-motion'
+import { reveal } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 const listaAdmin = { page: 1, pageSize: 12 } as const
 
-/** Sidebar pino 950 de la app: «Menú» para lectores, «Gestión» dentro de /admin. */
-export function Sidebar({ onNavegar }: { onNavegar?: () => void }) {
+/**
+ * Sidebar pino 950 de la app: «Menú» para lectores, «Gestión» en la vista Panel del admin y
+ * «Biblioteca» (Inicio y Catálogo, sin reservas) en su vista de lector. Al cambiar de vista los
+ * ítems entran con un reveal suave. En el menú móvil (`conVistaPill`) la pill va arriba.
+ */
+export function Sidebar({
+  onNavegar,
+  conVistaPill = false,
+}: {
+  onNavegar?: () => void
+  conVistaPill?: boolean
+}) {
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
   const sesion = useSesion()
   const enAdmin = pathname === '/admin' || pathname.startsWith('/admin/')
+  const navRef = useRef<HTMLElement>(null)
+  useMotion(
+    navRef,
+    (root) =>
+      reveal(root.querySelectorAll('[data-item-nav], [data-nota-vista]'), {
+        x: -12,
+        y: 0,
+        stagger: 0.04,
+      }),
+    [enAdmin],
+  )
 
   return (
     <div className="bg-sidebar text-sidebar-foreground relative flex h-full flex-col gap-10 overflow-hidden px-5 pt-7 pb-6">
@@ -40,6 +63,9 @@ export function Sidebar({ onNavegar }: { onNavegar?: () => void }) {
         className="pointer-events-none absolute -bottom-36 -left-30 size-105 bg-[radial-gradient(closest-side,rgb(152_214_84/0.22),rgb(152_214_84/0))]"
       />
 
+      {conVistaPill && sesion.isAdmin ? (
+        <VistaPill tono="oscuro" className="relative mr-12" />
+      ) : null}
       <div className="relative flex flex-col gap-2.5 px-2">
         <Brand onClick={onNavegar} />
         {enAdmin ? (
@@ -49,9 +75,13 @@ export function Sidebar({ onNavegar }: { onNavegar?: () => void }) {
         ) : null}
       </div>
 
-      <nav aria-label="Principal" className="relative flex flex-col gap-1">
+      <nav
+        ref={navRef}
+        aria-label="Principal"
+        className="relative flex flex-col gap-1"
+      >
         <p className="px-3 pb-2.5 text-[11px] font-semibold tracking-[0.12em] text-white/45 uppercase">
-          {enAdmin ? 'Gestión' : 'Menú'}
+          {enAdmin ? 'Gestión' : sesion.isAdmin ? 'Biblioteca' : 'Menú'}
         </p>
         {enAdmin ? (
           <>
@@ -115,9 +145,12 @@ export function Sidebar({ onNavegar }: { onNavegar?: () => void }) {
               </ItemNav>
             ) : null}
             {sesion.isAdmin ? (
-              <ItemNav activo={false} icono={ShieldCheck} onClick={onNavegar}>
-                <Link to="/admin">Administración</Link>
-              </ItemNav>
+              <p
+                data-nota-vista
+                className="mt-4 rounded-xl bg-white/4 px-3.5 py-3 text-xs leading-relaxed text-white/60"
+              >
+                Estás viendo la biblioteca como un lector, sin reservas.
+              </p>
             ) : null}
           </>
         )}

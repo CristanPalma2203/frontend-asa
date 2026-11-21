@@ -1,25 +1,24 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { ArrowRight, Search } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { ArrowRight, ChevronDown, Search } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
-import { Brand } from '@/components/layout/brand'
-import { Hueso } from '@/components/ui/hueso'
-import { HUESO_OSCURO } from '@/components/ui/hueso.bones'
-import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
 import { useSesion } from '@/components/layout/use-sesion'
+import { Hueso } from '@/components/ui/hueso'
+import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
 import { HeroBackdrop } from '@/features/biblioteca/components/hero-backdrop'
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
+import { textoDisponibles } from '@/features/biblioteca/disponibilidad'
 import type { ResumenHome } from '@/features/biblioteca/hooks/use-libros'
 import type { Libro } from '@/features/biblioteca/types/api'
 import { useMotion } from '@/hooks/use-motion'
-import { cardsIn, reveal, titleLines } from '@/lib/motion'
+import { cardsIn, lift, reveal, titleLines } from '@/lib/motion'
 import { cn } from '@/lib/utils'
 
 const catalogoInicial = { page: 1, pageSize: 12 } as const
 
 /**
- * Hero de la Home, sin imagen: fondo animado (`HeroBackdrop`).
- * La tira de portadas queda montada sobre el borde inferior.
+ * Panel superior del Home: fondo animado (HeroBackdrop), saludo, título, buscador flotante y
+ * «Recomendados», cuyas portadas sobresalen del borde inferior del panel.
  */
 export function HomeHero({
   resumen,
@@ -28,299 +27,278 @@ export function HomeHero({
   resumen: ResumenHome | undefined
   cargando: boolean
 }) {
+  const sesion = useSesion()
   const ref = useRef<HTMLElement>(null)
+  // Primer nombre (o la parte local del correo). Sin sesión, `nombre` es null.
+  const nombre = sesion.visible ? sesion.nombre?.split(/[\s@]/)[0] : undefined
 
-  // Entrada del hero, una vez por montaje (reveal, cardsIn y titleLines). No toca el HeroBackdrop.
+  // Entrada: saludo, título por palabras y buscador (una vez por montaje).
   useMotion(ref, (root) => {
-    reveal(root.querySelector('[data-m="pill"]'), { y: 8 })
-    titleLines(root.querySelector('h1'), 0.05)
     reveal(root.querySelectorAll('[data-m="bloque"]'), {
       y: 14,
-      stagger: 0.07,
-      delay: 0.2,
+      stagger: 0.06,
+      delay: 0.06,
     })
+    titleLines(root.querySelector('h1'), 0.06)
   })
-  // Chips y portadas llegan con la API: entran cuando están.
-  useMotion(
-    ref,
-    (root) => {
-      if (cargando) return
-      reveal(root.querySelectorAll('[data-m="chips"]'), { y: 14, delay: 0.2 })
-      cardsIn(root.querySelectorAll('[data-m="portada"]'), {
-        stagger: 0.06,
-        delay: 0.3,
-      })
-    },
-    [cargando],
-  )
 
   return (
-    <section ref={ref} className="relative isolate">
-      <div className="bg-bosque text-papel relative isolate overflow-clip pb-36 sm:pb-44">
+    <section ref={ref} className="relative mt-3 lg:mt-6">
+      {/* El panel termina antes que el contenido: las portadas sobresalen por abajo. */}
+      <div className="bg-bosque absolute inset-x-0 top-0 bottom-[96px] overflow-hidden rounded-[28px] lg:bottom-[150px] lg:rounded-[32px]">
         <HeroBackdrop />
-        <HeroNav />
-
-        <div className="relative mx-auto flex max-w-3xl flex-col items-center px-5 pt-10 text-center sm:pt-16">
-          <PildoraHero total={resumen?.totalTitulos} />
-
-          <h1 className="text-papel mt-6 text-[40px] leading-[1.02] font-semibold tracking-[-0.04em] sm:text-[64px]">
-            <PalabrasAnimadas texto="Encuentra tu próximo libro" />{' '}
-            <span className="titulo-serif text-lima-400 mt-1 block text-[1.08em] tracking-[-0.01em]">
-              <PalabrasAnimadas texto="y resérvalo en un clic." cursiva />
-            </span>
-          </h1>
-
-          <p
-            data-m="bloque"
-            className="mt-5 max-w-xl text-[15px] leading-relaxed text-white/72 sm:text-base"
-          >
-            Busca en el catálogo de la biblioteca, mira qué hay disponible y
-            reserva. Nosotros te asignamos el ejemplar.
-          </p>
-
-          <BuscadorHero />
-          <ChipsCategorias
-            categorias={resumen?.categorias}
-            cargando={cargando}
-          />
-        </div>
       </div>
 
-      <TiraPortadas libros={resumen?.destacados} cargando={cargando} />
+      <div className="relative flex flex-col px-5 pt-7 lg:px-12">
+        {/* Saludo solo con sesión y nombre: si no, el título ocupa su lugar. */}
+        {nombre ? (
+          <p
+            data-m="bloque"
+            className="mb-4 text-base font-medium text-white/80"
+          >
+            Hola, {nombre}
+          </p>
+        ) : null}
+        <h1 className="text-papel text-[38px] leading-[1.02] font-semibold tracking-[-0.045em] sm:text-[52px] lg:text-[64px] lg:leading-none">
+          <PalabrasAnimadas texto="Descubre tu próxima" />{' '}
+          <span className="titulo-serif text-lima-400 text-[1.14em]">
+            <PalabrasAnimadas texto="lectura" cursiva />
+          </span>
+        </h1>
+
+        <div data-m="bloque" className="mt-7 lg:mt-8">
+          <BuscadorHome categorias={resumen?.categorias ?? []} />
+        </div>
+
+        <div
+          data-m="bloque"
+          className="mt-10 flex items-center justify-between lg:mt-11"
+        >
+          <h2 className="text-papel text-xl font-semibold tracking-[-0.02em] lg:text-[22px]">
+            Recomendados
+          </h2>
+          <Link
+            to="/catalogo"
+            search={catalogoInicial}
+            className="hover:bg-lima-400/14 hover:text-lima-400 text-papel flex h-9 items-center gap-1.5 rounded-full border border-white/14 bg-white/8 px-3.5 text-[13px] font-semibold transition-colors hover:no-underline"
+          >
+            Ver todos
+            <ArrowRight aria-hidden className="size-3.5" strokeWidth={2.2} />
+          </Link>
+        </div>
+
+        <Recomendados libros={resumen?.destacados} cargando={cargando} />
+      </div>
     </section>
   )
 }
 
-function HeroNav() {
-  const sesion = useSesion()
-
-  return (
-    <nav className="relative mx-auto flex h-[76px] w-full max-w-7xl items-center justify-between gap-4 px-5 sm:px-10">
-      <Brand tono="oscuro" />
-      <div className="flex items-center gap-2">
-        <Link
-          to="/catalogo"
-          search={catalogoInicial}
-          className="hidden h-10 items-center rounded-full px-4 text-sm font-semibold text-white/80 transition-colors hover:bg-white/8 hover:text-white sm:flex"
-        >
-          Catálogo
-        </Link>
-        {sesion.visible ? (
-          <>
-            <Link
-              to="/mis-reservas"
-              className="hidden h-10 items-center rounded-full px-4 text-sm font-semibold text-white/80 transition-colors hover:bg-white/8 hover:text-white sm:flex"
-            >
-              Mis reservas
-            </Link>
-            <button
-              type="button"
-              onClick={sesion.salir}
-              className="flex h-10 cursor-pointer items-center rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition-colors hover:border-white/45"
-            >
-              Salir
-            </button>
-          </>
-        ) : (
-          <Link
-            to="/login"
-            className="bg-lima-400 text-pino-800 hover:bg-lima-500 flex h-10 items-center rounded-full px-4 text-sm font-semibold transition-colors"
-          >
-            Iniciar sesión
-          </Link>
-        )}
-      </div>
-    </nav>
-  )
-}
-
-function PildoraHero({ total }: { total: number | undefined }) {
-  return (
-    <span
-      data-m="pill"
-      className="inline-flex h-8 items-center gap-2 rounded-full border border-white/15 bg-white/6 px-3.5 text-[13px] font-medium text-white/85 backdrop-blur-sm"
-    >
-      <span
-        aria-hidden
-        className="bg-lima-400 size-1.5 rounded-full shadow-[0_0_0_4px_var(--color-lima-glow)]"
-      />
-      {total === undefined
-        ? 'Biblioteca ASA · catálogo en línea'
-        : `${total.toLocaleString('es')} ${total === 1 ? 'título' : 'títulos'} en el catálogo`}
-    </span>
-  )
-}
-
-function BuscadorHero() {
+/** Barra blanca flotante: categoría, texto y «Buscar». Lleva al catálogo con los filtros en la URL. */
+function BuscadorHome({ categorias }: { categorias: string[] }) {
   const navigate = useNavigate()
   const [texto, setTexto] = useState('')
+  const [categoria, setCategoria] = useState('')
 
   return (
     <form
       role="search"
-      data-m="bloque"
-      className="mt-9 w-full max-w-2xl"
+      aria-label="Buscar en el catálogo"
       onSubmit={(event) => {
         event.preventDefault()
         const buscar = texto.trim()
         void navigate({
           to: '/catalogo',
-          search: { ...catalogoInicial, ...(buscar ? { buscar } : {}) },
+          search: {
+            ...catalogoInicial,
+            ...(buscar ? { buscar } : {}),
+            ...(categoria ? { categoria } : {}),
+          },
         })
       }}
+      className="bg-card flex w-full max-w-[720px] flex-col gap-2 rounded-[20px] p-2 shadow-[0_24px_60px_-18px_rgb(0_0_0/0.55)] sm:h-16 sm:flex-row sm:items-center sm:gap-0"
     >
-      <div className="bg-papel shadow-flotante focus-within:shadow-foco flex items-center gap-2 rounded-full p-2 pl-6 transition-shadow">
-        <Search
+      <div className="relative flex-none">
+        <select
+          name="categoria"
+          aria-label="Categoría"
+          value={categoria}
+          onChange={(event) => setCategoria(event.target.value)}
+          className="bg-hueso text-tinta focus-visible:shadow-foco h-12 w-full cursor-pointer appearance-none rounded-xl pr-9 pl-3.5 text-sm font-medium outline-none sm:w-auto"
+        >
+          <option value="">Todas las categorías</option>
+          {categorias.map((nombre) => (
+            <option key={nombre} value={nombre}>
+              {nombre}
+            </option>
+          ))}
+        </select>
+        <ChevronDown
           aria-hidden
-          className="text-texto-4 size-5 flex-none"
-          strokeWidth={2}
+          className="text-niebla-fg pointer-events-none absolute top-1/2 right-3.5 size-3.5 -translate-y-1/2"
+          strokeWidth={2.4}
         />
-        <input
-          type="search"
-          name="buscar"
-          aria-label="Buscar en el catálogo"
-          placeholder="Título, autor o ISBN"
-          value={texto}
-          onChange={(event) => setTexto(event.target.value)}
-          className="text-texto placeholder:text-texto-4 h-12 min-w-0 flex-1 bg-transparent text-base outline-none sm:h-14 sm:text-[17px]"
-        />
+      </div>
+      <span aria-hidden className="bg-linea mx-3.5 hidden h-7 w-px sm:block" />
+      <div className="flex min-w-0 flex-1 items-center gap-2">
+        <label className="flex min-w-0 flex-1 items-center gap-2.5 pl-2 sm:pl-0">
+          <Search
+            aria-hidden
+            className="text-niebla-fg size-[19px] flex-none"
+            strokeWidth={2}
+          />
+          <span className="sr-only">Buscar por título, autor o ISBN</span>
+          <input
+            type="search"
+            name="buscar"
+            value={texto}
+            onChange={(event) => setTexto(event.target.value)}
+            placeholder="Busca por título, autor o ISBN"
+            className="text-tinta placeholder:text-texto-4 h-12 min-w-0 flex-1 bg-transparent text-base outline-none"
+          />
+        </label>
         <button
           type="submit"
-          className="bg-pino-950 text-papel hover:bg-pino-850 active:bg-pino-900 focus-visible:shadow-foco flex h-12 flex-none cursor-pointer items-center gap-2 rounded-full px-5 text-[15px] font-semibold transition-colors outline-none sm:h-14 sm:px-7"
+          className="bg-pino-800 text-papel hover:bg-pino-850 focus-visible:shadow-foco h-12 flex-none cursor-pointer rounded-[14px] px-6 text-[15px] font-semibold transition-colors outline-none"
         >
           Buscar
-          <ArrowRight
-            aria-hidden
-            className="hidden size-4 sm:block"
-            strokeWidth={2.2}
-          />
         </button>
       </div>
     </form>
   )
 }
 
-function ChipsCategorias({
-  categorias,
-  cargando,
-}: {
-  categorias: string[] | undefined
-  cargando: boolean
-}) {
-  if (cargando) {
-    return (
-      <div
-        aria-hidden
-        data-testid="chips-cargando"
-        className="mt-6 flex flex-wrap justify-center gap-2"
-      >
-        {Array.from({ length: 6 }, (_, i) => (
-          <Hueso
-            key={i}
-            cargando
-            ancho={88}
-            alto={36}
-            radio={999}
-            {...HUESO_OSCURO}
-          />
-        ))}
-      </div>
-    )
-  }
+/** Ancho mínimo de cada portada en la grilla (≥ sm) y separación entre columnas. */
+const MIN_PORTADA = 160
+const GAP = 24
+/** Libros en la fila con scroll de móvil (< sm). */
+const EN_MOVIL = 6
 
-  if (!categorias?.length) return null
-
-  return (
-    <ul
-      aria-label="Categorías"
-      data-m="chips"
-      className="mt-6 flex flex-wrap justify-center gap-2"
-    >
-      {categorias.map((categoria) => (
-        <li key={categoria}>
-          <Link
-            to="/catalogo"
-            search={{ ...catalogoInicial, categoria }}
-            className="hover:border-lima-400 hover:text-lima-400 flex h-9 items-center rounded-full border border-white/15 bg-white/4 px-4 text-[13px] font-medium text-white/85 transition-colors"
-          >
-            {categoria}
-          </Link>
-        </li>
-      ))}
-    </ul>
-  )
-}
-
-function TiraPortadas({
+/**
+ * Recomendados (primero los que tienen stock). Móvil: fila con scroll y snap. Desde sm: grilla
+ * auto-fill (mín. 160 px) y solo los que caben en una fila: se mide el ancho con un
+ * ResizeObserver en vez de esconder la segunda fila con CSS, que dejaría enlaces ocultos pero
+ * enfocables.
+ */
+function Recomendados({
   libros,
   cargando,
 }: {
   libros: Libro[] | undefined
   cargando: boolean
 }) {
-  if (!cargando && !libros?.length) return null
+  const ref = useRef<HTMLUListElement>(null)
+  const [porFila, setPorFila] = useState(EN_MOVIL)
 
-  return (
-    <div className="relative z-10 -mt-24 px-5 sm:-mt-32">
-      <ul
-        aria-label="Libros del catálogo"
-        className="tira-sin-barra mx-auto -mt-8 -mb-4 flex max-w-5xl snap-x justify-start gap-4 overflow-x-auto overflow-y-hidden px-1 py-10 sm:justify-center sm:gap-6"
-      >
-        {cargando
-          ? Array.from({ length: 6 }, (_, i) => (
-              <li key={i} aria-hidden className="flex-none">
-                <span className="bg-pino-900 rounded-portada animate-asa-pulse block aspect-[2/3] w-[118px] sm:w-[136px]" />
-              </li>
-            ))
-          : libros?.map((libro, i) => (
-              <li
-                key={libro.idLibro}
-                data-m="portada"
-                className="flex-none snap-start"
-              >
-                <PortadaTira libro={libro} indice={i} />
-              </li>
-            ))}
-      </ul>
-    </div>
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof ResizeObserver === 'undefined') return undefined
+    const ro = new ResizeObserver(() => {
+      if (getComputedStyle(el).display !== 'grid') {
+        setPorFila(EN_MOVIL)
+        return
+      }
+      const columnas = Math.floor((el.clientWidth + GAP) / (MIN_PORTADA + GAP))
+      setPorFila(Math.max(1, columnas))
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [cargando])
+
+  const lista = (libros ?? []).slice(0, porFila)
+  useMotion(
+    ref,
+    (root) => {
+      if (!lista.length) return
+      cardsIn(root.children, { stagger: 0.05, delay: 0.1 })
+      return lift(root)
+    },
+    [lista.map((libro) => libro.idLibro).join(',')],
   )
-}
 
-function PortadaTira({ libro, indice }: { libro: Libro; indice: number }) {
-  const disponible = libro.disponibles > 0
+  if (!cargando && lista.length === 0) return null
+
+  const claseLista =
+    // Móvil: scroll horizontal; overflow-y-hidden + margen interno para que la entrada (cardsIn) no
+    // saque barra vertical ni recorte sombras. Desde sm: grilla auto-fill sin scroll.
+    'tira-sin-barra -mx-5 mt-1 flex snap-x gap-4 overflow-x-auto overflow-y-hidden px-5 pt-4 pb-6 sm:mx-0 sm:mt-5 sm:grid sm:grid-cols-[repeat(auto-fill,minmax(160px,1fr))] sm:gap-6 sm:overflow-visible sm:p-0'
+
+  if (cargando) {
+    return (
+      <ul
+        ref={ref}
+        aria-label="Cargando recomendados"
+        aria-busy
+        className={claseLista}
+      >
+        {Array.from({ length: porFila }, (_, i) => (
+          <li
+            key={i}
+            className="flex w-[132px] flex-none flex-col gap-2.5 sm:w-auto"
+          >
+            <Hueso
+              cargando
+              alto={198}
+              radio={8}
+              llenar
+              className="aspect-[2/3] w-full"
+            />
+            <Hueso cargando ancho="80%" alto={14} />
+          </li>
+        ))}
+      </ul>
+    )
+  }
 
   return (
-    <Link
-      to="/libros/$idLibro"
-      params={{ idLibro: String(libro.idLibro) }}
-      aria-label={`${libro.titulo}, ${disponible ? 'disponible' : 'sin stock'}`}
-      className={cn(
-        'group relative block rounded-[8px] pb-3 transition-transform duration-300 ease-out hover:-translate-y-1.5',
-        indice % 2 === 1 && 'sm:translate-y-3 sm:hover:translate-y-1.5',
-      )}
-    >
-      <PortadaLibro
-        isbn={libro.isbn}
-        titulo={libro.titulo}
-        className="group-hover:shadow-card-hover w-[118px] transition-shadow duration-300 sm:w-[136px]"
-      />
-      <span
-        aria-hidden
-        className={cn(
-          'absolute bottom-0 left-1/2 inline-flex h-6 -translate-x-1/2 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold whitespace-nowrap shadow-sm',
-          disponible
-            ? 'bg-lima-400 text-pino-800'
-            : 'bg-papel text-texto-3 ring-linea ring-1',
-        )}
-      >
-        <span
-          className={cn(
-            'size-1.5 rounded-full',
-            disponible ? 'bg-pino-800' : 'bg-texto-5',
-          )}
-        />
-        {disponible ? 'Disponible' : 'Sin stock'}
-      </span>
-    </Link>
+    <ul ref={ref} aria-label="Recomendados" className={claseLista}>
+      {lista.map((libro) => (
+        <li
+          key={libro.idLibro}
+          className="w-[132px] flex-none snap-start sm:w-auto"
+        >
+          <Link
+            to="/libros/$idLibro"
+            params={{ idLibro: String(libro.idLibro) }}
+            data-lift
+            aria-label={`${libro.titulo}, ${libro.disponibles > 0 ? textoDisponibles(libro.disponibles) : 'agotado'}`}
+            className="group text-tinta focus-visible:shadow-foco flex flex-col gap-3 rounded-lg outline-none hover:no-underline"
+          >
+            <span className="relative block">
+              <PortadaLibro
+                isbn={libro.isbn}
+                titulo={libro.titulo}
+                className="w-full shadow-[0_2px_4px_rgb(0_0_0/0.12),0_30px_44px_-20px_rgb(0_0_0/0.6)]"
+              />
+              <span
+                className={cn(
+                  'absolute top-2 left-2 inline-flex h-[22px] items-center gap-1.5 rounded-full px-2 text-[11px] font-semibold shadow-[0_2px_6px_rgb(0_0_0/0.2)]',
+                  libro.disponibles > 0
+                    ? 'bg-lima-400 text-pino-800'
+                    : 'bg-niebla text-texto-2',
+                )}
+              >
+                {libro.disponibles > 0 ? (
+                  <span
+                    aria-hidden
+                    className="bg-pino-800 size-[5px] rounded-full"
+                  />
+                ) : null}
+                {libro.disponibles > 0
+                  ? textoDisponibles(libro.disponibles)
+                  : 'Agotado'}
+              </span>
+            </span>
+            <span className="flex flex-col gap-0.5">
+              <span className="truncate text-[15px] font-semibold">
+                {libro.titulo}
+              </span>
+              <span className="text-texto-3 truncate text-[13px]">
+                {libro.autor}
+              </span>
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
   )
 }

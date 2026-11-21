@@ -41,7 +41,7 @@ describe('movimiento reducido (setup de los tests)', () => {
   })
 
   it.each([
-    ['Home', '/', 'Encuentra tu próximo libro y resérvalo en un clic.'],
+    ['Home', '/', 'Descubre tu próxima lectura'],
     ['Catálogo', '/catalogo?page=1&pageSize=12', 'El Principito'],
     ['Ficha', '/libros/1', 'El Principito'],
   ])(
@@ -60,7 +60,7 @@ describe('máscaras de titleLines', () => {
     const { container } = await renderEn('/')
     const h1 = await screen.findByRole('heading', {
       level: 1,
-      name: 'Encuentra tu próximo libro y resérvalo en un clic.',
+      name: 'Descubre tu próxima lectura',
     })
     await act(async () => {})
     const mascaras = Array.from(
@@ -74,10 +74,10 @@ describe('máscaras de titleLines', () => {
     expect(h1.querySelectorAll('[data-tl]')).toHaveLength(mascaras.length)
   })
 
-  it('la tira de portadas de la Home no saca scroll vertical (overflow-y hidden)', async () => {
+  it('la fila de Recomendados de la Home no saca scroll vertical (overflow-y hidden)', async () => {
     await renderEn('/')
     const tira = await screen.findByRole('list', {
-      name: 'Libros del catálogo',
+      name: 'Recomendados',
     })
     expect(tira).toHaveClass(
       'overflow-x-auto',
