@@ -50,7 +50,7 @@ export function ReservasChart({
 
   const { w: width, h: height } = size
   const labels = serie.map((d) => {
-    const [, m, day] = d.fecha.split('-')
+    const [, m, day] = d.fecha.slice(0, 10).split('-')
     return `${Number(day)}/${Number(m)}`
   })
   const reservas = serie.map((d) => d.reservas)
@@ -78,21 +78,27 @@ export function ReservasChart({
       ? `${pathR} L${xAt(ptsR.length - 1)},${height - RESERVAS_PAD.b} L${xAt(0)},${height - RESERVAS_PAD.b} Z`
       : ''
 
+  const anchoRevelado = Math.max(0, width - RESERVAS_PAD.l + 2)
   const clipRef = useRef<SVGRectElement>(null)
   useEffect(() => {
     const rect = clipRef.current
-    if (!rect) return
-    const full = Math.max(0, width - RESERVAS_PAD.l + 2)
-    if (prefersReducedMotion()) {
-      gsap.set(rect, { attr: { width: full } })
-      return
-    }
-    gsap.fromTo(
+    if (!rect || prefersReducedMotion()) return
+    const revelado = gsap.fromTo(
       rect,
       { attr: { width: 0 } },
-      { attr: { width: full }, duration: dur(1.4), ease: 'power2.inOut' },
+      {
+        attr: { width: anchoRevelado },
+        duration: dur(1.4),
+        ease: 'power2.inOut',
+        onInterrupt: () => {
+          gsap.set(rect, { attr: { width: anchoRevelado } })
+        },
+      },
     )
-  }, [pathR, width, dias])
+    return () => {
+      revelado.kill()
+    }
+  }, [pathR, anchoRevelado, dias])
 
   const vacio =
     !cargando && serie.every((d) => d.reservas === 0 && d.cancelaciones === 0)
@@ -221,7 +227,7 @@ export function ReservasChart({
                   ref={clipRef}
                   x={RESERVAS_PAD.l}
                   y={0}
-                  width={0}
+                  width={anchoRevelado}
                   height={height}
                 />
               </clipPath>

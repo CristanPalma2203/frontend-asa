@@ -1,10 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { http, HttpResponse } from 'msw'
 import { describe, expect, it } from 'vitest'
 
-import { queryKeys } from '@/features/biblioteca/queryKeys'
-import type { LibroDetalle } from '@/features/biblioteca/types/api'
 import { crearApiFake } from '@/test/api-fake'
 import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
@@ -21,7 +18,7 @@ async function montar(copias = 2) {
   return { api, fila, user: userEvent.setup(), ...render }
 }
 
-describe('admin: editar y desactivar ejemplares', () => {
+describe('admin: editar e inactivar ejemplares', () => {
   it('edita el código con PUT /api/ejemplares/{id} y su rowVersion, y recarga la lista', async () => {
     const { api, fila, user } = await montar()
     const rowVersion = api.libros[0]?.ejemplares[0]?.rowVersion
@@ -104,60 +101,22 @@ describe('admin: editar y desactivar ejemplares', () => {
     )
   })
 
-  it('desactivar pide confirmación, llama a DELETE e invalida libros y ejemplares', async () => {
-    const { api, fila, user, queryClient } = await montar()
+  it('cada ejemplar tiene una sola acción para pasarlo a Inactivo', async () => {
+    const { api, fila, user } = await montar()
 
-    await user.click(
-      within(fila).getByRole('button', { name: 'Desactivar BIB-001' }),
-    )
+    expect(
+      within(fila).queryByRole('button', { name: /Desactivar/ }),
+    ).toBeNull()
+    await user.click(within(fila).getByRole('button', { name: 'Inactivar' }))
     const dialogo = await screen.findByRole('dialog', {
-      name: 'Desactivar ejemplar',
+      name: 'Inactivar ejemplar',
     })
-    expect(api.pedidos('/api/ejemplares/1')).toHaveLength(0)
-    await user.click(
-      within(dialogo).getByRole('button', { name: 'Desactivar' }),
-    )
+    await user.click(within(dialogo).getByRole('button', { name: 'Inactivar' }))
 
     expect(await within(fila).findByText('Inactivo')).toBeInTheDocument()
     expect(api.libros[0]?.ejemplares[0]?.estado).toBe('Inactivo')
-    await waitFor(() =>
-      expect(
-        queryClient.getQueryData<LibroDetalle>(queryKeys.libros.detail(1))
-          ?.disponibles,
-      ).toBe(1),
-    )
-  })
-
-  it('si el backend rechaza la desactivación, muestra el mensaje del ProblemDetails', async () => {
-    const { fila, user } = await montar()
-    server.use(
-      http.delete('*/api/ejemplares/:id', () =>
-        HttpResponse.json(
-          {
-            status: 409,
-            title: 'ejemplar-reservado',
-            code: 'ejemplar-reservado',
-          },
-          {
-            status: 409,
-            headers: { 'content-type': 'application/problem+json' },
-          },
-        ),
-      ),
-    )
-
-    await user.click(
-      within(fila).getByRole('button', { name: 'Desactivar BIB-001' }),
-    )
-    const dialogo = await screen.findByRole('dialog', {
-      name: 'Desactivar ejemplar',
-    })
-    await user.click(
-      within(dialogo).getByRole('button', { name: 'Desactivar' }),
-    )
-
-    expect(await within(dialogo).findByRole('alert')).toHaveTextContent(
-      'El ejemplar tiene una reserva activa y no se puede cambiar.',
-    )
+    expect(
+      within(fila).getByRole('button', { name: 'Activar' }),
+    ).toBeInTheDocument()
   })
 })

@@ -13,7 +13,7 @@ function Table({
       className={cn(
         'bg-card border-linea shadow-card relative w-full overflow-x-auto rounded-xl border',
         accionesFijas &&
-          '[&_td:last-child]:bg-card [&_th:last-child]:bg-hueso-claro [&_td:last-child]:sticky [&_td:last-child]:right-0 [&_td:last-child]:z-[1] [&_th:last-child]:sticky [&_th:last-child]:right-0 [&_th:last-child]:z-[1]',
+          'sm:[&_td:last-child]:bg-card sm:[&_th:last-child]:bg-hueso-claro sm:[&_td:last-child]:sticky sm:[&_td:last-child]:right-0 sm:[&_td:last-child]:z-[1] sm:[&_th:last-child]:sticky sm:[&_th:last-child]:right-0 sm:[&_th:last-child]:z-[1]',
       )}
     >
       <table

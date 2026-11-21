@@ -10,6 +10,7 @@ import { VistaPill } from '@/components/layout/vista-pill'
 import { LuxiaFab } from '@/features/luxia/components/luxia-fab'
 import { useMotion } from '@/hooks/use-motion'
 import { reveal, titleLines } from '@/lib/motion'
+import { cn } from '@/lib/utils'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({
@@ -91,7 +92,14 @@ function LayoutConSidebar({
             <Topbar enInicio={pathname === '/'} />
           )}
         </div>
-        <div ref={rutaRef} data-ruta className="flex-1 overflow-clip">
+        <div
+          ref={rutaRef}
+          data-ruta
+          className={cn(
+            'flex-1 overflow-clip',
+            conLuxia && 'max-sm:pb-[calc(4rem+env(safe-area-inset-bottom))]',
+          )}
+        >
           {children}
         </div>
         <SiteFooter />

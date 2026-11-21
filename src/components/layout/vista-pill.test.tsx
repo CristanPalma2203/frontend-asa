@@ -29,6 +29,9 @@ describe('pill Panel / Biblioteca', () => {
     )
     const nav = screen.getByRole('navigation', { name: 'Principal' })
     expect(within(nav).getByText('Gestión')).toBeInTheDocument()
+    const marca = screen.getAllByRole('link', { name: /ASA Biblioteca/ })[0]
+    expect(marca?.parentElement).toHaveTextContent(/^AASA Biblioteca$/)
+    expect(marca?.parentElement?.children).toHaveLength(1)
 
     await user.click(within(pill).getByRole('link', { name: 'Biblioteca' }))
     await waitFor(() => expect(router.state.location.pathname).toBe('/'))

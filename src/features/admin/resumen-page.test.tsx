@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import gsap from 'gsap'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -234,5 +235,38 @@ describe('admin: Resumen de la biblioteca', () => {
         String(diaEsperado),
       )
     })
+  })
+
+  it('con datos reales dibuja el pico del 21/11 y deja la línea visible', async () => {
+    entrarComo('Admin')
+    const serieReal = Array.from({ length: 14 }, (_, i) => ({
+      fecha: `2026-11-${String(8 + i).padStart(2, '0')}`,
+      reservas: i === 13 ? 9 : 0,
+      cancelaciones: 0,
+    }))
+    server.use(
+      http.get('*/api/resumen', () =>
+        HttpResponse.json(resumenFixture({ serieDiaria: serieReal })),
+      ),
+    )
+    await renderEn('/admin')
+
+    const grafica = await screen.findByRole('img', {
+      name: /Reservas y cancelaciones de los últimos 14 días/i,
+    })
+    expect(screen.getByText('21/11')).toBeInTheDocument()
+    const linea = grafica.querySelector('path[stroke="var(--color-pino-800)"]')
+    const puntos = (linea?.getAttribute('d') ?? '')
+      .split(/[MC ]+/)
+      .filter(Boolean)
+      .map((par) => par.split(',').map(Number))
+    const ultimo = puntos.at(-1)
+    const base = puntos[0]
+    expect(ultimo?.[1]).toBe(RESERVAS_PAD.t)
+    expect(base?.[1]).toBeGreaterThan(RESERVAS_PAD.t)
+
+    const recorte = grafica.querySelector('clipPath rect')
+    gsap.killTweensOf(recorte)
+    expect(Number(recorte?.getAttribute('width'))).toBeGreaterThan(0)
   })
 })

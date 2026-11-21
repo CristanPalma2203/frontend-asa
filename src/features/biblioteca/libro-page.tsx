@@ -9,7 +9,6 @@ import {
   FichaReserva,
   FichaReservaCargando,
 } from '@/features/biblioteca/components/ficha-reserva'
-import { FichaSinopsis } from '@/features/biblioteca/components/ficha-sinopsis'
 import { LibroNoEncontrado } from '@/features/biblioteca/components/libro-no-encontrado'
 import { MasDeCategoria } from '@/features/biblioteca/components/mas-de-categoria'
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
@@ -201,7 +200,6 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
 
       {detalle ? (
         <div className="flex flex-col gap-16 px-5 md:gap-20 md:px-0">
-          <FichaSinopsis sinopsis={detalle.sinopsis} />
           <MasDeCategoria
             categoria={detalle.categoria}
             idActual={detalle.idLibro}

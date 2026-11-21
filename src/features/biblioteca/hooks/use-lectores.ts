@@ -64,7 +64,10 @@ export function useGuardarLector(
     },
     onSuccess: () => opciones.onSuccess?.(),
     onSettled: async () => {
-      await queryClient.invalidateQueries({ queryKey: queryKeys.lectores.all })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.lectores.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.resumen.all }),
+      ])
     },
   })
 }

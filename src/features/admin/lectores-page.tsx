@@ -15,6 +15,7 @@ import {
   useLector,
   useLectores,
 } from '@/features/biblioteca/hooks/use-lectores'
+import { MAX_BUSQUEDA_LECTORES } from '@/features/biblioteca/schemas/lectores-search.schema'
 import type { LectorLista } from '@/features/biblioteca/types/api'
 
 const Route = getRouteApi('/admin/lectores')
@@ -73,6 +74,7 @@ export function LectoresAdminPage() {
         onChange={(event) => setTexto(event.target.value)}
         placeholder="Buscar nombre, correo o identificador"
         aria-label="Buscar lectores"
+        maxLength={MAX_BUSQUEDA_LECTORES}
       />
       {lectores.isError ? (
         <div className="bg-card border-linea rounded-xl border p-6">
@@ -91,6 +93,11 @@ export function LectoresAdminPage() {
         <LectoresTable
           lectores={items}
           cargando={lectores.isPending}
+          paginacion={{
+            page: search.page,
+            pageSize: search.pageSize,
+            total: lectores.data?.totalCount ?? 0,
+          }}
           abiertoId={abiertoId}
           detalle={detalle.data}
           cargandoDetalle={detalle.isPending}

@@ -13,12 +13,14 @@ export function ReservarDialog({
   onOpenChange,
   titulo,
   deshabilitado,
+  pendiente,
   onConfirmar,
 }: {
   abierto: boolean
   onOpenChange: (open: boolean) => void
   titulo: string
   deshabilitado: boolean
+  pendiente: boolean
   onConfirmar: () => void
 }) {
   return (
@@ -38,7 +40,12 @@ export function ReservarDialog({
           >
             Cancelar
           </Button>
-          <Button type="button" disabled={deshabilitado} onClick={onConfirmar}>
+          <Button
+            type="button"
+            disabled={deshabilitado}
+            cargando={pendiente}
+            onClick={onConfirmar}
+          >
             Confirmar
           </Button>
         </DialogFooter>

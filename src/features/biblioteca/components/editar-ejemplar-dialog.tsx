@@ -131,7 +131,7 @@ function FormularioEdicion({
         <Button type="button" variant="outline" onClick={onClose}>
           Cancelar
         </Button>
-        <Button type="submit" disabled={editar.isPending}>
+        <Button type="submit" cargando={editar.isPending}>
           Guardar
         </Button>
       </DialogFooter>

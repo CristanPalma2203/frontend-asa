@@ -2,6 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 
+import { AlertaError } from '@/components/ui/alerta-error'
 import { Button } from '@/components/ui/button'
 import { Campo } from '@/components/ui/campo'
 import {
@@ -12,7 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { mensajeDeError } from '@/features/biblioteca/errores'
+import { mensajeDeError, mensajeGeneral } from '@/features/biblioteca/errores'
 import { useGuardarLector } from '@/features/biblioteca/hooks/use-lectores'
 import {
   lectorSchema,
@@ -20,6 +21,12 @@ import {
 } from '@/features/biblioteca/schemas/lector.schema'
 import type { LectorLista } from '@/features/biblioteca/types/api'
 import { ApiError } from '@/lib/api/client'
+
+const CODIGOS_CON_CAMPO = [
+  'correo-duplicado',
+  'identificador-duplicado',
+  'lector-con-reservas-activas',
+] as const
 
 export function LectorFormDialog({
   lector,
@@ -40,6 +47,12 @@ export function LectorFormDialog({
     },
   })
   const guardar = useGuardarLector(editando, { onSuccess: onClose })
+  const errorGeneral = mensajeGeneral(guardar.error, CODIGOS_CON_CAMPO)
+
+  function cerrar() {
+    guardar.reset()
+    onClose()
+  }
 
   useEffect(() => {
     form.reset(
@@ -82,7 +95,7 @@ export function LectorFormDialog({
   }, [form, guardar.error])
 
   return (
-    <Dialog open={lector !== null} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={lector !== null} onOpenChange={(open) => !open && cerrar()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
@@ -93,6 +106,7 @@ export function LectorFormDialog({
           className="grid gap-4"
           onSubmit={form.handleSubmit((values) => guardar.mutate(values))}
         >
+          <AlertaError mensaje={errorGeneral} />
           <Campo
             label="Identificador"
             error={form.formState.errors.identificador?.message}
@@ -127,10 +141,10 @@ export function LectorFormDialog({
             </Campo>
           )}
           <DialogFooter className="mt-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={cerrar}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={guardar.isPending}>
+            <Button type="submit" cargando={guardar.isPending}>
               Guardar
             </Button>
           </DialogFooter>

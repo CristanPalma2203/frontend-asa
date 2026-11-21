@@ -14,7 +14,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Hueso } from '@/components/ui/hueso'
-import { DesactivarEjemplarDialog } from '@/features/biblioteca/components/desactivar-ejemplar-dialog'
 import { EditarEjemplarDialog } from '@/features/biblioteca/components/editar-ejemplar-dialog'
 import { EjemplarFormDialog } from '@/features/biblioteca/components/ejemplar-form-dialog'
 import { EjemplaresAdminTable } from '@/features/biblioteca/components/ejemplares-admin-table'
@@ -25,7 +24,6 @@ import { totalActivos } from '@/features/biblioteca/disponibilidad'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import {
   useCambiarEstadoEjemplar,
-  useDesactivarEjemplar,
   useEjemplares,
 } from '@/features/biblioteca/hooks/use-ejemplares'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
@@ -42,13 +40,6 @@ export function LibroAdminPage() {
   const [abierto, setAbierto] = useState(false)
   const [aInactivar, setAInactivar] = useState<EjemplarLista | null>(null)
   const [aEditar, setAEditar] = useState<EjemplarLista | null>(null)
-  const [aDesactivar, setADesactivar] = useState<EjemplarLista | null>(null)
-  const desactivar = useDesactivarEjemplar(id, {
-    onSuccess: () => {
-      setADesactivar(null)
-      toast.success('Ejemplar desactivado')
-    },
-  })
   const estado = useCambiarEstadoEjemplar(id, {
     onConflicto: () => toast.error('Otro usuario cambió este ejemplar'),
   })
@@ -160,12 +151,8 @@ export function LibroAdminPage() {
         ) : (
           <EjemplaresAdminTable
             ejemplares={filas}
-            deshabilitado={estado.isPending || desactivar.isPending}
+            deshabilitado={estado.isPending}
             onEditar={setAEditar}
-            onDesactivar={(item) => {
-              desactivar.reset()
-              setADesactivar(item)
-            }}
             onCambiarEstado={(item) =>
               item.estado === 'Inactivo'
                 ? cambiarEstado(item)
@@ -197,13 +184,6 @@ export function LibroAdminPage() {
         ejemplar={aEditar}
         onClose={() => setAEditar(null)}
       />
-      <DesactivarEjemplarDialog
-        ejemplar={aDesactivar}
-        onClose={() => setADesactivar(null)}
-        onConfirmar={(item) => desactivar.mutate(item.idEjemplar)}
-        pending={desactivar.isPending}
-        error={desactivar.error}
-      />
 
       <Dialog
         open={aInactivar !== null}
@@ -230,7 +210,8 @@ export function LibroAdminPage() {
             <Button
               type="button"
               variant="destructive"
-              disabled={!aInactivar || estado.isPending}
+              disabled={!aInactivar}
+              cargando={estado.isPending}
               onClick={() => {
                 if (aInactivar) cambiarEstado(aInactivar)
                 setAInactivar(null)

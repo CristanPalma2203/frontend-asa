@@ -99,6 +99,11 @@ export function LibrosAdminPage() {
         <LibrosAdminTable
           libros={items}
           cargando={libros.isPending}
+          paginacion={{
+            page: search.page,
+            pageSize: search.pageSize,
+            total: libros.data?.totalCount ?? 0,
+          }}
           onEdit={setModo}
           onBaja={setBaja}
         />

@@ -9,6 +9,8 @@ import { render } from '@testing-library/react'
 import { Toaster } from '@/components/ui/sonner'
 import { routeTree } from '@/routeTree.gen'
 
+import { registrarRouter } from './navegaciones'
+
 export async function renderEn(
   path: string,
   opciones: { staleTime?: number } = {},
@@ -23,6 +25,7 @@ export async function renderEn(
     routeTree,
     history: createMemoryHistory({ initialEntries: [path] }),
   })
+  registrarRouter(router)
   await router.load()
 
   return {

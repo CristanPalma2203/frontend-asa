@@ -93,7 +93,7 @@ export function EjemplarFormDialog({
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={crear.isPending}>
+            <Button type="submit" cargando={crear.isPending}>
               Guardar
             </Button>
           </DialogFooter>

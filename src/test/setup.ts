@@ -7,6 +7,7 @@ import { afterAll, afterEach, beforeAll, vi } from 'vitest'
 import { useAuthStore } from '@/features/auth/store'
 import { useLuxiaStore } from '@/features/luxia/store'
 
+import { esperarNavegacionesPendientes } from './navegaciones'
 import { server } from './server'
 
 configure({ asyncUtilTimeout: 5000 })
@@ -45,7 +46,8 @@ HTMLCanvasElement.prototype.getContext = (() =>
 
 beforeAll(() => server.listen())
 
-afterEach(() => {
+afterEach(async () => {
+  await esperarNavegacionesPendientes()
   cleanup()
   server.resetHandlers()
   useAuthStore.getState().logout()

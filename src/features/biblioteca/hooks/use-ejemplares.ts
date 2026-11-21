@@ -13,7 +13,6 @@ import type {
 import {
   cambiarEstadoEjemplar,
   crearEjemplar,
-  desactivarEjemplar,
   editarEjemplar,
 } from '@/features/biblioteca/services/ejemplares.mutation'
 import { listarEjemplares } from '@/features/biblioteca/services/ejemplares.read'
@@ -57,6 +56,7 @@ async function invalidarDisponibilidad(
       queryKey: queryKeys.libros.detail(idLibro),
     }),
     queryClient.invalidateQueries({ queryKey: queryKeys.libros.lists() }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.resumen.all }),
   ])
 }
 
@@ -86,21 +86,6 @@ export function useEditarEjemplar(
           queryKey: queryKeys.ejemplares.list(idLibro),
         })
       }
-    },
-  })
-}
-
-export function useDesactivarEjemplar(
-  idLibro: number,
-  opciones: { onSuccess?: () => void } = {},
-) {
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (idEjemplar: number) => desactivarEjemplar(idEjemplar),
-    onSuccess: async () => {
-      opciones.onSuccess?.()
-      await invalidarDisponibilidad(queryClient, idLibro)
     },
   })
 }

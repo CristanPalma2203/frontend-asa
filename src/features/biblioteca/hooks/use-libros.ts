@@ -104,7 +104,10 @@ export function useGuardarLibro(
     },
     onSuccess: async () => {
       opciones.onSuccess?.()
-      await queryClient.invalidateQueries({ queryKey: queryKeys.libros.all })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.libros.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.resumen.all }),
+      ])
     },
   })
 }
@@ -116,7 +119,10 @@ export function useDesactivarLibro(opciones: { onSuccess?: () => void } = {}) {
     mutationFn: (id: number) => desactivarLibro(id),
     onSuccess: async () => {
       opciones.onSuccess?.()
-      await queryClient.invalidateQueries({ queryKey: queryKeys.libros.all })
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.libros.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.resumen.all }),
+      ])
     },
   })
 }

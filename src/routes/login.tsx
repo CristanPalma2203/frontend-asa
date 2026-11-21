@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { useRef, useState } from 'react'
 import { redirect, useNavigate } from '@tanstack/react-router'
 import { createFileRoute } from '@tanstack/react-router'
 
@@ -19,6 +20,8 @@ import {
   type LoginForm,
 } from '@/features/biblioteca/schemas/login.schema'
 import { ApiError } from '@/lib/api/client'
+
+const ESPERA_ARRANQUE_MS = 4000
 
 export const Route = createFileRoute('/login')({
   staticData: { title: 'Iniciar sesión · ASA Biblioteca' },
@@ -44,9 +47,17 @@ function LoginPage() {
     resolver: zodResolver(loginSchema),
     defaultValues: { correo: '', password: '' },
   })
+  const enviando = useRef(false)
+  const [servidorLento, setServidorLento] = useState(false)
 
   async function onSubmit(values: LoginForm) {
+    if (enviando.current) return
+    enviando.current = true
     form.clearErrors('root')
+    const avisoArranque = window.setTimeout(
+      () => setServidorLento(true),
+      ESPERA_ARRANQUE_MS,
+    )
     try {
       await iniciarSesion(values)
       const rol = useAuthStore.getState().rol
@@ -60,8 +71,14 @@ function LoginPage() {
       form.setError('root', {
         message: mensajeDeError(code, 'No se pudo iniciar sesión.'),
       })
+    } finally {
+      window.clearTimeout(avisoArranque)
+      setServidorLento(false)
+      enviando.current = false
     }
   }
+
+  const entrando = form.formState.isSubmitting
 
   const errores = form.formState.errors
 
@@ -82,58 +99,62 @@ function LoginPage() {
 
             <form
               className="mt-7 flex flex-col gap-5"
-              onSubmit={form.handleSubmit(onSubmit)}
+              onSubmit={(event) => void form.handleSubmit(onSubmit)(event)}
             >
-              <div className="flex flex-col gap-1.5">
-                <Label
-                  htmlFor="correo"
-                  className="text-texto-2 text-[13px] font-semibold"
-                >
-                  Correo
-                </Label>
-                <Input
-                  id="correo"
-                  type="email"
-                  autoComplete="username"
-                  placeholder="nombre@correo.com"
-                  aria-invalid={errores.correo ? true : undefined}
-                  aria-describedby={errores.correo ? 'correo-error' : undefined}
-                  {...form.register('correo')}
-                />
-                {errores.correo ? (
-                  <p
-                    id="correo-error"
-                    className="text-rojo-800 text-[13px] font-medium"
+              <fieldset disabled={entrando} className="contents">
+                <div className="flex flex-col gap-1.5">
+                  <Label
+                    htmlFor="correo"
+                    className="text-texto-2 text-[13px] font-semibold"
                   >
-                    {errores.correo.message}
-                  </p>
-                ) : null}
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label
-                  htmlFor="password"
-                  className="text-texto-2 text-[13px] font-semibold"
-                >
-                  Contraseña
-                </Label>
-                <PasswordInput
-                  id="password"
-                  autoComplete="current-password"
-                  aria-invalid={errores.password ? true : undefined}
-                  aria-describedby={
-                    errores.password ? 'password-error' : undefined
-                  }
-                  {...form.register('password')}
-                />
-                {errores.password ? (
-                  <p
-                    id="password-error"
-                    className="text-rojo-800 text-[13px] font-medium"
+                    Correo
+                  </Label>
+                  <Input
+                    id="correo"
+                    type="email"
+                    autoComplete="username"
+                    placeholder="nombre@correo.com"
+                    aria-invalid={errores.correo ? true : undefined}
+                    aria-describedby={
+                      errores.correo ? 'correo-error' : undefined
+                    }
+                    {...form.register('correo')}
+                  />
+                  {errores.correo ? (
+                    <p
+                      id="correo-error"
+                      className="text-rojo-800 text-[13px] font-medium"
+                    >
+                      {errores.correo.message}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label
+                    htmlFor="password"
+                    className="text-texto-2 text-[13px] font-semibold"
                   >
-                    {errores.password.message}
-                  </p>
-                ) : null}
-              </div>
+                    Contraseña
+                  </Label>
+                  <PasswordInput
+                    id="password"
+                    autoComplete="current-password"
+                    aria-invalid={errores.password ? true : undefined}
+                    aria-describedby={
+                      errores.password ? 'password-error' : undefined
+                    }
+                    {...form.register('password')}
+                  />
+                  {errores.password ? (
+                    <p
+                      id="password-error"
+                      className="text-rojo-800 text-[13px] font-medium"
+                    >
+                      {errores.password.message}
+                    </p>
+                  ) : null}
+                </div>
+              </fieldset>
               {errores.root ? (
                 <p
                   role="alert"
@@ -146,10 +167,19 @@ function LoginPage() {
                 type="submit"
                 size="lg"
                 className="mt-1 w-full"
-                disabled={form.formState.isSubmitting}
+                cargando={entrando}
+                textoCargando="Entrando…"
               >
                 Entrar
               </Button>
+              {servidorLento ? (
+                <p
+                  role="status"
+                  className="text-texto-3 -mt-2 text-center text-[13px]"
+                >
+                  Despertando el servidor, puede tardar unos segundos…
+                </p>
+              ) : null}
             </form>
 
             {import.meta.env.DEV ? (

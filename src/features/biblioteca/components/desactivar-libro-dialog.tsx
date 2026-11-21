@@ -47,7 +47,8 @@ export function DesactivarLibroDialog({
           <Button
             type="button"
             variant="destructive"
-            disabled={!libro || pending}
+            disabled={!libro}
+            cargando={pending}
             onClick={() => libro && onConfirmar(libro)}
           >
             Desactivar

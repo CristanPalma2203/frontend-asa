@@ -183,7 +183,8 @@ export function FichaReserva({
         abierto={abierto}
         onOpenChange={setAbierto}
         titulo={detalle.titulo}
-        deshabilitado={reservar.isPending || !lectorId}
+        deshabilitado={!lectorId}
+        pendiente={reservar.isPending}
         onConfirmar={confirmarReserva}
       />
     </div>

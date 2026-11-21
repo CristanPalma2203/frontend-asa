@@ -35,10 +35,7 @@ export function useReservasActivasCount() {
     queryKey: queryKeys.reservas.list('Activa', 1, 20),
     queryFn: () => listarReservasDeLector(lectorId ?? 0, 'Activa', 1, 20),
     enabled: lectorId != null,
-    select: (pagina) =>
-      pagina.totalPages > 1
-        ? pagina.totalCount
-        : pagina.items.filter((reserva) => reserva.estado === 'Activa').length,
+    select: (pagina) => pagina.totalCount,
   })
 }
 
@@ -96,5 +93,6 @@ async function invalidarTrasReserva(queryClient: QueryClient) {
   await Promise.all([
     queryClient.invalidateQueries({ queryKey: queryKeys.libros.all }),
     queryClient.invalidateQueries({ queryKey: queryKeys.reservas.mias() }),
+    queryClient.invalidateQueries({ queryKey: queryKeys.resumen.all }),
   ])
 }

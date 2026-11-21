@@ -31,10 +31,6 @@ export type LibroDetalle = {
   estado: EstadoLibro
   disponibles: number
   ejemplares: Ejemplar[]
-  sinopsis?: string | null
-  paginas?: number | null
-  anioPublicacion?: number | null
-  editorial?: string | null
 }
 
 export type Reserva = {

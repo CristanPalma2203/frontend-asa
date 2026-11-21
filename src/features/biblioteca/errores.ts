@@ -1,3 +1,5 @@
+import { ApiError } from '@/lib/api/client'
+
 export const mensajesError = {
   'sin-stock': 'No hay ejemplares disponibles para este libro.',
   'reserva-duplicada': 'Ya tienes una reserva activa de este libro.',
@@ -24,9 +26,25 @@ export const mensajesError = {
   'reserva-no-activa': 'Solo se puede cancelar una reserva activa.',
   'reserva-no-encontrada': 'No se encontró la reserva.',
   'credenciales-invalidas': 'El correo o la contraseña no son válidos.',
+  'libro-inactivo': 'Este libro está inactivo y no se puede reservar.',
+  'lector-no-encontrado': 'No se encontró el lector.',
+  'acceso-denegado': 'No tienes permiso para hacer esta acción.',
+  'registro-duplicado': 'Ya existe un registro con esos datos.',
 } as const
 
 export function mensajeDeError(code: string | undefined, fallback: string) {
   if (!code) return fallback
   return mensajesError[code as keyof typeof mensajesError] ?? fallback
+}
+
+export function mensajeGeneral(
+  error: unknown,
+  codigosConCampo: readonly string[],
+): string | null {
+  if (!error) return null
+  if (!(error instanceof ApiError)) {
+    return 'No se pudo conectar con el servidor. Inténtalo de nuevo.'
+  }
+  if (error.code && codigosConCampo.includes(error.code)) return null
+  return mensajeDeError(error.code, error.detail ?? error.title)
 }

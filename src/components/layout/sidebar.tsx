@@ -20,7 +20,7 @@ import { useReservasActivasCount } from '@/features/biblioteca/hooks/use-reserva
 import {
   useTotalLectores,
   useTotalLibros,
-} from '@/features/biblioteca/hooks/use-resumen-admin'
+} from '@/features/biblioteca/hooks/use-totales'
 import { useMotion } from '@/hooks/use-motion'
 import { reveal } from '@/lib/motion'
 import { cn } from '@/lib/utils'
@@ -61,13 +61,8 @@ export function Sidebar({
       {conVistaPill && sesion.isAdmin ? (
         <VistaPill tono="oscuro" className="relative mr-12" />
       ) : null}
-      <div className="relative flex flex-col gap-2.5 px-2">
+      <div className="relative flex items-center px-2">
         <Brand onClick={onNavegar} />
-        {enAdmin ? (
-          <span className="border-lima-400/35 text-lima-400 ml-[38px] self-start rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-[0.1em] uppercase">
-            Admin
-          </span>
-        ) : null}
       </div>
 
       <nav

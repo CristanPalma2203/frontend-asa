@@ -5,7 +5,6 @@ import { describe, expect, it } from 'vitest'
 
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import { crearApiFake } from '@/test/api-fake'
-import { detalleEjemplo } from '@/test/fixtures'
 import { renderEn } from '@/test/render'
 import { server } from '@/test/server'
 import { entrarComo } from '@/test/sesion'
@@ -205,35 +204,6 @@ describe('ficha', () => {
       'Reservado por ti',
     )
     expect(screen.queryByRole('button', { name: 'Reservar' })).toBeNull()
-  })
-
-  it('oculta sinopsis, páginas, año y editorial si no vienen, y los muestra si llegan', async () => {
-    const { unmount } = await renderEn('/libros/1')
-    await screen.findByRole('heading', { name: 'El Principito', level: 1 })
-    expect(screen.queryByRole('heading', { name: 'Sinopsis' })).toBeNull()
-    expect(screen.queryByText('Editorial')).toBeNull()
-    unmount()
-
-    server.use(
-      http.get('http://api.test/api/libros/:id', () =>
-        HttpResponse.json({
-          ...detalleEjemplo,
-          sinopsis:
-            'Un aviador cae en el desierto y conoce a un pequeño príncipe.',
-          paginas: 96,
-          anioPublicacion: 1943,
-          editorial: 'Salamandra',
-        }),
-      ),
-    )
-    await renderEn('/libros/1')
-    expect(
-      await screen.findByRole('heading', { name: 'Sinopsis' }),
-    ).toBeInTheDocument()
-    expect(screen.getByText(/conoce a un pequeño príncipe/)).toBeInTheDocument()
-    expect(screen.getByText('96')).toBeInTheDocument()
-    expect(screen.getByText('1943')).toBeInTheDocument()
-    expect(screen.getByText('Salamandra')).toBeInTheDocument()
   })
 
   it('«Más de esta categoría» muestra hasta 6 de la misma categoría, sin el actual, con enlace a su ficha', async () => {

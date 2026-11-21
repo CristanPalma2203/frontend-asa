@@ -34,25 +34,87 @@ const buttonVariants = cva(
   },
 )
 
+function Spinner() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      data-slot="spinner"
+      className="motion-safe:animate-spin"
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="9"
+        stroke="currentColor"
+        strokeWidth="3"
+        opacity="0.25"
+      />
+      <path
+        d="M21 12a9 9 0 0 0-9-9"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
+
 function Button({
   className,
   variant,
   size,
   asChild = false,
+  cargando,
+  textoCargando,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    cargando?: boolean
+    textoCargando?: string
   }) {
   const Comp = asChild ? Slot : 'button'
+  const conEstadoCarga = cargando !== undefined && !asChild
 
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      disabled={disabled || cargando}
+      aria-busy={cargando || undefined}
       {...props}
-    />
+    >
+      {conEstadoCarga ? (
+        <span className="grid place-items-center [grid-template-areas:'capa']">
+          <span
+            className={cn(
+              'inline-flex items-center gap-2 [grid-area:capa]',
+              cargando && 'invisible',
+            )}
+            aria-hidden={cargando || undefined}
+          >
+            {children}
+          </span>
+          <span
+            className={cn(
+              'inline-flex items-center gap-2 [grid-area:capa]',
+              !cargando && 'invisible',
+            )}
+            aria-hidden={!cargando || undefined}
+          >
+            <Spinner />
+            {textoCargando ?? children}
+          </span>
+        </span>
+      ) : (
+        children
+      )}
+    </Comp>
   )
 }
 
-export { Button, buttonVariants }
+export { Button, Spinner, buttonVariants }

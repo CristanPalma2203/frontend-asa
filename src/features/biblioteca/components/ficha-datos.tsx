@@ -14,22 +14,12 @@ export function FichaDatos({
   const items: Item[] = detalle
     ? [
         { etiqueta: 'ISBN', valor: detalle.isbn, mono: true },
-        ...(detalle.paginas
-          ? [{ etiqueta: 'Páginas', valor: String(detalle.paginas) }]
-          : []),
-        ...(detalle.anioPublicacion
-          ? [{ etiqueta: 'Año', valor: String(detalle.anioPublicacion) }]
-          : []),
-        ...(detalle.editorial
-          ? [{ etiqueta: 'Editorial', valor: detalle.editorial }]
-          : []),
         {
           etiqueta: 'Ejemplares',
           valor: `${totalActivos} ${totalActivos === 1 ? 'activo' : 'activos'}`,
         },
       ]
     : []
-  const isbnAncho = items.length > 2
 
   return (
     <dl
@@ -44,7 +34,6 @@ export function FichaDatos({
                 'bg-card flex min-w-0 flex-col gap-1.5 rounded-[14px] px-3.5 py-3',
                 'md:mr-5 md:min-w-[120px] md:flex-1 md:rounded-none md:bg-transparent md:py-4 md:pr-5 md:pl-0',
                 i < items.length - 1 && 'md:border-linea md:border-r',
-                item.etiqueta === 'ISBN' && isbnAncho && 'col-span-2',
               )}
             >
               <dt className="text-texto-3 text-[10.5px] font-semibold tracking-[0.12em] uppercase">

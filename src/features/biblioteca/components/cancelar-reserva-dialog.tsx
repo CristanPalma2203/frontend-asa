@@ -54,7 +54,8 @@ export function CancelarReservaDialog({
           <Button
             type="button"
             variant="destructive"
-            disabled={pending || !reserva}
+            disabled={!reserva}
+            cargando={pending}
             onClick={() => {
               if (!reserva) return
               onConfirmar(reserva)

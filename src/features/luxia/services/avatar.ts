@@ -7,10 +7,6 @@ let cache: boolean | null = null
 
 export function canUseRive(): boolean {
   if (cache !== null) return cache
-  if (import.meta.env.MODE === 'test') {
-    cache = false
-    return cache
-  }
   try {
     const c = document.createElement('canvas')
     cache = !!(

@@ -27,7 +27,3 @@ export function cambiarEstadoEjemplar(
 export function editarEjemplar(idEjemplar: number, body: EjemplarEdicion) {
   return api<void>(`/api/ejemplares/${idEjemplar}`, { method: 'PUT', body })
 }
-
-export function desactivarEjemplar(idEjemplar: number) {
-  return api<void>(`/api/ejemplares/${idEjemplar}`, { method: 'DELETE' })
-}
