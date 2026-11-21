@@ -15,9 +15,9 @@ function Table({
     <div
       data-slot="table-container"
       className={cn(
-        'bg-card border-linea shadow-card relative w-full overflow-auto rounded-xl border',
+        'bg-card border-linea shadow-card relative w-full overflow-x-auto rounded-xl border',
         accionesFijas &&
-          '[&_td:last-child]:bg-card [&_th:last-child]:bg-hueso-claro [&_td:last-child]:sticky [&_td:last-child]:right-0 [&_td:last-child]:z-[1] [&_td:last-child]:shadow-[-8px_0_12px_-10px_rgba(4,44,36,0.25)] [&_th:last-child]:sticky [&_th:last-child]:right-0 [&_th:last-child]:z-[1]',
+          '[&_td:last-child]:bg-card [&_th:last-child]:bg-hueso-claro [&_td:last-child]:sticky [&_td:last-child]:right-0 [&_td:last-child]:z-[1] [&_th:last-child]:sticky [&_th:last-child]:right-0 [&_th:last-child]:z-[1]',
       )}
     >
       <table

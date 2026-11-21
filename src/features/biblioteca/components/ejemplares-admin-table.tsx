@@ -30,10 +30,10 @@ export function EjemplaresAdminTable({
   onDesactivar?: (ejemplar: EjemplarLista) => void
 }) {
   return (
-    <Table accionesFijas>
+    <Table accionesFijas className="w-max min-w-full">
       <TableHeader>
         <TableRow>
-          <TableHead>Código</TableHead>
+          <TableHead className="min-w-[8rem]">Código</TableHead>
           <TableHead>Estado</TableHead>
           <TableHead>
             <span className="sr-only">Acciones</span>
@@ -44,7 +44,7 @@ export function EjemplaresAdminTable({
         {cargando ? <FilasFantasma columnas={2} filas={4} /> : null}
         {ejemplares.map((item) => (
           <TableRow key={item.idEjemplar}>
-            <TableCell className="text-tinta font-mono text-[13px] font-medium whitespace-nowrap">
+            <TableCell className="text-tinta min-w-[8rem] font-mono text-[13px] font-medium whitespace-nowrap">
               {item.codigoInventario}
             </TableCell>
             <TableCell>
