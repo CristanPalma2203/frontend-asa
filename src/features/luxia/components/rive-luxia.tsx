@@ -2,6 +2,7 @@ import {
   Alignment,
   Fit,
   Layout,
+  Rive,
   RuntimeLoader,
   useRive,
 } from '@rive-app/react-canvas'
@@ -23,6 +24,10 @@ import {
   type LuxiaRiveInputs,
   type RiveLike,
 } from '@/features/luxia/services/rive-control'
+
+// Los inputs de la state machine siguen siendo la API usada (sin migrar a data binding): se
+// silencia solo ese aviso de deprecación del runtime.
+Rive.suppressDeprecationWarnings = ['state-machine-inputs']
 
 // Runtime servido desde /luxia/ (no unpkg ni jsdelivr): una sola vez, al cargar este módulo
 // (lazy), antes del primer useRive. El fallback también es local.
@@ -78,7 +83,7 @@ export default function RiveLuxia({
   const { rive, RiveComponent } = useRive({
     src,
     artboard: ARTBOARD,
-    stateMachines: SM,
+    stateMachine: SM,
     autoplay: true,
     layout: new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
     onLoadError: onError,
