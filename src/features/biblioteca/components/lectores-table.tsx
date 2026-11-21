@@ -50,11 +50,17 @@ export function LectoresTable({
           const abierto = abiertoId === fila.original.idLector
           return (
             <Fragment key={fila.id}>
-              <TableRow className={cn(abierto && 'bg-lima-wash/60')}>
+              <TableRow
+                data-resaltada={abierto || undefined}
+                className={cn(abierto && 'bg-lima-wash/60')}
+              >
                 <CeldasDatos fila={fila} clases={clasesLectores} />
               </TableRow>
               {abierto ? (
-                <TableRow className="bg-hueso-claro hover:bg-hueso-claro">
+                <TableRow
+                  data-sin-hover
+                  className="bg-hueso-claro hover:bg-hueso-claro"
+                >
                   <TableCell
                     colSpan={totalColumnas}
                     className="text-texto-2 text-sm"

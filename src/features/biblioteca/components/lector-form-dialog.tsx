@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 
 import { AlertaError } from '@/components/ui/alerta-error'
 import { Button } from '@/components/ui/button'
@@ -46,7 +47,12 @@ export function LectorFormDialog({
       estado: 'Activo',
     },
   })
-  const guardar = useGuardarLector(editando, { onSuccess: onClose })
+  const guardar = useGuardarLector(editando, {
+    onSuccess: (values) => {
+      if (!editando) toast.success(`Lector «${values.nombre}» creado`)
+      onClose()
+    },
+  })
   const errorGeneral = mensajeGeneral(guardar.error, CODIGOS_CON_CAMPO)
 
   function cerrar() {

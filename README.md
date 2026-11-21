@@ -16,14 +16,6 @@ Aplicación web de la biblioteca ASA: los lectores buscan libros y los reservan,
 
 Sin iniciar sesión se puede navegar por el catálogo y ver las fichas; para reservar hay que entrar como lector.
 
-| Catálogo | Ficha del libro |
-| --- | --- |
-| ![Catálogo](docs/catalogo.png) | ![Ficha](docs/ficha.png) |
-
-| Mis reservas | Administración |
-| --- | --- |
-| ![Mis reservas](docs/mis-reservas.png) | ![Admin](docs/admin.png) |
-
 ## Stack
 
 - React 19, Vite y TypeScript
@@ -90,7 +82,7 @@ src/
 
 - Resumen con las métricas de la biblioteca.
 - Libros: alta, edición y desactivación.
-- Ejemplares de cada libro: alta, edición del código, activar o inactivar y desactivar.
+- Ejemplares de cada libro: alta, edición del código y activar o inactivar.
 - Lectores: alta y edición, incluido marcarlos como activos o inactivos.
 
 ## Correrlo en local
@@ -115,25 +107,21 @@ Cubren:
 
 - **Catálogo:** búsqueda, filtros, paginación y estados vacío y de error.
 - **Reservas:** reservar (código del ejemplar y disponibilidad actualizada), reserva duplicada, sin stock, y cancelación con vuelta atrás si falla.
-- **Admin:** inactivar, editar y desactivar ejemplares, con conflictos de concurrencia y errores del backend.
+- **Admin:** tablas, inactivar y editar ejemplares, con conflictos de concurrencia y errores del backend.
 - **Sesión:** login con credenciales inválidas y limpieza de LuxIA al cerrar sesión, con un 401 o con el token vencido.
-- **LuxIA:** respuestas del catálogo, tarjetas de libro y foco del panel.
+- **LuxIA:** respuestas del catálogo, sin repetir fichas ni sugerencias, y foco del panel.
 - **Fechas** en hora de El Salvador, **mensajes de error** por código y **animaciones** con «reducir movimiento».
-
-En Windows, correrlos desde una ruta con la unidad en mayúscula (`C:\…`, no `c:\…`), o Vitest no arranca.
 
 ## Supuestos
 
 - Las fechas llegan en UTC y se muestran en hora de El Salvador.
 - La URL de la API se fija al compilar (`VITE_API_URL`).
-- Editar y desactivar ejemplares usan `PUT` y `DELETE /api/ejemplares/{id}`; la edición envía el `rowVersion` para detectar cambios concurrentes.
+- Editar un ejemplar usa `PUT /api/ejemplares/{id}` y envía el `rowVersion` para detectar cambios concurrentes.
 
 ## Con más tiempo haría
 
-- Tests de punta a punta con Playwright contra el backend real.
 - Una Content-Security-Policy estricta.
 - Renovación del token sin volver a iniciar sesión.
-- Pasar la animación del avatar de LuxIA a data binding de Rive.
 
 ## Autor
 

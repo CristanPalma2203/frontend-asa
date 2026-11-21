@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ArrowRight, Check } from 'lucide-react'
 import { useRef, useState, type ReactNode } from 'react'
+import { toast } from 'sonner'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Hueso } from '@/components/ui/hueso'
@@ -68,6 +69,9 @@ export function FichaReserva({
         onSuccess: (reserva) => {
           setAbierto(false)
           setCodigoNuevo(reserva.codigoInventario)
+          toast.success(`Reservaste «${detalle.titulo}»`, {
+            description: `Tu ejemplar: ${reserva.codigoInventario}`,
+          })
         },
         onError: (error) => {
           if (error instanceof ApiError && error.code === 'sin-stock')
@@ -251,7 +255,7 @@ function TarjetaReserva({
       {accion ? (
         <div
           data-barra-reserva
-          className="max-md:border-pino-800/5 max-md:bg-hueso/85 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:px-4 max-md:pt-3 max-md:pb-[calc(1.25rem+env(safe-area-inset-bottom))] max-md:backdrop-blur-md"
+          className="max-md:border-pino-800/5 max-md:bg-hueso/85 max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-30 max-md:border-t max-md:pt-3 max-md:pr-[calc(7.5rem+env(safe-area-inset-right))] max-md:pb-[calc(1.25rem+env(safe-area-inset-bottom))] max-md:pl-4 max-md:backdrop-blur-md"
         >
           {accion}
         </div>

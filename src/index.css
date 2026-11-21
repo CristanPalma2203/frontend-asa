@@ -216,6 +216,18 @@
 }
 
 @layer components {
+  @media (width >= 40rem) {
+    .tabla-acciones-fijas
+      tbody
+      tr:is(:hover:not([aria-hidden], [data-sin-hover]), [data-resaltada])
+      > td:last-child {
+      background-image: linear-gradient(
+        color-mix(in oklab, var(--color-lima-wash) 60%, transparent),
+        color-mix(in oklab, var(--color-lima-wash) 60%, transparent)
+      );
+    }
+  }
+
   .hueso-llenar > [data-boneyard-content] {
     height: 100%;
   }

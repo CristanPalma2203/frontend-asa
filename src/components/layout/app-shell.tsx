@@ -97,7 +97,7 @@ function LayoutConSidebar({
           data-ruta
           className={cn(
             'flex-1 overflow-clip',
-            conLuxia && 'max-sm:pb-[calc(4rem+env(safe-area-inset-bottom))]',
+            conLuxia && 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]',
           )}
         >
           {children}
@@ -187,7 +187,7 @@ function MobileNav() {
         <Brand tono="claro" />
         <DialogPrimitive.Trigger
           aria-label="Abrir menú"
-          className="border-linea-fuerte bg-papel text-tinta grid size-11 cursor-pointer place-items-center rounded-full border"
+          className="border-linea-fuerte bg-papel text-tinta grid size-11 cursor-pointer touch-manipulation place-items-center rounded-full border"
         >
           <Menu className="size-[18px]" strokeWidth={2.2} />
         </DialogPrimitive.Trigger>

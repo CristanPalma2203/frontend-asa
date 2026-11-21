@@ -34,7 +34,7 @@ export function useLector(id: number | null) {
 
 export function useGuardarLector(
   lector: LectorLista | null,
-  opciones: { onSuccess?: () => void } = {},
+  opciones: { onSuccess?: (values: LectorForm) => void } = {},
 ) {
   const queryClient = useQueryClient()
 
@@ -62,7 +62,7 @@ export function useGuardarLector(
         await activarLector(lector.idLector)
       }
     },
-    onSuccess: () => opciones.onSuccess?.(),
+    onSuccess: (_respuesta, values) => opciones.onSuccess?.(values),
     onSettled: async () => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.lectores.all }),

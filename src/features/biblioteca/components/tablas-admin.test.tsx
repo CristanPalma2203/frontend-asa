@@ -138,6 +138,9 @@ describe('tabla de lectores', () => {
       'aria-expanded',
       'true',
     )
+    expect(
+      screen.getByRole('cell', { name: 'Ana López' }).closest('tr'),
+    ).toHaveAttribute('data-resaltada')
     const detalle = screen.getByText('Reservas activas:').closest('td')
     expect(detalle).toHaveAttribute('colspan', '5')
     expect(detalle).toHaveTextContent('Reservas activas:2')
@@ -157,6 +160,7 @@ describe('columna de acciones fija', () => {
       .getByRole('table')
       .closest('[data-slot="table-container"]')
     const clases = contenedor?.className.split(/\s+/) ?? []
+    expect(clases).toContain('tabla-acciones-fijas')
     expect(clases).toContain('sm:[&_td:last-child]:sticky')
     expect(clases).toContain('sm:[&_th:last-child]:sticky')
     expect(

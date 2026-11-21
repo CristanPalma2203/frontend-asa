@@ -511,12 +511,12 @@ describe('LuxIA', () => {
     expect(medio?.y).toBeLessThan(-388 * 0.5)
   })
 
-  it('en móvil deja margen inferior para que la mascota no tape los botones del final', async () => {
+  it('deja margen inferior para que la mascota no tape los botones del final', async () => {
     await renderEn(CATALOGO)
     await screen.findByTestId('luxia-fab')
     const ruta = document.querySelector('[data-ruta]')
     expect(ruta?.className).toContain(
-      'max-sm:pb-[calc(4rem+env(safe-area-inset-bottom))]',
+      'pb-[calc(4.5rem+env(safe-area-inset-bottom))]',
     )
   })
 

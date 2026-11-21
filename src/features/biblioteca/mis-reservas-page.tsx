@@ -129,7 +129,7 @@ export function MisReservasPage() {
       : null
 
   return (
-    <main className="flex w-full flex-col gap-8 px-4 pt-6 pb-14 md:px-6 xl:px-8">
+    <main className="flex w-full flex-col gap-8 pt-6 pr-4 pb-14 pl-4 sm:pr-32 md:pl-6 xl:pl-8">
       <header
         ref={headerRef}
         className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"

@@ -61,12 +61,22 @@ describe('ficha', () => {
       '3 disponibles',
     )
     expect(screen.getByText('3 de 3 ejemplares activos')).toBeInTheDocument()
+    expect(
+      screen
+        .getByRole('button', { name: 'Reservar' })
+        .closest('[data-barra-reserva]'),
+    ).toHaveClass('max-md:pr-[calc(7.5rem+env(safe-area-inset-right))]')
 
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
 
     expect(await screen.findByTestId('tu-ejemplar')).toHaveTextContent(
       'Tu ejemplar: BIB-001',
+    )
+    const aviso = await screen.findByText('Reservaste «El Principito»')
+    expect(aviso.closest('[data-sonner-toast]')).toHaveAttribute(
+      'data-type',
+      'success',
     )
     expect(screen.getByTestId('estado-disponibilidad')).toHaveTextContent(
       'Reservado por ti',

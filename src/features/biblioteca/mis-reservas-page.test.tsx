@@ -23,6 +23,7 @@ describe('mis reservas', () => {
     ).toBeInTheDocument()
     expect(within(activa).getByText('Activa')).toBeInTheDocument()
     expect(within(activa).getByText(/Solicitud/)).toBeInTheDocument()
+    expect(activa.closest('main')).toHaveClass('sm:pr-32')
 
     const resumen = screen.getByRole('group', {
       name: 'Resumen de tus reservas',
