@@ -10,7 +10,7 @@ function isbnLimpio(isbn: string) {
 }
 
 /**
- * Portada con el estilo Corelux. El tamaño lo pone `className` (ancho; el alto sale de la
+ * Portada de libro. El tamaño lo pone `className` (ancho; el alto sale de la
  * proporción 2:3). Mientras la imagen carga, shimmer de boneyard en el hueco (PortadaConCarga).
  * Sin ISBN o sin portada en Open Library muestra el título sobre pino.
  */
@@ -26,7 +26,10 @@ export function PortadaLibro({
   className?: string
 }) {
   const limpio = isbnLimpio(isbn)
-  const base = cn('rounded-portada shadow-portada aspect-[2/3] shrink-0', className)
+  const base = cn(
+    'rounded-portada shadow-portada aspect-[2/3] shrink-0',
+    className,
+  )
   const respaldo = <PortadaRespaldo titulo={titulo} className={base} />
 
   if (limpio.length === 0) return respaldo
@@ -42,7 +45,13 @@ export function PortadaLibro({
   )
 }
 
-function PortadaRespaldo({ titulo, className }: { titulo: string; className: string }) {
+function PortadaRespaldo({
+  titulo,
+  className,
+}: {
+  titulo: string
+  className: string
+}) {
   return (
     <div
       role="img"
@@ -74,9 +83,21 @@ export function MiniPortada({
 }) {
   const libro = useLibro(idLibro)
   if (libro.isPending) {
-    return <Hueso cargando ancho={56} alto={84} radio={6} className={cn('w-14 shrink-0', className)} />
+    return (
+      <Hueso
+        cargando
+        ancho={56}
+        alto={84}
+        radio={6}
+        className={cn('w-14 shrink-0', className)}
+      />
+    )
   }
   return (
-    <PortadaLibro isbn={libro.data?.isbn ?? ''} titulo={titulo} className={cn('w-14', className)} />
+    <PortadaLibro
+      isbn={libro.data?.isbn ?? ''}
+      titulo={titulo}
+      className={cn('w-14', className)}
+    />
   )
 }

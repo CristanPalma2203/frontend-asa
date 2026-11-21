@@ -29,7 +29,7 @@ function SelectTrigger({
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       className={cn(
-        'flex h-10 w-full items-center justify-between gap-2 rounded-[12px] border border-linea-fuerte bg-card px-3 text-sm outline-none focus-visible:shadow-foco disabled:cursor-not-allowed disabled:opacity-50',
+        'border-linea-fuerte bg-card focus-visible:shadow-foco flex h-10 w-full items-center justify-between gap-2 rounded-[12px] border px-3 text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50',
         className,
       )}
       {...props}
@@ -48,7 +48,10 @@ function SelectScrollUpButton({
 }: React.ComponentProps<typeof SelectPrimitive.ScrollUpButton>) {
   return (
     <SelectPrimitive.ScrollUpButton
-      className={cn('flex cursor-default items-center justify-center py-1', className)}
+      className={cn(
+        'flex cursor-default items-center justify-center py-1',
+        className,
+      )}
       {...props}
     >
       <ChevronUp className="size-4" />
@@ -62,7 +65,10 @@ function SelectScrollDownButton({
 }: React.ComponentProps<typeof SelectPrimitive.ScrollDownButton>) {
   return (
     <SelectPrimitive.ScrollDownButton
-      className={cn('flex cursor-default items-center justify-center py-1', className)}
+      className={cn(
+        'flex cursor-default items-center justify-center py-1',
+        className,
+      )}
       {...props}
     >
       <ChevronDown className="size-4" />
@@ -81,7 +87,7 @@ function SelectContent({
       <SelectPrimitive.Content
         data-slot="select-content"
         className={cn(
-          'relative z-50 max-h-96 min-w-32 overflow-hidden rounded-xl border border-linea bg-popover text-popover-foreground shadow-flotante',
+          'border-linea bg-popover text-popover-foreground shadow-flotante relative z-50 max-h-96 min-w-32 overflow-hidden rounded-xl border',
           position === 'popper' && 'w-(--radix-select-trigger-width)',
           className,
         )}
@@ -104,7 +110,10 @@ function SelectLabel({
 }: React.ComponentProps<typeof SelectPrimitive.Label>) {
   return (
     <SelectPrimitive.Label
-      className={cn('px-2 py-1.5 text-xs font-semibold text-texto-3', className)}
+      className={cn(
+        'text-texto-3 px-2 py-1.5 text-xs font-semibold',
+        className,
+      )}
       {...props}
     />
   )
@@ -118,7 +127,7 @@ function SelectItem({
   return (
     <SelectPrimitive.Item
       className={cn(
-        'relative flex w-full cursor-default items-center rounded-md py-1.5 pr-8 pl-2 text-sm outline-none select-none focus:bg-accent focus:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50',
+        'focus:bg-accent focus:text-accent-foreground relative flex w-full cursor-default items-center rounded-md py-1.5 pr-8 pl-2 text-sm outline-none select-none data-disabled:pointer-events-none data-disabled:opacity-50',
         className,
       )}
       {...props}
@@ -139,7 +148,7 @@ function SelectSeparator({
 }: React.ComponentProps<typeof SelectPrimitive.Separator>) {
   return (
     <SelectPrimitive.Separator
-      className={cn('my-1 h-0.5 bg-border', className)}
+      className={cn('bg-border my-1 h-0.5', className)}
       {...props}
     />
   )

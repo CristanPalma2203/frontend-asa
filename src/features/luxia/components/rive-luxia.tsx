@@ -1,5 +1,17 @@
-import { Alignment, Fit, Layout, useRive } from '@rive-app/react-canvas'
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import {
+  Alignment,
+  Fit,
+  Layout,
+  RuntimeLoader,
+  useRive,
+} from '@rive-app/react-canvas'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react'
 
 import type { LuxiaInputs } from '@/features/luxia/hooks/use-luxia-controller'
 import {
@@ -12,13 +24,20 @@ import {
   type RiveLike,
 } from '@/features/luxia/services/rive-control'
 
+// Runtime servido desde /luxia/ (no unpkg ni jsdelivr): una sola vez, al cargar este módulo
+// (lazy), antes del primer useRive. El fallback también es local.
+RuntimeLoader.setWasmUrl(`${import.meta.env.BASE_URL}luxia/rive.wasm`)
+RuntimeLoader.setWasmFallbackUrl(
+  `${import.meta.env.BASE_URL}luxia/rive_fallback.wasm`,
+)
+
 /**
- * Único punto que conoce Rive (se carga con React.lazy). Portado de Corelux RiveLuxia.tsx.
- * SM `LuxIA_oculta`, autoplay, oculta desde el cuadro 0. variante (0 Corelux) se fija en onLoad
+ * Único punto que conoce Rive (se carga con React.lazy).
+ * SM `LuxIA_oculta`, autoplay, oculta desde el cuadro 0. `variante` se fija en onLoad
  * con r.stateMachineInputs (sin parpadeo). onReady(false) = el contenedor usa el respaldo CSS.
  *
- * Cambio por las reglas de hooks: Corelux escribía `varRef.current = variante` en el render.
- * Aquí se copia en un useLayoutEffect, que corre antes de que Rive termine de cargar (asíncrono),
+ * `varRef.current = variante` no se escribe en el render (reglas de hooks): se copia en un
+ * useLayoutEffect, que corre antes de que Rive termine de cargar (asíncrono),
  * así onRiveReady sigue leyendo la variante vigente.
  */
 export default function RiveLuxia({

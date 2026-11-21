@@ -22,11 +22,14 @@ export function isSoftwareWebGL(): boolean {
       return true
     }
     const info = gl.getExtension('WEBGL_debug_renderer_info')
-    const renderer = info ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL) || '') : ''
+    const renderer = info
+      ? String(gl.getParameter(info.UNMASKED_RENDERER_WEBGL) || '')
+      : ''
     gl.getExtension('WEBGL_lose_context')?.loseContext()
-    softwareWebGlCache = /swiftshader|llvmpipe|softpipe|software|microsoft basic render/i.test(
-      renderer,
-    )
+    softwareWebGlCache =
+      /swiftshader|llvmpipe|softpipe|software|microsoft basic render/i.test(
+        renderer,
+      )
     return softwareWebGlCache
   } catch {
     softwareWebGlCache = true

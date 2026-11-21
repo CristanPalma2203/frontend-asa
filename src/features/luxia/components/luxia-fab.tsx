@@ -1,7 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from 'react'
 
 import { queryKeys } from '@/features/biblioteca/queryKeys'
 import { listarLibros } from '@/features/biblioteca/services/libros.read'
@@ -13,7 +21,11 @@ import { usePrefersReducedMotion } from '@/features/luxia/hooks/use-prefers-redu
 import { useVisualViewportVars } from '@/features/luxia/hooks/use-visual-viewport-vars'
 import { RIVE_SRC, canUseRive } from '@/features/luxia/services/avatar'
 import { consultarLuxia } from '@/features/luxia/services/consulta'
-import { MAX_MESSAGE, loadHistory, saveHistory } from '@/features/luxia/services/historial'
+import {
+  MAX_MESSAGE,
+  loadHistory,
+  saveHistory,
+} from '@/features/luxia/services/historial'
 import {
   APPEAR_WAIT_MS,
   ESQUINA,
@@ -24,6 +36,7 @@ import {
 import { useLuxiaStore } from '@/features/luxia/store'
 import { textos as t } from '@/features/luxia/textos'
 import type { ChatMsg } from '@/features/luxia/types/chat'
+import { cn } from '@/lib/utils'
 
 import '@/features/luxia/luxia-chat.css'
 
@@ -31,7 +44,7 @@ import '@/features/luxia/luxia-chat.css'
 type Muelle = { from: Dock; to: Dock | null }
 
 /**
- * LuxIA de Corelux (LuxiaFab.tsx) portada: panel propio, avatar flotante que vuela al header y
+ * LuxIA: panel propio, avatar flotante que vuela al header y
  * consulta por reglas sobre /api/libros (sin LLM, sin reservas). Está siempre visible mientras
  * esté montada (aquí no hay hero que la oculte).
  */
@@ -87,8 +100,7 @@ export function LuxiaFab() {
   const rootRef = useRef<HTMLDivElement>(null)
   const panelCleanup = useRef<(() => void) | null>(null)
 
-  // Corelux guardaba el origen del vuelo en un ref leído en el render (dockFrom). Aquí el origen
-  // viaja en el mismo estado que el destino: cada cambio de muelle guarda de dónde sale.
+  // El origen del vuelo viaja en el mismo estado que el destino (no en un ref leído en el render): cada cambio de muelle guarda de dónde sale.
   const [muelle, setMuelle] = useState<Muelle>({ from: ESQUINA, to: null })
   const dock = muelle.to
   const dockKey = claveDock(dock ?? ESQUINA)
@@ -109,7 +121,11 @@ export function LuxiaFab() {
     if (!slot || !panel || !anchor || !flyer || !anchor.offsetWidth) return
     let sx = slot.offsetLeft + slot.offsetWidth / 2
     let sy = slot.offsetTop + slot.offsetHeight / 2
-    for (let el = slot.offsetParent as HTMLElement | null; el; el = el.offsetParent as HTMLElement | null) {
+    for (
+      let el = slot.offsetParent as HTMLElement | null;
+      el;
+      el = el.offsetParent as HTMLElement | null
+    ) {
       // offsetLeft/Top de los hijos se miden desde el borde interior: suma el borde del panel.
       sx += el.offsetLeft + el.clientLeft
       sy += el.offsetTop + el.clientTop
@@ -131,7 +147,7 @@ export function LuxiaFab() {
     )
   }, [])
 
-  // Corelux medía en un useLayoutEffect al abrir. Aquí se mide cuando el panel entra en el DOM
+  // Se mide cuando el panel entra en el DOM, no con setState en un useLayoutEffect
   // (ref callback: el layout ya está calculado) y luego con ResizeObserver y resize de ventana.
   const panelRef = useCallback(
     (node: HTMLElement | null) => {
@@ -140,7 +156,10 @@ export function LuxiaFab() {
       if (!node) return
       measureDock()
       window.addEventListener('resize', measureDock)
-      const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => measureDock()) : null
+      const ro =
+        typeof ResizeObserver !== 'undefined'
+          ? new ResizeObserver(() => measureDock())
+          : null
       ro?.observe(node)
       panelCleanup.current = () => {
         window.removeEventListener('resize', measureDock)
@@ -232,7 +251,12 @@ export function LuxiaFab() {
   return (
     <div
       ref={rootRef}
-      className={`luxia-fab${open ? ' is-open' : ''}${reduced ? ' is-reduced' : ''}${kbOpen ? ' is-kb' : ''}`}
+      className={cn(
+        'luxia-fab',
+        open && 'is-open',
+        reduced && 'is-reduced',
+        kbOpen && 'is-kb',
+      )}
       data-testid="luxia-fab"
       onKeyDown={(e) => {
         if (e.key === 'Escape' && open) {
@@ -247,8 +271,16 @@ export function LuxiaFab() {
             key="luxia-chat"
             ref={panelRef}
             initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0, transition: { duration: 0.28, ease: 'easeOut' } }}
-            exit={{ opacity: 0, y: reduced ? 0 : 8, transition: { duration: 0.25, ease: 'easeIn' } }}
+            animate={{
+              opacity: 1,
+              y: 0,
+              transition: { duration: 0.28, ease: 'easeOut' },
+            }}
+            exit={{
+              opacity: 0,
+              y: reduced ? 0 : 8,
+              transition: { duration: 0.25, ease: 'easeIn' },
+            }}
             className="luxia-chat"
             role="dialog"
             aria-modal="false"
@@ -265,11 +297,19 @@ export function LuxiaFab() {
               <div className="luxia-chat__title">
                 <h2 id="luxia-chat-title">LuxIA</h2>
                 <p data-testid="luxia-status">
-                  <span className={`luxia-chat__dot${error ? ' is-off' : ''}`} aria-hidden="true" />{' '}
+                  <span
+                    className={cn('luxia-chat__dot', error && 'is-off')}
+                    aria-hidden="true"
+                  />{' '}
                   {busy ? t.typing : error ? t.offline : t.subtitle}
                 </p>
               </div>
-              <button type="button" className="luxia-chat__close" onClick={cerrar} aria-label={t.close}>
+              <button
+                type="button"
+                className="luxia-chat__close"
+                onClick={cerrar}
+                aria-label={t.close}
+              >
                 ×
               </button>
             </header>
@@ -280,17 +320,24 @@ export function LuxiaFab() {
               aria-live="polite"
               aria-label={t.log}
             >
-              <div className="luxia-chat__msg is-assistant" data-testid="luxia-chat-msg">
+              <div
+                className="luxia-chat__msg is-assistant"
+                data-testid="luxia-chat-msg"
+              >
                 {t.greeting}
               </div>
               {msgs.map((m, i) => (
                 <Fragment key={i}>
                   {m.text && (
-                    <div className={`luxia-chat__msg is-${m.role}`} data-testid="luxia-chat-msg">
+                    <div
+                      className={`luxia-chat__msg is-${m.role}`}
+                      data-testid="luxia-chat-msg"
+                    >
                       {m.text}
                     </div>
                   )}
-                  {m.role === 'assistant' && (m.libros?.length || m.consulta) ? (
+                  {m.role === 'assistant' &&
+                  (m.libros?.length || m.consulta) ? (
                     <div className="luxia-chat__links">
                       {m.libros?.map((libro) => (
                         <Link
@@ -319,7 +366,10 @@ export function LuxiaFab() {
                 </Fragment>
               ))}
               {busy && (
-                <div className="luxia-chat__msg is-assistant luxia-chat__typing" aria-label={t.typing}>
+                <div
+                  className="luxia-chat__msg is-assistant luxia-chat__typing"
+                  aria-label={t.typing}
+                >
                   <span />
                   <span />
                   <span />
@@ -329,7 +379,11 @@ export function LuxiaFab() {
                 <div className="luxia-chat__error" role="alert">
                   {t.errorGeneric}
                   {canRetry && (
-                    <button type="button" className="luxia-chat__retry" onClick={retry}>
+                    <button
+                      type="button"
+                      className="luxia-chat__retry"
+                      onClick={retry}
+                    >
                       {t.retry}
                     </button>
                   )}
@@ -366,8 +420,17 @@ export function LuxiaFab() {
                 placeholder={t.placeholder}
                 aria-label={t.inputAria}
               />
-              <button type="submit" disabled={busy || !draft.trim()} aria-label={t.send}>
-                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <button
+                type="submit"
+                disabled={busy || !draft.trim()}
+                aria-label={t.send}
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  aria-hidden="true"
+                >
                   <path
                     d="M4 12h14M12 5l7 7-7 7"
                     fill="none"
@@ -398,9 +461,18 @@ export function LuxiaFab() {
           data-dock-target={dockKey}
           data-closing={closing || undefined}
         >
-          <motion.div className="luxia-fab__dock" initial={false} animate={dockAnimation}>
+          <motion.div
+            className="luxia-fab__dock"
+            initial={false}
+            animate={dockAnimation}
+          >
             <div
-              className={`luxia-fab__bob${dock ? ' is-docked-float' : arrived && shown && !reduced ? ' is-floating' : ''}`}
+              className={cn(
+                'luxia-fab__bob',
+                dock
+                  ? 'is-docked-float'
+                  : arrived && shown && !reduced && 'is-floating',
+              )}
               data-testid="luxia-bob"
             >
               <button
@@ -412,7 +484,11 @@ export function LuxiaFab() {
                 aria-haspopup="dialog"
                 aria-label={open ? t.close : t.open}
               >
-                <span className="luxia-fab__shadow" data-testid="luxia-shadow" aria-hidden="true" />
+                <span
+                  className="luxia-fab__shadow"
+                  data-testid="luxia-shadow"
+                  aria-hidden="true"
+                />
                 <LuxiaAvatar
                   riveSrc={reduced ? undefined : RIVE_SRC}
                   inputs={inputs}

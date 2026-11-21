@@ -1,4 +1,4 @@
-/** Lógica pura de inputs Rive de LuxIA (sin importar el runtime, testeable). Portado de Corelux riveControl.ts. */
+/** Lógica pura de inputs Rive de LuxIA (sin importar el runtime, testeable). */
 /** push-v8: SM `LuxIA_oculta` (artboard LuxIA) arranca oculta desde el cuadro 0 (iniciar_oculta=true por defecto). */
 export const SM = 'LuxIA_oculta'
 export const ARTBOARD = 'LuxIA'
@@ -43,14 +43,21 @@ export function hasAppearControl(i: LuxiaRiveInputs) {
  * En onLoad (onRiveReady, mismo tick de la carga): variante vía r.stateMachineInputs(SM).
  * No usar useStateMachineInput para esto: llega 1-4 cuadros tarde y parpadea.
  */
-export function bootLuxiaRive(rive: RiveLike, variante: number): LuxiaRiveInputs {
+export function bootLuxiaRive(
+  rive: RiveLike,
+  variante: number,
+): LuxiaRiveInputs {
   const i = findInputs(rive)
   if (i.variante) i.variante.value = variante
   return i
 }
 
 /** Dispara aparecer/desaparecer solo cuando cambia el estado visible. */
-export function syncShown(i: LuxiaRiveInputs, shown: boolean, last: { shown: boolean }) {
+export function syncShown(
+  i: LuxiaRiveInputs,
+  shown: boolean,
+  last: { shown: boolean },
+) {
   if (shown === last.shown) return false
   last.shown = shown
   const trigger = shown ? i.aparecer : i.desaparecer

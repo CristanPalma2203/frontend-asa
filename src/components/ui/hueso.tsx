@@ -16,10 +16,16 @@ export function Hueso({
   alto,
   radio = 4,
   llenar = false,
+  color,
+  shimmer,
   className,
   children,
 }: {
   cargando: boolean
+  /** Color del hueso (boneyard `color`); sin él, el de la config global. */
+  color?: string
+  /** Color del brillo; sin él, el `shimmerColor` de la config global. */
+  shimmer?: string
   /** Ancho del hueco (px o valor CSS). Sin él, el ancho lo da `className` o el contenedor. */
   ancho?: number | string
   alto: number
@@ -34,19 +40,34 @@ export function Hueso({
     () => huesoUnico(`hueso-${anchoPx}x${alto}`, anchoPx, alto, radio),
     [anchoPx, alto, radio],
   )
-  const estilo: CSSProperties | undefined = ancho === undefined ? undefined : { width: ancho }
+  // boneyard <Skeleton> solo acepta `color`; su shimmerColor es de la config global. El brillo
+  // propio va por `boneClass` (.hueso-brillo en index.css) con estas variables CSS.
+  const estilo = {
+    ...(ancho === undefined ? {} : { width: ancho }),
+    ...(shimmer
+      ? { '--hueso-color': color ?? 'transparent', '--hueso-brillo': shimmer }
+      : {}),
+  } as CSSProperties
 
   return (
     <div className={cn('max-w-full', className)} style={estilo}>
-      <Skeleton loading={cargando} initialBones={huesos} className={llenar ? 'hueso-llenar h-full' : undefined}>
-        {children ?? <span aria-hidden className="block" style={{ height: alto }} />}
+      <Skeleton
+        loading={cargando}
+        initialBones={huesos}
+        color={color}
+        boneClass={shimmer ? 'hueso-brillo' : undefined}
+        className={llenar ? 'hueso-llenar h-full' : undefined}
+      >
+        {children ?? (
+          <span aria-hidden className="block" style={{ height: alto }} />
+        )}
       </Skeleton>
     </div>
   )
 }
 
 /**
- * Portada con shimmer hasta que la imagen carga (patrón ThumbImage de Corelux): listo con onLoad,
+ * Portada con shimmer hasta que la imagen carga: lista con onLoad,
  * o al montar si viene de caché (img.complete && naturalWidth > 0). Si falla, `respaldo`.
  * La imagen entra con opacidad 0 → 1 en 200 ms. `key={src}` reinicia el estado si cambia la URL.
  */
@@ -106,7 +127,13 @@ function PortadaConCargaInterna({
   if (fallo) return <>{respaldo}</>
 
   return (
-    <Hueso cargando={!listo} alto={alto} radio={radio} llenar className={cn('overflow-hidden', className)}>
+    <Hueso
+      cargando={!listo}
+      alto={alto}
+      radio={radio}
+      llenar
+      className={cn('overflow-hidden', className)}
+    >
       <img
         ref={marcarSiCargada}
         src={src}

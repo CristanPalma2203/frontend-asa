@@ -3,7 +3,12 @@ import { ArrowRight } from 'lucide-react'
 import { useRef, type ReactNode } from 'react'
 
 import { buttonVariants } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from '@/components/ui/sheet'
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { StockBadge } from '@/features/biblioteca/components/stock-badge'
 import type { Libro } from '@/features/biblioteca/types/api'
@@ -50,7 +55,9 @@ export function LibroResumenPanel({
               <dl className="border-linea grid grid-cols-2 gap-4 border-y py-4">
                 <div>
                   <dt className="text-texto-3 text-xs">ISBN</dt>
-                  <dd className="text-texto mt-1 font-mono text-[13px]">{libro.isbn}</dd>
+                  <dd className="text-texto mt-1 font-mono text-[13px]">
+                    {libro.isbn}
+                  </dd>
                 </div>
                 <div>
                   <dt className="text-texto-3 text-xs">Ejemplares</dt>
@@ -80,10 +87,12 @@ export function LibroResumenPanel({
   )
 }
 
-/** Hijos del panel con la entrada del drawer de Flito (Pc): y 14, stagger 0.04, delay 0.12. */
+/** Hijos del panel: entran tras el deslizamiento del drawer (y 14, stagger 0.04, delay 0.12). */
 function ContenidoPanel({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
-  useMotion(ref, (root) => reveal(root.children, { y: 14, stagger: 0.04, delay: 0.12 }))
+  useMotion(ref, (root) =>
+    reveal(root.children, { y: 14, stagger: 0.04, delay: 0.12 }),
+  )
   return (
     <div ref={ref} className="flex flex-1 flex-col">
       {children}

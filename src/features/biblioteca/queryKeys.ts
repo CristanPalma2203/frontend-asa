@@ -1,4 +1,7 @@
-import type { ListarLectoresParams, ListarLibrosParams } from '@/features/biblioteca/types/api'
+import type {
+  ListarLectoresParams,
+  ListarLibrosParams,
+} from '@/features/biblioteca/types/api'
 import type { FiltroReservas } from '@/features/biblioteca/types/estados'
 
 // Cada recurso tiene una raíz `all`; listas y detalles cuelgan de ella para poder
@@ -13,14 +16,16 @@ export const queryKeys = {
   libros: {
     all: librosAll,
     lists: () => [...librosAll, 'list'] as const,
-    list: (params: ListarLibrosParams) => [...librosAll, 'list', params] as const,
+    list: (params: ListarLibrosParams) =>
+      [...librosAll, 'list', params] as const,
     details: () => [...librosAll, 'detail'] as const,
     detail: (id: number) => [...librosAll, 'detail', id] as const,
   },
   lectores: {
     all: lectoresAll,
     lists: () => [...lectoresAll, 'list'] as const,
-    list: (params: ListarLectoresParams) => [...lectoresAll, 'list', params] as const,
+    list: (params: ListarLectoresParams) =>
+      [...lectoresAll, 'list', params] as const,
     details: () => [...lectoresAll, 'detail'] as const,
     detail: (id: number) => [...lectoresAll, 'detail', id] as const,
   },

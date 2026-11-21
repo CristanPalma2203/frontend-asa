@@ -1,10 +1,21 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { flexRender } from '@tanstack/react-table'
-import { getCoreRowModel, useLegacyTable, type LegacyColumnDef } from '@tanstack/react-table/legacy'
+import {
+  getCoreRowModel,
+  useLegacyTable,
+  type LegacyColumnDef,
+} from '@tanstack/react-table/legacy'
 
 import { Button } from '@/components/ui/button'
 import { FilasFantasma } from '@/components/ui/filas-fantasma'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import type { Libro } from '@/features/biblioteca/types/api'
 
 /** Tabla de libros del panel admin: la fila entera navega a la ficha de administración. */
@@ -25,7 +36,11 @@ export function LibrosAdminTable({
     {
       accessorKey: 'isbn',
       header: 'ISBN',
-      cell: ({ row }) => <span className="text-texto-2 font-mono text-[13px]">{row.original.isbn}</span>,
+      cell: ({ row }) => (
+        <span className="text-texto-2 font-mono text-[13px]">
+          {row.original.isbn}
+        </span>
+      ),
     },
     {
       accessorKey: 'titulo',
@@ -45,7 +60,9 @@ export function LibrosAdminTable({
     {
       accessorKey: 'categoria',
       header: 'Categoría',
-      cell: ({ row }) => <span className="text-texto-3">{row.original.categoria}</span>,
+      cell: ({ row }) => (
+        <span className="text-texto-3">{row.original.categoria}</span>
+      ),
     },
     {
       accessorKey: 'disponibles',
@@ -54,7 +71,11 @@ export function LibrosAdminTable({
         <span className="inline-flex items-center gap-2 font-mono text-[13px]">
           <span
             aria-hidden
-            className={row.original.disponibles > 0 ? 'bg-lima-400 size-2 rounded-full' : 'bg-texto-5 size-2 rounded-full'}
+            className={
+              row.original.disponibles > 0
+                ? 'bg-lima-400 size-2 rounded-full'
+                : 'bg-texto-5 size-2 rounded-full'
+            }
           />
           {row.original.disponibles}
           <span className="text-texto-4">/ {row.original.totalEjemplares}</span>
@@ -93,7 +114,11 @@ export function LibrosAdminTable({
       ),
     },
   ]
-  const table = useLegacyTable({ data: libros, columns: columnas, getCoreRowModel: getCoreRowModel() })
+  const table = useLegacyTable({
+    data: libros,
+    columns: columnas,
+    getCoreRowModel: getCoreRowModel(),
+  })
 
   return (
     <Table className="min-w-[44rem]">
@@ -102,7 +127,10 @@ export function LibrosAdminTable({
           <TableRow key={group.id}>
             {group.headers.map((header) => (
               <TableHead key={header.id}>
-                {flexRender(header.column.columnDef.header, header.getContext())}
+                {flexRender(
+                  header.column.columnDef.header,
+                  header.getContext(),
+                )}
               </TableHead>
             ))}
           </TableRow>

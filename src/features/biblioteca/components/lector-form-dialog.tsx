@@ -14,7 +14,10 @@ import {
 import { Input } from '@/components/ui/input'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import { useGuardarLector } from '@/features/biblioteca/hooks/use-lectores'
-import { lectorSchema, type LectorForm } from '@/features/biblioteca/schemas/lector.schema'
+import {
+  lectorSchema,
+  type LectorForm,
+} from '@/features/biblioteca/schemas/lector.schema'
 import type { LectorLista } from '@/features/biblioteca/types/api'
 import { ApiError } from '@/lib/api/client'
 
@@ -52,7 +55,13 @@ export function LectorFormDialog({
             password: '',
             estado: editando.estado === 'Inactivo' ? 'Inactivo' : 'Activo',
           }
-        : { identificador: '', nombre: '', correo: '', password: '', estado: 'Activo' },
+        : {
+            identificador: '',
+            nombre: '',
+            correo: '',
+            password: '',
+            estado: 'Activo',
+          },
     )
   }, [editando, form, lector])
 
@@ -60,13 +69,19 @@ export function LectorFormDialog({
     const error = guardar.error
     if (!(error instanceof ApiError)) return
     if (error.code === 'correo-duplicado') {
-      form.setError('correo', { message: mensajeDeError(error.code, error.detail ?? error.title) })
+      form.setError('correo', {
+        message: mensajeDeError(error.code, error.detail ?? error.title),
+      })
     }
     if (error.code === 'identificador-duplicado') {
-      form.setError('identificador', { message: mensajeDeError(error.code, error.detail ?? error.title) })
+      form.setError('identificador', {
+        message: mensajeDeError(error.code, error.detail ?? error.title),
+      })
     }
     if (error.code === 'lector-con-reservas-activas') {
-      form.setError('estado', { message: mensajeDeError(error.code, error.detail ?? error.title) })
+      form.setError('estado', {
+        message: mensajeDeError(error.code, error.detail ?? error.title),
+      })
     }
   }, [form, guardar.error])
 
@@ -74,10 +89,18 @@ export function LectorFormDialog({
     <Dialog open={lector !== null} onOpenChange={(open) => !open && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{editando ? 'Editar lector' : 'Crear lector'}</DialogTitle>
+          <DialogTitle>
+            {editando ? 'Editar lector' : 'Crear lector'}
+          </DialogTitle>
         </DialogHeader>
-        <form className="grid gap-4" onSubmit={form.handleSubmit((values) => guardar.mutate(values))}>
-          <Campo label="Identificador" error={form.formState.errors.identificador?.message}>
+        <form
+          className="grid gap-4"
+          onSubmit={form.handleSubmit((values) => guardar.mutate(values))}
+        >
+          <Campo
+            label="Identificador"
+            error={form.formState.errors.identificador?.message}
+          >
             <Input {...form.register('identificador')} />
           </Campo>
           <Campo label="Nombre" error={form.formState.errors.nombre?.message}>
@@ -96,8 +119,15 @@ export function LectorFormDialog({
             </select>
           </Campo>
           {editando ? null : (
-            <Campo label="Contraseña (opcional)" error={form.formState.errors.password?.message}>
-              <Input type="password" autoComplete="new-password" {...form.register('password')} />
+            <Campo
+              label="Contraseña (opcional)"
+              error={form.formState.errors.password?.message}
+            >
+              <Input
+                type="password"
+                autoComplete="new-password"
+                {...form.register('password')}
+              />
             </Campo>
           )}
           <DialogFooter className="mt-2">
@@ -113,4 +143,3 @@ export function LectorFormDialog({
     </Dialog>
   )
 }
-

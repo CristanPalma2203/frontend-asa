@@ -14,7 +14,9 @@ const CATALOGO = '/catalogo?page=1&pageSize=12'
 
 async function abrir() {
   const user = userEvent.setup()
-  await user.click(await screen.findByRole('button', { name: 'Abrir chat con LuxIA' }))
+  await user.click(
+    await screen.findByRole('button', { name: 'Abrir chat con LuxIA' }),
+  )
   const panel = await screen.findByRole('dialog', { name: 'LuxIA' })
   return { user, panel }
 }
@@ -23,20 +25,30 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('LuxIA (Corelux)', () => {
+describe('LuxIA', () => {
   it('abre el panel, enfoca el mensaje y Escape lo cierra devolviendo el foco al botón', async () => {
     await renderEn(CATALOGO)
     const { user, panel } = await abrir()
 
     expect(panel).toHaveAttribute('aria-modal', 'false')
     expect(within(panel).getByLabelText('Mensaje para LuxIA')).toHaveFocus()
-    expect(screen.getByRole('button', { name: 'Cerrar chat', expanded: true, hidden: false })).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', {
+        name: 'Cerrar chat',
+        expanded: true,
+        hidden: false,
+      }),
+    ).toBeInTheDocument()
 
     await user.keyboard('{Escape}')
 
-    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'LuxIA' })).toBeNull())
     await waitFor(() =>
-      expect(screen.getByRole('button', { name: 'Abrir chat con LuxIA' })).toHaveFocus(),
+      expect(screen.queryByRole('dialog', { name: 'LuxIA' })).toBeNull(),
+    )
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: 'Abrir chat con LuxIA' }),
+      ).toHaveFocus(),
     )
   })
 
@@ -46,13 +58,30 @@ describe('LuxIA (Corelux)', () => {
     await renderEn(CATALOGO)
     const { user, panel } = await abrir()
 
-    await user.click(within(panel).getByRole('button', { name: '¿Cuántos ejemplares quedan de Dune?' }))
+    await user.click(
+      within(panel).getByRole('button', {
+        name: '¿Cuántos ejemplares quedan de Dune?',
+      }),
+    )
 
     const log = within(panel).getByRole('log')
-    expect(await within(log).findByText('Quedan 3 ejemplares de «Dune».')).toBeInTheDocument()
-    expect(within(log).getByText('¿Cuántos ejemplares quedan de Dune?')).toBeInTheDocument()
-    expect(within(panel).getByRole('link', { name: /Dune/ })).toHaveAttribute('href', '/libros/1')
-    expect(api.pedidos('/api/libros').at(-1)?.searchParams.get('search')).toBe('Dune')
+    expect(
+      await within(log).findByText('Quedan 3 ejemplares de «Dune».'),
+    ).toBeInTheDocument()
+    expect(
+      await within(log).findByText(
+        (_, el) =>
+          el?.textContent === '¿Cuántos ejemplares quedan de Dune?' &&
+          el.children.length === 0,
+      ),
+    ).toBeInTheDocument()
+    expect(within(panel).getByRole('link', { name: /Dune/ })).toHaveAttribute(
+      'href',
+      '/libros/1',
+    )
+    expect(api.pedidos('/api/libros').at(-1)?.searchParams.get('search')).toBe(
+      'Dune',
+    )
   })
 
   it('Enter envía y Shift+Enter hace salto de línea', async () => {
@@ -72,7 +101,8 @@ describe('LuxIA (Corelux)', () => {
     server.use(
       http.get('http://api.test/api/libros', ({ request }) => {
         const url = new URL(request.url)
-        if (falla && url.searchParams.get('search')) return new HttpResponse(null, { status: 500 })
+        if (falla && url.searchParams.get('search'))
+          return new HttpResponse(null, { status: 500 })
         return undefined
       }),
       ...api.handlers,
@@ -80,23 +110,35 @@ describe('LuxIA (Corelux)', () => {
     await renderEn(CATALOGO)
     const { user, panel } = await abrir()
 
-    await user.type(within(panel).getByLabelText('Mensaje para LuxIA'), 'Dune{Enter}')
+    await user.type(
+      within(panel).getByLabelText('Mensaje para LuxIA'),
+      'Dune{Enter}',
+    )
 
     expect(await within(panel).findByRole('alert')).toHaveTextContent(
       'No pude responder ahora. Inténtalo de nuevo en un rato.',
     )
-    expect(within(panel).getByTestId('luxia-status')).toHaveTextContent('Sin conexión')
+    expect(within(panel).getByTestId('luxia-status')).toHaveTextContent(
+      'Sin conexión',
+    )
 
     falla = false
     await user.click(within(panel).getByRole('button', { name: 'Reintentar' }))
 
-    expect(await within(panel).findByText('Quedan 2 ejemplares de «Dune».')).toBeInTheDocument()
-    expect(within(panel).getAllByText('Dune', { selector: '.luxia-chat__msg' })).toHaveLength(1)
+    expect(
+      await within(panel).findByText('Quedan 2 ejemplares de «Dune».'),
+    ).toBeInTheDocument()
+    expect(
+      within(panel).getAllByText('Dune', { selector: '.luxia-chat__msg' }),
+    ).toHaveLength(1)
     expect(within(panel).queryByRole('alert')).toBeNull()
   })
 
   it('guarda el historial en localStorage y lo limita', async () => {
-    const viejos = Array.from({ length: 30 }, (_, i) => ({ role: 'user', text: `m${i}` }))
+    const viejos = Array.from({ length: 30 }, (_, i) => ({
+      role: 'user',
+      text: `m${i}`,
+    }))
     localStorage.setItem(STORAGE_KEY, JSON.stringify(viejos))
     await renderEn(CATALOGO)
     const { panel } = await abrir()
@@ -104,7 +146,9 @@ describe('LuxIA (Corelux)', () => {
     // Al cargar solo quedan los últimos HISTORY_LIMIT.
     expect(within(panel).queryByText('m19')).toBeNull()
     expect(within(panel).getByText('m29')).toBeInTheDocument()
-    const guardado = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '[]') as unknown[]
+    const guardado = JSON.parse(
+      localStorage.getItem(STORAGE_KEY) ?? '[]',
+    ) as unknown[]
     expect(guardado).toHaveLength(HISTORY_LIMIT)
   })
 
@@ -114,36 +158,57 @@ describe('LuxIA (Corelux)', () => {
     await renderEn(CATALOGO)
     const { user, panel } = await abrir()
 
-    await user.click(within(panel).getByRole('button', { name: '¿Cómo reservo El Principito?' }))
+    await user.click(
+      within(panel).getByRole('button', {
+        name: '¿Cómo reservo El Principito?',
+      }),
+    )
 
-    expect(await within(panel).findByText(/no puedo reservar por ti/)).toBeInTheDocument()
-    expect(within(panel).getByRole('link', { name: /El Principito/ })).toHaveAttribute('href', '/libros/1')
+    expect(
+      await within(panel).findByText(/no puedo reservar por ti/),
+    ).toBeInTheDocument()
+    expect(
+      within(panel).getByRole('link', { name: /El Principito/ }),
+    ).toHaveAttribute('href', '/libros/1')
     expect(api.pedidos('/api/reservas')).toHaveLength(0)
   })
 
   it('el botón «Pregúntale a LuxIA» del sidebar abre el mismo panel (uno solo)', async () => {
     const user = userEvent.setup()
     await renderEn(CATALOGO)
-    const [boton] = screen.getAllByRole('button', { name: 'Pregúntale a LuxIA' })
+    const [boton] = screen.getAllByRole('button', {
+      name: 'Pregúntale a LuxIA',
+    })
     if (!boton) throw new Error('Falta el botón del sidebar')
 
     await user.click(boton)
 
-    expect(await screen.findAllByRole('dialog', { name: 'LuxIA' })).toHaveLength(1)
+    expect(
+      await screen.findAllByRole('dialog', { name: 'LuxIA' }),
+    ).toHaveLength(1)
     expect(boton).toHaveAttribute('aria-expanded', 'true')
   })
 
   it('con reduced-motion no hay vuelo: solo fundido de 0,3 s', async () => {
     vi.stubGlobal(
       'matchMedia',
-      vi.fn().mockReturnValue({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }),
+      vi
+        .fn()
+        .mockReturnValue({
+          matches: true,
+          addEventListener: vi.fn(),
+          removeEventListener: vi.fn(),
+        }),
     )
     await renderEn(CATALOGO)
     expect(screen.getByTestId('luxia-fab')).toHaveClass('is-reduced')
     await abrir()
 
     const sinVuelo = dockAnim({ x: -286, y: -388, s: 0.667 }, ESQUINA, true)
-    expect(sinVuelo).toMatchObject({ opacity: [0, 1], transition: { duration: 0.3 } })
+    expect(sinVuelo).toMatchObject({
+      opacity: [0, 1],
+      transition: { duration: 0.3 },
+    })
     expect(sinVuelo.transition).not.toHaveProperty('times')
     const conVuelo = dockAnim({ x: -286, y: -388, s: 0.667 }, ESQUINA, false)
     expect((conVuelo.transition as { times: number[] }).times).toHaveLength(25)

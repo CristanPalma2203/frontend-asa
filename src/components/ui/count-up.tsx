@@ -3,10 +3,11 @@ import { useLayoutEffect, useRef } from 'react'
 
 import { prefersReducedMotion } from '@/lib/motion'
 
-const formatoPorDefecto = (valor: number) => Math.round(valor).toLocaleString('es')
+const formatoPorDefecto = (valor: number) =>
+  Math.round(valor).toLocaleString('es')
 
 /**
- * Cifra que cuenta hasta su valor (CountUp de Wynlo motion.tsx: power3.out, 1.2 s). Con
+ * Cifra que cuenta hasta su valor (power3.out, 1.2 s). Con
  * movimiento reducido se escribe el valor final sin animar. Solo toca el texto del span.
  */
 export function CountUp({

@@ -13,7 +13,9 @@ export function LibroNoEncontrado() {
       <h1 className="text-[32px] leading-tight sm:text-[40px]">
         Libro no <span className="titulo-serif">encontrado</span>
       </h1>
-      <p className="text-texto-3 text-[15px]">Ese título no está en la biblioteca.</p>
+      <p className="text-texto-3 text-[15px]">
+        Ese título no está en la biblioteca.
+      </p>
       <Link
         to="/catalogo"
         search={{ page: 1, pageSize: 12 }}

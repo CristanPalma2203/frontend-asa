@@ -4,7 +4,7 @@
 const base = import.meta.env.BASE_URL
 
 export const RIVE_SRC = `${base}luxia/luxia.riv`
-export const PLACEHOLDER_SRC = `${base}luxia/CoreluxIcon.png`
+export const PLACEHOLDER_SRC = `${base}luxia/luxia.webp`
 
 let cache: boolean | null = null
 
@@ -17,7 +17,11 @@ export function canUseRive(): boolean {
   }
   try {
     const c = document.createElement('canvas')
-    cache = !!(c.getContext('webgl2') || c.getContext('webgl') || c.getContext('2d'))
+    cache = !!(
+      c.getContext('webgl2') ||
+      c.getContext('webgl') ||
+      c.getContext('2d')
+    )
   } catch {
     cache = false
   }

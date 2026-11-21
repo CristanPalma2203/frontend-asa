@@ -1,11 +1,11 @@
 import { useEffect, useState, type RefObject } from 'react'
 
 /**
- * Teclado móvil (sacado de Corelux LuxiaFab.tsx): publica en `el` --lx-vvh (alto del viewport
+ * Teclado móvil: publica en `el` --lx-vvh (alto del viewport
  * visible) y --lx-kb (alto tapado debajo, p. ej. el teclado de iOS) con window.visualViewport.
  * Devuelve true si el teclado ocupa espacio. Llama a `onChange` para re-medir el muelle de LuxIA.
  *
- * Cambios por las reglas de hooks del repo: la primera medición va en requestAnimationFrame (no
+ * Por las reglas de hooks: la primera medición va en requestAnimationFrame (no
  * síncrona en el efecto) y al desactivarse no se hace setKb(false): el valor devuelto es
  * `active && kb`, así que se apaga solo.
  */

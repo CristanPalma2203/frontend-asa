@@ -13,7 +13,10 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { mensajeDeError } from '@/features/biblioteca/errores'
-import { libroSchema, type LibroForm } from '@/features/biblioteca/schemas/libro.schema'
+import {
+  libroSchema,
+  type LibroForm,
+} from '@/features/biblioteca/schemas/libro.schema'
 import type { Libro } from '@/features/biblioteca/types/api'
 import { ApiError } from '@/lib/api/client'
 
@@ -45,7 +48,9 @@ export function LibroFormDialog({
   useEffect(() => {
     if (!(error instanceof ApiError)) return
     if (error.code === 'isbn-duplicado') {
-      form.setError('isbn', { message: mensajeDeError(error.code, error.detail ?? error.title) })
+      form.setError('isbn', {
+        message: mensajeDeError(error.code, error.detail ?? error.title),
+      })
     }
     aplicarValidacion(form, error)
   }, [error, form])
@@ -66,7 +71,10 @@ export function LibroFormDialog({
           <Campo label="Autor" error={form.formState.errors.autor?.message}>
             <Input {...form.register('autor')} />
           </Campo>
-          <Campo label="Categoría" error={form.formState.errors.categoria?.message}>
+          <Campo
+            label="Categoría"
+            error={form.formState.errors.categoria?.message}
+          >
             <Input {...form.register('categoria')} />
           </Campo>
           <DialogFooter className="mt-2">
@@ -93,4 +101,3 @@ function aplicarValidacion(form: UseFormReturn<LibroForm>, error: ApiError) {
     }
   }
 }
-

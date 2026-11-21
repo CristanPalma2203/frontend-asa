@@ -21,7 +21,9 @@ describe('mis reservas', () => {
     })
     await renderEn('/mis-reservas')
     // 14:00Z = 8:00 en America/El_Salvador (UTC-6)
-    expect(await screen.findByText(/Solicitud 20 nov 2026.*8:00/)).toBeInTheDocument()
+    expect(
+      await screen.findByText(/Solicitud 20 nov 2026.*8:00/),
+    ).toBeInTheDocument()
   })
 
   it('cancela con update optimista y hace rollback si falla', async () => {
@@ -39,8 +41,12 @@ describe('mis reservas', () => {
     expect(await screen.findByText('Activa')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Cancelar reserva' }))
     const dialog = await screen.findByRole('dialog')
-    await user.click(within(dialog).getByRole('button', { name: 'Cancelar reserva' }))
-    await waitFor(() => expect(screen.queryByText('Activa')).not.toBeInTheDocument())
+    await user.click(
+      within(dialog).getByRole('button', { name: 'Cancelar reserva' }),
+    )
+    await waitFor(() =>
+      expect(screen.queryByText('Activa')).not.toBeInTheDocument(),
+    )
     soltarCancelacion(true)
     expect(await screen.findByText('Activa')).toBeInTheDocument()
   })
@@ -58,7 +64,11 @@ describe('mis reservas', () => {
   it('Historial muestra las canceladas y no las activas', async () => {
     const user = userEvent.setup()
     entrarComo('Lector')
-    const reserva = (idReserva: number, titulo: string, estado: 'Activa' | 'Cancelada') => ({
+    const reserva = (
+      idReserva: number,
+      titulo: string,
+      estado: 'Activa' | 'Cancelada',
+    ) => ({
       idReserva,
       idLibro: idReserva,
       titulo,
@@ -70,17 +80,30 @@ describe('mis reservas', () => {
     server.use(
       http.get('http://api.test/api/lectores/:id/reservas', ({ request }) => {
         const estado = new URL(request.url).searchParams.get('estado')
-        const todas = [reserva(1, 'Dune', 'Activa'), reserva(2, 'Emma', 'Cancelada')]
+        const todas = [
+          reserva(1, 'Dune', 'Activa'),
+          reserva(2, 'Emma', 'Cancelada'),
+        ]
         const items = estado ? todas.filter((r) => r.estado === estado) : todas
-        return HttpResponse.json({ items, page: 1, pageSize: 20, totalCount: items.length, totalPages: 1 })
+        return HttpResponse.json({
+          items,
+          page: 1,
+          pageSize: 20,
+          totalCount: items.length,
+          totalPages: 1,
+        })
       }),
     )
     await renderEn('/mis-reservas')
-    expect(await screen.findByRole('link', { name: 'Dune' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('link', { name: 'Dune' }),
+    ).toBeInTheDocument()
 
     await user.click(screen.getByRole('tab', { name: 'Historial' }))
 
-    expect(await screen.findByRole('link', { name: 'Emma' })).toBeInTheDocument()
+    expect(
+      await screen.findByRole('link', { name: 'Emma' }),
+    ).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Dune' })).not.toBeInTheDocument()
     expect(screen.getByText('Cancelada')).toBeInTheDocument()
   })

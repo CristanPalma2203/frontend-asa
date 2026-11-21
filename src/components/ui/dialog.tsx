@@ -9,7 +9,10 @@ import { cn } from '@/lib/utils'
 /** `open` del Dialog para que DialogContent sepa cuándo entrar y cuándo salir (GSAP). */
 const AbiertoContext = React.createContext(false)
 
-function Dialog({ open = false, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+function Dialog({
+  open = false,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return (
     <AbiertoContext.Provider value={open}>
       <DialogPrimitive.Root data-slot="dialog" open={open} {...props} />
@@ -17,15 +20,21 @@ function Dialog({ open = false, ...props }: React.ComponentProps<typeof DialogPr
   )
 }
 
-function DialogTrigger(props: React.ComponentProps<typeof DialogPrimitive.Trigger>) {
+function DialogTrigger(
+  props: React.ComponentProps<typeof DialogPrimitive.Trigger>,
+) {
   return <DialogPrimitive.Trigger data-slot="dialog-trigger" {...props} />
 }
 
-function DialogPortal(props: React.ComponentProps<typeof DialogPrimitive.Portal>) {
+function DialogPortal(
+  props: React.ComponentProps<typeof DialogPrimitive.Portal>,
+) {
   return <DialogPrimitive.Portal data-slot="dialog-portal" {...props} />
 }
 
-function DialogClose(props: React.ComponentProps<typeof DialogPrimitive.Close>) {
+function DialogClose(
+  props: React.ComponentProps<typeof DialogPrimitive.Close>,
+) {
   return <DialogPrimitive.Close data-slot="dialog-close" {...props} />
 }
 
@@ -36,14 +45,17 @@ function DialogOverlay({
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
-      className={cn('bg-pino-950/45 fixed inset-0 z-50 backdrop-blur-[2px]', className)}
+      className={cn(
+        'bg-pino-950/45 fixed inset-0 z-50 backdrop-blur-[2px]',
+        className,
+      )}
       {...props}
     />
   )
 }
 
 /**
- * Contenido del diálogo con la entrada y salida de Tend (lib/motion.ts): entra con
+ * Contenido del diálogo con entrada y salida animadas (lib/motion.ts): entra con
  * {opacity 0, y −14, scale 0.97} → 0.38 s back.out(1.6) y sale {opacity 0, y −8} 0.16 s power2.in.
  * Para que la salida se vea, el contenido sigue montado (forceMount) hasta que termina el tween;
  * el desmontaje va en su onComplete, no en un efecto.
@@ -71,12 +83,18 @@ function DialogContent({
     if (!el || !montado) return
     if (open) {
       dialogoEntra(el)
-      if (overlay) gsap.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: dur(0.38), clearProps: 'opacity' })
+      if (overlay)
+        gsap.fromTo(
+          overlay,
+          { opacity: 0 },
+          { opacity: 1, duration: dur(0.38), clearProps: 'opacity' },
+        )
       return () => {
         gsap.killTweensOf([el, overlay])
       }
     }
-    if (overlay) gsap.to(overlay, { opacity: 0, duration: dur(0.16), ease: 'power2.in' })
+    if (overlay)
+      gsap.to(overlay, { opacity: 0, duration: dur(0.16), ease: 'power2.in' })
     dialogoSale(el, () => setMontado(false))
     return () => {
       gsap.killTweensOf([el, overlay])
@@ -111,20 +129,32 @@ function DialogContent({
 }
 
 function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return <div data-slot="dialog-header" className={cn('flex flex-col gap-2', className)} {...props} />
+  return (
+    <div
+      data-slot="dialog-header"
+      className={cn('flex flex-col gap-2', className)}
+      {...props}
+    />
+  )
 }
 
 function DialogFooter({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="dialog-footer"
-      className={cn('flex flex-col-reverse gap-2 sm:flex-row sm:justify-end', className)}
+      className={cn(
+        'flex flex-col-reverse gap-2 sm:flex-row sm:justify-end',
+        className,
+      )}
       {...props}
     />
   )
 }
 
-function DialogTitle({ className, ...props }: React.ComponentProps<typeof DialogPrimitive.Title>) {
+function DialogTitle({
+  className,
+  ...props
+}: React.ComponentProps<typeof DialogPrimitive.Title>) {
   return (
     <DialogPrimitive.Title
       data-slot="dialog-title"

@@ -12,27 +12,31 @@ const pasos: Paso[] = [
   {
     icono: Search,
     titulo: 'Busca',
-    texto: 'Encuentra el libro por título, autor o ISBN, o explora por categoría.',
+    texto:
+      'Encuentra el libro por título, autor o ISBN, o explora por categoría.',
   },
   {
     icono: BookMarked,
     titulo: 'Reserva',
-    texto: 'Si hay ejemplares disponibles, pulsa «Reservar». La biblioteca te asigna uno.',
+    texto:
+      'Si hay ejemplares disponibles, pulsa «Reservar». La biblioteca te asigna uno.',
   },
   {
     icono: CalendarCheck,
     titulo: 'Gestiona',
-    texto: 'Consulta tus reservas activas y cancélalas cuando quieras desde «Mis reservas».',
+    texto:
+      'Consulta tus reservas activas y cancélalas cuando quieras desde «Mis reservas».',
   },
 ]
 
 export function HomePasos() {
   const ref = useRef<HTMLElement>(null)
 
-  // Entra al aparecer en pantalla (IntersectionObserver, sin ScrollTrigger): so() de Flito.
+  // Entra al aparecer en pantalla (IntersectionObserver, sin cargar ScrollTrigger).
   useMotion(ref, (root, contextSafe) => {
     const bloques = root.querySelectorAll('[data-m="paso"]')
-    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined') return
+    if (prefersReducedMotion() || typeof IntersectionObserver === 'undefined')
+      return
     const entrar = contextSafe(() => reveal(bloques, { y: 12, stagger: 0.07 }))
     const io = new IntersectionObserver(
       (entries) => {

@@ -1,9 +1,6 @@
 import gsap from 'gsap'
 
-// Movimiento de la app con GSAP. Curvas y tiempos portados de las plantillas:
-// - Wynlo motion.tsx / sidebar.tsx (enterNodes, useDashboardMotion, CountUp, lift, magnetic)
-// - Flito kit (so = reveal, co = cardsIn, uo = pop, X = dur, Pc = drawer)
-// - Tend: solo valores (titleLines, diálogos); el código es propio.
+// Movimiento de la app con GSAP.
 // Con prefers-reduced-motion todas las duraciones, delays y staggers valen 0 y el contenido queda
 // visible al instante (clearProps).
 
@@ -15,7 +12,7 @@ export function prefersReducedMotion() {
   )
 }
 
-/** Duración o retardo: 0 con movimiento reducido (X de Flito, dur de Wynlo). */
+/** Duración o retardo: 0 con movimiento reducido. */
 export function dur(value: number) {
   return prefersReducedMotion() ? 0 : value
 }
@@ -28,10 +25,15 @@ function lista(nodos: Nodos): Element[] {
   return Array.from(nodos as ArrayLike<Element>)
 }
 
-/** Entrada suave (so() de Flito, enterNodes() de Wynlo). */
+/** Entrada suave: opacidad y desplazamiento. */
 export function reveal(
   nodos: Nodos,
-  { x = 0, y = 12, stagger = 0.045, delay = 0 }: { x?: number; y?: number; stagger?: number; delay?: number } = {},
+  {
+    x = 0,
+    y = 12,
+    stagger = 0.045,
+    delay = 0,
+  }: { x?: number; y?: number; stagger?: number; delay?: number } = {},
 ) {
   const els = lista(nodos)
   if (!els.length) return
@@ -51,13 +53,21 @@ export function reveal(
   )
 }
 
-/** Tarjetas que entran ladeadas (co() de Flito, useDashboardMotion de Wynlo). */
-export function cardsIn(nodos: Nodos, { delay = 0, stagger = 0.07 }: { delay?: number; stagger?: number } = {}) {
+/** Tarjetas que entran ladeadas. */
+export function cardsIn(
+  nodos: Nodos,
+  { delay = 0, stagger = 0.07 }: { delay?: number; stagger?: number } = {},
+) {
   const els = lista(nodos)
   if (!els.length) return
   gsap.fromTo(
     els,
-    { opacity: 0, y: 40, rotation: (i: number) => (i % 2 ? 2.5 : -2.5), scale: 0.95 },
+    {
+      opacity: 0,
+      y: 40,
+      rotation: (i: number) => (i % 2 ? 2.5 : -2.5),
+      scale: 0.95,
+    },
     {
       opacity: 1,
       y: 0,
@@ -73,7 +83,7 @@ export function cardsIn(nodos: Nodos, { delay = 0, stagger = 0.07 }: { delay?: n
 }
 
 /**
- * Título por palabras (patrón de Tend): cada palabra va en una máscara con overflow clip
+ * Título por palabras: cada palabra va en una máscara con overflow clip
  * (componente <PalabrasAnimadas>) y sube desde abajo. Sin palabras marcadas, entrada suave.
  */
 export function titleLines(el: Element | null | undefined, delay = 0) {
@@ -98,10 +108,14 @@ export function titleLines(el: Element | null | undefined, delay = 0) {
   )
 }
 
-/** Aparición con rebote (uo() de Flito, KPIs de Wynlo). */
+/** Aparición con rebote. */
 export function pop(
   nodos: Nodos,
-  { from = 0.6, delay = 0, stagger = 0.05 }: { from?: number; delay?: number; stagger?: number } = {},
+  {
+    from = 0.6,
+    delay = 0,
+    stagger = 0.05,
+  }: { from?: number; delay?: number; stagger?: number } = {},
 ) {
   const els = lista(nodos)
   if (!els.length) return
@@ -121,17 +135,30 @@ export function pop(
   )
 }
 
-/** Diálogos (valores de Tend): entrada con rebote y salida corta hacia arriba. */
+/** Diálogos: entrada con rebote y salida corta hacia arriba. */
 export function dialogoEntra(el: Element) {
   gsap.fromTo(
     el,
     { opacity: 0, y: -14, scale: 0.97 },
-    { opacity: 1, y: 0, scale: 1, duration: dur(0.38), ease: 'back.out(1.6)', clearProps: 'transform,opacity' },
+    {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: dur(0.38),
+      ease: 'back.out(1.6)',
+      clearProps: 'transform,opacity',
+    },
   )
 }
 
 export function dialogoSale(el: Element, onComplete: () => void) {
-  gsap.to(el, { opacity: 0, y: -8, duration: dur(0.16), ease: 'power2.in', onComplete })
+  gsap.to(el, {
+    opacity: 0,
+    y: -8,
+    duration: dur(0.16),
+    ease: 'power2.in',
+    onComplete,
+  })
 }
 
 function punteroFino() {
@@ -142,14 +169,26 @@ function punteroFino() {
   )
 }
 
-/** [data-lift] sube 4 px al pasar el puntero (Wynlo motion.tsx). Devuelve la limpieza. */
+/** [data-lift] sube 4 px al pasar el puntero. Devuelve la limpieza. */
 export function lift(root: Element) {
   if (!punteroFino()) return () => {}
   const quitar: Array<() => void> = []
   root.querySelectorAll<HTMLElement>('[data-lift]').forEach((el) => {
-    const enter = () => gsap.to(el, { y: -4, duration: 0.45, ease: 'power3.out', overwrite: 'auto' })
+    const enter = () =>
+      gsap.to(el, {
+        y: -4,
+        duration: 0.45,
+        ease: 'power3.out',
+        overwrite: 'auto',
+      })
     const leave = () =>
-      gsap.to(el, { y: 0, duration: 0.5, ease: 'power3.out', overwrite: 'auto', clearProps: 'transform' })
+      gsap.to(el, {
+        y: 0,
+        duration: 0.5,
+        ease: 'power3.out',
+        overwrite: 'auto',
+        clearProps: 'transform',
+      })
     el.addEventListener('pointerenter', enter)
     el.addEventListener('pointerleave', leave)
     quitar.push(() => {
@@ -160,7 +199,7 @@ export function lift(root: Element) {
   return () => quitar.forEach((fn) => fn())
 }
 
-/** [data-magnetic] sigue al puntero (factor 0.2 / 0.28 respecto al centro, Wynlo). */
+/** [data-magnetic] sigue al puntero (factor 0.2 / 0.28 respecto al centro). */
 export function magnetic(root: Element) {
   if (!punteroFino()) return () => {}
   const quitar: Array<() => void> = []

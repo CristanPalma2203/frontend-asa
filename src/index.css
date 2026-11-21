@@ -2,7 +2,7 @@
 @import 'tw-animate-css';
 
 /*
- * Paleta Corelux (valores del repo Corelux).
+ * Paleta de la app.
  * Pino para estructura y acción primaria; lima solo para disponibilidad y acento.
  * Texto sobre lima: siempre tinta (#0A0A0A) o pino-800 (#042C24).
  */
@@ -13,7 +13,7 @@
   --color-pino-850: #0a3d40; /* primario hover */
   --color-pino-800: #042c24; /* tinta de acento · enlaces · foco */
   --color-pino-700: #031812; /* pino más profundo */
-  --color-bosque: #032a21; /* fondo del hero (Corelux --color-forest) */
+  --color-bosque: #032a21; /* fondo del hero */
 
   /* Lima */
   --color-lima-400: #c2f968; /* --accent */
@@ -230,7 +230,7 @@
     height: 100%;
   }
 
-  /* Fondo animado del hero, portado de la landing de Corelux (ver hero-backdrop.tsx). */
+  /* Fondo animado del hero (ver hero-backdrop.tsx). */
   .hero-fx {
     position: absolute;
     inset: 0;
@@ -320,4 +320,15 @@
 }
 .tira-sin-barra::-webkit-scrollbar {
   display: none;
+}
+
+/* Brillo propio de un Hueso (prop `shimmer`): boneyard pinta el gradiente en línea con el
+   shimmerColor global; esto lo sustituye con el mismo ángulo y paradas (110°, 30/50/70 %). */
+.hueso-brillo[data-boneyard-bone] {
+  background-image: linear-gradient(
+    110deg,
+    var(--hueso-color) 30%,
+    var(--hueso-brillo) 50%,
+    var(--hueso-color) 70%
+  ) !important;
 }

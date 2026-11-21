@@ -17,7 +17,10 @@ import { CountUp } from '@/components/ui/count-up'
 import { Hueso } from '@/components/ui/hueso'
 import { useSesion } from '@/components/layout/use-sesion'
 import { useReservasActivasCount } from '@/features/biblioteca/hooks/use-reservas'
-import { useTotalLectores, useTotalLibros } from '@/features/biblioteca/hooks/use-resumen-admin'
+import {
+  useTotalLectores,
+  useTotalLibros,
+} from '@/features/biblioteca/hooks/use-resumen-admin'
 import { LuxiaBoton } from '@/features/luxia/components/luxia-boton'
 import { cn } from '@/lib/utils'
 
@@ -172,13 +175,25 @@ export function Sidebar({ onNavegar }: { onNavegar?: () => void }) {
 
 function ContadorLibros() {
   const total = useTotalLibros()
-  return <ContadorNav valor={total.data} cargando={total.isPending} etiqueta="libros" tono="neutro" />
+  return (
+    <ContadorNav
+      valor={total.data}
+      cargando={total.isPending}
+      etiqueta="libros"
+      tono="neutro"
+    />
+  )
 }
 
 function ContadorLectores() {
   const total = useTotalLectores()
   return (
-    <ContadorNav valor={total.data} cargando={total.isPending} etiqueta="lectores" tono="neutro" />
+    <ContadorNav
+      valor={total.data}
+      cargando={total.isPending}
+      etiqueta="lectores"
+      tono="neutro"
+    />
   )
 }
 
@@ -208,7 +223,10 @@ function ContadorNav({
 }) {
   if (cargando) {
     return (
-      <div aria-hidden className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
+      >
         <Hueso cargando ancho={20} alto={16} radio={999} />
       </div>
     )
@@ -217,7 +235,9 @@ function ContadorNav({
   return (
     <span
       className={cn(
-        tono === 'lima' ? 'bg-lima-400 text-pino-800' : 'bg-white/10 text-white/80',
+        tono === 'lima'
+          ? 'bg-lima-400 text-pino-800'
+          : 'bg-white/10 text-white/80',
         'pointer-events-none absolute top-1/2 right-3 grid h-5 min-w-5 -translate-y-1/2 place-items-center rounded-full px-1.5 font-mono text-[11px] font-semibold',
       )}
     >

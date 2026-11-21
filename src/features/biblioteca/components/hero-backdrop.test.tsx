@@ -20,8 +20,12 @@ function simularWebGL(renderer: string) {
           : null,
     getParameter: () => renderer,
   }
-  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(((tipo: string) =>
-    tipo.startsWith('webgl') ? gl : null) as unknown as HTMLCanvasElement['getContext'])
+  vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(((
+    tipo: string,
+  ) =>
+    tipo.startsWith('webgl')
+      ? gl
+      : null) as unknown as HTMLCanvasElement['getContext'])
   return { loseContext }
 }
 

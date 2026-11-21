@@ -35,7 +35,9 @@ export type CatalogoSearch = {
   pageSize: number
 }
 
-export function parseCatalogoSearch(search: Record<string, unknown>): CatalogoSearch {
+export function parseCatalogoSearch(
+  search: Record<string, unknown>,
+): CatalogoSearch {
   const parsed = catalogoSearchSchema.parse(search)
   return {
     page: parsed.page,

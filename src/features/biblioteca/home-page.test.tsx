@@ -1,37 +1,56 @@
 import { screen, within } from '@testing-library/react'
+import { http } from 'msw'
 import { describe, expect, it } from 'vitest'
 
 import { resumirHome } from '@/features/biblioteca/hooks/use-libros'
 import type { Libro } from '@/features/biblioteca/types/api'
 import { libroEjemplo } from '@/test/fixtures'
 import { renderEn } from '@/test/render'
+import { server } from '@/test/server'
 
 describe('home', () => {
+  it('mientras llegan las categorías muestra 6 huecos y ningún animate-pulse', async () => {
+    // La API no responde: la Home se queda cargando.
+    server.use(http.get('*/api/libros', () => new Promise<never>(() => {})))
+    await renderEn('/')
+
+    const huecos = await screen.findByTestId('chips-cargando')
+    expect(huecos.querySelectorAll('[aria-busy="true"]')).toHaveLength(6)
+    expect(huecos.querySelector('[class*="pulse"]')).toBeNull()
+  })
+
   it('muestra el total, las categorías y las portadas que devuelve la API', async () => {
     await renderEn('/')
 
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(
       'Encuentra tu próximo libro',
     )
-    expect(await screen.findByText('1 título en el catálogo')).toBeInTheDocument()
+    expect(
+      await screen.findByText('1 título en el catálogo'),
+    ).toBeInTheDocument()
 
     const categorias = screen.getByRole('list', { name: 'Categorías' })
-    expect(within(categorias).getByRole('link', { name: 'Infantil' })).toHaveAttribute(
-      'href',
-      expect.stringContaining('categoria=Infantil'),
-    )
+    expect(
+      within(categorias).getByRole('link', { name: 'Infantil' }),
+    ).toHaveAttribute('href', expect.stringContaining('categoria=Infantil'))
 
     const portadas = screen.getByRole('list', { name: 'Libros del catálogo' })
     expect(
       within(portadas).getByRole('link', { name: 'El Principito, disponible' }),
     ).toHaveAttribute('href', '/libros/1')
 
-    expect(screen.getByRole('heading', { name: 'Reservar es así de simple' })).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { name: 'Reservar es así de simple' }),
+    ).toBeInTheDocument()
   })
 })
 
 describe('resumirHome', () => {
-  const libro = (id: number, categoria: string, disponibles: number): Libro => ({
+  const libro = (
+    id: number,
+    categoria: string,
+    disponibles: number,
+  ): Libro => ({
     ...libroEjemplo,
     idLibro: id,
     categoria,
@@ -39,7 +58,11 @@ describe('resumirHome', () => {
   })
 
   it('pone primero los libros con stock y ordena categorías por frecuencia', () => {
-    const items = [libro(1, 'Poesía', 0), libro(2, 'Novela', 1), libro(3, 'Novela', 2)]
+    const items = [
+      libro(1, 'Poesía', 0),
+      libro(2, 'Novela', 1),
+      libro(3, 'Novela', 2),
+    ]
     const resumen = resumirHome({ items, totalCount: 30 })
 
     expect(resumen.totalTitulos).toBe(30)

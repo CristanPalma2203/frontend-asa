@@ -37,7 +37,10 @@ type ApiOptions = Omit<RequestInit, 'body'> & {
   body?: unknown
 }
 
-export async function api<T>(path: string, options: ApiOptions = {}): Promise<T> {
+export async function api<T>(
+  path: string,
+  options: ApiOptions = {},
+): Promise<T> {
   const { body, headers: incomingHeaders, ...init } = options
   const token = readActiveToken()
   const headers = new Headers(incomingHeaders)
@@ -54,11 +57,14 @@ export async function api<T>(path: string, options: ApiOptions = {}): Promise<T>
     headers.set('Authorization', `Bearer ${token}`)
   }
 
-  const response = await fetch(new URL(path, ensureTrailingSlash(env.VITE_API_URL)), {
-    ...init,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  })
+  const response = await fetch(
+    new URL(path, ensureTrailingSlash(env.VITE_API_URL)),
+    {
+      ...init,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    },
+  )
 
   if (response.status === 204) {
     return undefined as T
@@ -111,9 +117,11 @@ async function problemError(response: Response) {
   const problem = isRecord(payload) ? payload : {}
 
   return new ApiError({
-    status: typeof problem.status === 'number' ? problem.status : response.status,
+    status:
+      typeof problem.status === 'number' ? problem.status : response.status,
     code: typeof problem.code === 'string' ? problem.code : undefined,
-    title: typeof problem.title === 'string' ? problem.title : response.statusText,
+    title:
+      typeof problem.title === 'string' ? problem.title : response.statusText,
     detail: typeof problem.detail === 'string' ? problem.detail : undefined,
     errors: parseErrors(problem.errors),
   })
@@ -125,7 +133,9 @@ function parseErrors(value: unknown): ApiFieldErrors | undefined {
   const errors: ApiFieldErrors = {}
   for (const [key, messages] of Object.entries(value)) {
     if (Array.isArray(messages)) {
-      errors[key] = messages.filter((message): message is string => typeof message === 'string')
+      errors[key] = messages.filter(
+        (message): message is string => typeof message === 'string',
+      )
     } else if (typeof messages === 'string') {
       errors[key] = [messages]
     }

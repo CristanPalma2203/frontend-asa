@@ -1,7 +1,7 @@
 import { Hueso } from '@/components/ui/hueso'
 import { TableCell, TableRow } from '@/components/ui/table'
 
-/** Anchos de los huecos por columna, los de COL_WIDTHS de Corelux (components/Skeleton.js). */
+/** Anchos de los huecos por columna: variados para que la fila fantasma no parezca una rejilla. */
 const COL_WIDTHS = ['72%', '58%', '46%', '64%', '40%', '52%']
 
 /**
@@ -21,10 +21,19 @@ export function FilasFantasma({
   return (
     <>
       {Array.from({ length: filas }, (_, fila) => (
-        <TableRow key={fila} aria-hidden data-testid="fila-fantasma" className="hover:bg-transparent">
+        <TableRow
+          key={fila}
+          aria-hidden
+          data-testid="fila-fantasma"
+          className="hover:bg-transparent"
+        >
           {Array.from({ length: columnas }, (_, col) => (
             <TableCell key={col}>
-              <Hueso cargando ancho={COL_WIDTHS[col % COL_WIDTHS.length]} alto={12} />
+              <Hueso
+                cargando
+                ancho={COL_WIDTHS[col % COL_WIDTHS.length]}
+                alto={12}
+              />
             </TableCell>
           ))}
           {acciones ? (

@@ -1,5 +1,8 @@
 import { api } from '@/lib/api/client'
-import type { ReservaCreada, ReservarBody } from '@/features/biblioteca/types/api'
+import type {
+  ReservaCreada,
+  ReservarBody,
+} from '@/features/biblioteca/types/api'
 
 export function reservar(body: ReservarBody) {
   return api<ReservaCreada>('/api/reservas', {

@@ -1,18 +1,31 @@
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query'
 
 import { useAuthStore } from '@/features/auth/store'
 import { queryKeys } from '@/features/biblioteca/queryKeys'
-import { cancelarReserva, reservar } from '@/features/biblioteca/services/reservas.mutation'
+import {
+  cancelarReserva,
+  reservar,
+} from '@/features/biblioteca/services/reservas.mutation'
 import { listarReservasDeLector } from '@/features/biblioteca/services/reservas.read'
 import type { PagedResponse, Reserva } from '@/features/biblioteca/types/api'
 import type { FiltroReservas } from '@/features/biblioteca/types/estados'
 
 /** Reservas del lector de la sesión. No consulta si la sesión no tiene lector. */
-export function useMisReservas(filtro: FiltroReservas = 'Activa', page = 1, pageSize = 20) {
+export function useMisReservas(
+  filtro: FiltroReservas = 'Activa',
+  page = 1,
+  pageSize = 20,
+) {
   const lectorId = useAuthStore((state) => state.lectorId)
   return useQuery({
     queryKey: queryKeys.reservas.list(filtro, page, pageSize),
-    queryFn: () => listarReservasDeLector(lectorId ?? 0, filtro, page, pageSize),
+    queryFn: () =>
+      listarReservasDeLector(lectorId ?? 0, filtro, page, pageSize),
     enabled: lectorId != null,
   })
 }
@@ -50,7 +63,8 @@ export function useCancelarReserva() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ idReserva }: { idReserva: number }) => cancelarReserva(idReserva),
+    mutationFn: ({ idReserva }: { idReserva: number }) =>
+      cancelarReserva(idReserva),
     onMutate: async ({ idReserva }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.reservas.mias() })
       const previas = queryClient.getQueriesData<PagedResponse<Reserva>>({

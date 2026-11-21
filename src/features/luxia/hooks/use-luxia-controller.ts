@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
- * Controlador único de LuxIA (Rive state machine). Portado de Corelux luxiaMood.ts sin cambios:
+ * Controlador único de LuxIA (Rive state machine):
  * el componente solo cambia "mood" y RiveLuxia traduce a los inputs numéricos.
  * `mano` NO sigue a `estado`: siempre se fijan ambos.
  */
-export type LuxiaMood = 'idle' | 'greet' | 'thinking' | 'talking' | 'ready' | 'error'
+export type LuxiaMood =
+  'idle' | 'greet' | 'thinking' | 'talking' | 'ready' | 'error'
 
 export interface LuxiaInputs {
   estado: number // 0 idle,1 pensando,2 hablando,3 listo,4 confundido,5 dormido
@@ -23,7 +24,10 @@ export const MOOD_INPUTS: Record<LuxiaMood, LuxiaInputs> = {
 }
 
 /** Estados transitorios: vuelven solos al siguiente tras ~2 s. */
-const AUTO_NEXT: Partial<Record<LuxiaMood, LuxiaMood>> = { greet: 'idle', talking: 'ready' }
+const AUTO_NEXT: Partial<Record<LuxiaMood, LuxiaMood>> = {
+  greet: 'idle',
+  talking: 'ready',
+}
 export const MOOD_HOLD_MS = 2000
 
 export function useLuxiaController(initial: LuxiaMood = 'idle') {

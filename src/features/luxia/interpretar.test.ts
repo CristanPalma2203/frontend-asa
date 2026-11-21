@@ -18,7 +18,10 @@ describe('interpretar', () => {
       tipo: 'reservar',
       consulta: 'Principito',
     })
-    expect(interpretar('Resérvame Dune')).toEqual({ tipo: 'reservar', consulta: 'Dune' })
+    expect(interpretar('Resérvame Dune')).toEqual({
+      tipo: 'reservar',
+      consulta: 'Dune',
+    })
     expect(interpretar('reserva')).toEqual({ tipo: 'reservar', consulta: '' })
     expect(interpretar('¿Cómo reservo El Principito?')).toEqual({
       tipo: 'reservar',

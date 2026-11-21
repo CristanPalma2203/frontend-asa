@@ -1,7 +1,7 @@
 import { configureBoneyard } from 'boneyard-js/react'
 
-// Configuración de Corelux (src/bones/registry.js). Única diferencia: `select: 'container'` en vez
-// de 'viewport', porque aquí cada Skeleton es un hueco pequeño dentro de su componente.
+// Configuración global de boneyard. `select: 'container'` (no 'viewport') porque cada Skeleton es
+// un hueco pequeño dentro de su componente.
 // Huesos a mano (huesoUnico en components/ui/hueso.tsx): sin CLI ni capturas.
 configureBoneyard({
   color: '#e6e2da',

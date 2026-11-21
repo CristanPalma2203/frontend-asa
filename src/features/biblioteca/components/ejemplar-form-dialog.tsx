@@ -13,7 +13,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import { useCrearEjemplar } from '@/features/biblioteca/hooks/use-ejemplares'
-import { ejemplarSchema, type EjemplarForm } from '@/features/biblioteca/schemas/ejemplar.schema'
+import {
+  ejemplarSchema,
+  type EjemplarForm,
+} from '@/features/biblioteca/schemas/ejemplar.schema'
 import { ApiError } from '@/lib/api/client'
 
 /** Alta de un ejemplar. Muestra en el campo `codigo-inventario-duplicado` y los errores de validación. */
@@ -43,7 +46,9 @@ export function EjemplarFormDialog({
           message: mensajeDeError(error.code, error.detail ?? error.title),
         })
       }
-      const mensaje = error.errors?.CodigoInventario?.[0] ?? error.errors?.codigoInventario?.[0]
+      const mensaje =
+        error.errors?.CodigoInventario?.[0] ??
+        error.errors?.codigoInventario?.[0]
       if (error.code === 'validacion-fallida' && mensaje) {
         form.setError('codigoInventario', { message: mensaje })
       }
@@ -56,8 +61,14 @@ export function EjemplarFormDialog({
         <DialogHeader>
           <DialogTitle>Agregar ejemplar</DialogTitle>
         </DialogHeader>
-        <form className="grid gap-1.5" onSubmit={form.handleSubmit((values) => crear.mutate(values))}>
-          <Label htmlFor="codigo" className="text-texto-2 text-[13px] font-semibold">
+        <form
+          className="grid gap-1.5"
+          onSubmit={form.handleSubmit((values) => crear.mutate(values))}
+        >
+          <Label
+            htmlFor="codigo"
+            className="text-texto-2 text-[13px] font-semibold"
+          >
             Código de inventario
           </Label>
           <Input
@@ -65,7 +76,9 @@ export function EjemplarFormDialog({
             maxLength={30}
             placeholder="BIB-001"
             className="font-mono"
-            aria-invalid={form.formState.errors.codigoInventario ? true : undefined}
+            aria-invalid={
+              form.formState.errors.codigoInventario ? true : undefined
+            }
             {...form.register('codigoInventario')}
           />
           {form.formState.errors.codigoInventario ? (
@@ -74,7 +87,11 @@ export function EjemplarFormDialog({
             </p>
           ) : null}
           <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={crear.isPending}>

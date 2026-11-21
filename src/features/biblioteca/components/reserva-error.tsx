@@ -22,11 +22,18 @@ export function ReservaError({
       role="alert"
       className="border-rojo-600/20 bg-rojo-50 text-rojo-800 flex items-start gap-3 rounded-xl border p-4 text-sm"
     >
-      <AlertCircle aria-hidden className="mt-0.5 size-[18px] flex-none" strokeWidth={2} />
+      <AlertCircle
+        aria-hidden
+        className="mt-0.5 size-[18px] flex-none"
+        strokeWidth={2}
+      />
       <div className="flex flex-col items-start gap-2">
         <p className="font-medium">{mensajeDeError(code, fallback)}</p>
         {code === 'reserva-duplicada' ? (
-          <Link to="/mis-reservas" className="font-semibold underline underline-offset-4">
+          <Link
+            to="/mis-reservas"
+            className="font-semibold underline underline-offset-4"
+          >
             Mis reservas
           </Link>
         ) : null}

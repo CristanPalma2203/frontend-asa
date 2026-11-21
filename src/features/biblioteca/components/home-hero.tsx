@@ -3,6 +3,8 @@ import { ArrowRight, Search } from 'lucide-react'
 import { useRef, useState } from 'react'
 
 import { Brand } from '@/components/layout/brand'
+import { Hueso } from '@/components/ui/hueso'
+import { HUESO_OSCURO } from '@/components/ui/hueso.bones'
 import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
 import { useSesion } from '@/components/layout/use-sesion'
 import { HeroBackdrop } from '@/features/biblioteca/components/hero-backdrop'
@@ -16,7 +18,7 @@ import { cn } from '@/lib/utils'
 const catalogoInicial = { page: 1, pageSize: 12 } as const
 
 /**
- * Hero de la Home, sin imagen: fondo animado de Corelux (`HeroBackdrop`).
+ * Hero de la Home, sin imagen: fondo animado (`HeroBackdrop`).
  * La tira de portadas queda montada sobre el borde inferior.
  */
 export function HomeHero({
@@ -28,7 +30,7 @@ export function HomeHero({
 }) {
   const ref = useRef<HTMLElement>(null)
 
-  // Entrada del hero, una vez por montaje (Flito so/co + titleLines). No toca el HeroBackdrop.
+  // Entrada del hero, una vez por montaje (reveal, cardsIn y titleLines). No toca el HeroBackdrop.
   useMotion(ref, (root) => {
     reveal(root.querySelector('[data-m="pill"]'), { y: 8 })
     titleLines(root.querySelector('h1'), 0.05)
@@ -206,12 +208,19 @@ function ChipsCategorias({
 }) {
   if (cargando) {
     return (
-      <div aria-hidden className="mt-6 flex flex-wrap justify-center gap-2">
-        {[72, 96, 64, 88].map((ancho) => (
-          <span
-            key={ancho}
-            className="animate-asa-pulse h-9 rounded-full bg-white/8"
-            style={{ width: ancho }}
+      <div
+        aria-hidden
+        data-testid="chips-cargando"
+        className="mt-6 flex flex-wrap justify-center gap-2"
+      >
+        {Array.from({ length: 6 }, (_, i) => (
+          <Hueso
+            key={i}
+            cargando
+            ancho={88}
+            alto={36}
+            radio={999}
+            {...HUESO_OSCURO}
           />
         ))}
       </div>

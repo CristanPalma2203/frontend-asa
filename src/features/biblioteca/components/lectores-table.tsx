@@ -2,7 +2,14 @@ import { ChevronDown } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { FilasFantasma } from '@/components/ui/filas-fantasma'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
 import { EstadoBadge } from '@/features/biblioteca/components/estado-badge'
 import { badgeLector } from '@/features/biblioteca/components/estado-badge.styles'
 import type { Lector, LectorLista } from '@/features/biblioteca/types/api'
@@ -76,8 +83,12 @@ function LectorFilas({
   return (
     <>
       <TableRow className={cn(abierto && 'bg-lima-wash/60')}>
-        <TableCell className="text-texto-2 font-mono text-[13px]">{lector.identificador}</TableCell>
-        <TableCell className="text-tinta font-semibold">{lector.nombre}</TableCell>
+        <TableCell className="text-texto-2 font-mono text-[13px]">
+          {lector.identificador}
+        </TableCell>
+        <TableCell className="text-tinta font-semibold">
+          {lector.nombre}
+        </TableCell>
         <TableCell className="text-texto-3">{lector.correo}</TableCell>
         <TableCell>
           <EstadoBadge estilo={badgeLector[lector.estado]} />
@@ -110,7 +121,9 @@ function LectorFilas({
             {detalle ? (
               <span className="inline-flex items-center gap-2">
                 Reservas activas:
-                <span className="text-tinta font-mono font-semibold">{detalle.reservasActivas}</span>
+                <span className="text-tinta font-mono font-semibold">
+                  {detalle.reservasActivas}
+                </span>
               </span>
             ) : null}
           </TableCell>

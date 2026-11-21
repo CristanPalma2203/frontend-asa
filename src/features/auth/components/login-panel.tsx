@@ -17,7 +17,8 @@ export function LoginPanel() {
           </span>
         </p>
         <p className="mt-5 text-[15px] leading-relaxed text-white/70">
-          Busca en el catálogo, reserva y consulta tus préstamos desde un solo lugar.
+          Busca en el catálogo, reserva y consulta tus préstamos desde un solo
+          lugar.
         </p>
       </div>
       <p className="relative text-xs text-white/60">ASA Biblioteca · Luxware</p>

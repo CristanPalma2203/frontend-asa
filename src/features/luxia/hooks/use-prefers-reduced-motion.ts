@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from 'react'
 
-// Sacado de Corelux LuxiaFab.tsx. Allí era useState + listener en un efecto; aquí
-// useSyncExternalStore: mismo resultado sin estado propio que sincronizar.
+// useSyncExternalStore en vez de useState + listener en un efecto: sin estado propio que sincronizar.
 const query = '(prefers-reduced-motion: reduce)'
 
 function suscribir(avisar: () => void) {
@@ -12,7 +11,11 @@ function suscribir(avisar: () => void) {
 }
 
 function leer() {
-  return typeof window !== 'undefined' && !!window.matchMedia && window.matchMedia(query).matches
+  return (
+    typeof window !== 'undefined' &&
+    !!window.matchMedia &&
+    window.matchMedia(query).matches
+  )
 }
 
 export function usePrefersReducedMotion() {

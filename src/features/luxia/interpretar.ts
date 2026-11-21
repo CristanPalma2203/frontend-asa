@@ -48,11 +48,16 @@ export function interpretar(pregunta: string): Intencion {
   while (anterior !== texto) {
     anterior = texto
     // El espacio final deja que un prefijo cuadre también con la última palabra («hay libros»).
-    for (const prefijo of prefijos) texto = `${texto} `.replace(prefijo, '').trim()
+    for (const prefijo of prefijos)
+      texto = `${texto} `.replace(prefijo, '').trim()
     for (const sufijo of sufijos) texto = texto.replace(sufijo, '')
     texto = texto.replace(/^["'«“]+|["'»”]+$/g, '').trim()
   }
 
-  if (!texto) return { tipo: tipoBase === 'reservar' ? 'reservar' : 'vacia', consulta: '' }
+  if (!texto)
+    return {
+      tipo: tipoBase === 'reservar' ? 'reservar' : 'vacia',
+      consulta: '',
+    }
   return { tipo: tipoBase, consulta: texto }
 }

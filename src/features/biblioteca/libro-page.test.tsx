@@ -19,14 +19,15 @@ function problema(code: string) {
   )
 }
 
-
 describe('ficha', () => {
   it('Reservar sin sesión manda a login', async () => {
     const user = userEvent.setup()
     const { router } = await renderEn('/libros/1')
     await user.click(await screen.findByRole('link', { name: 'Reservar' }))
     expect(router.state.location.pathname).toBe('/login')
-    expect(router.state.location.search).toMatchObject({ redirect: '/libros/1' })
+    expect(router.state.location.search).toMatchObject({
+      redirect: '/libros/1',
+    })
   })
 
   it('reservar muestra "Tu ejemplar: <código>" y la disponibilidad baja de 3 a 2 en ficha y catálogo', async () => {
@@ -35,10 +36,14 @@ describe('ficha', () => {
     const api = crearApiFake([{ titulo: 'El Principito', copias: 3 }])
     server.use(...api.handlers)
     // El catálogo queda en caché con 3 disponibles antes de reservar.
-    const { router } = await renderEn('/catalogo?page=1&pageSize=12', { staleTime: STALE_TIME_APP })
+    const { router } = await renderEn('/catalogo?page=1&pageSize=12', {
+      staleTime: STALE_TIME_APP,
+    })
     expect(await screen.findByText('3 disponibles')).toBeInTheDocument()
 
-    await act(() => router.navigate({ to: '/libros/$idLibro', params: { idLibro: '1' } }))
+    await act(() =>
+      router.navigate({ to: '/libros/$idLibro', params: { idLibro: '1' } }),
+    )
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
     expect(screen.getByText('3 disponibles')).toBeInTheDocument()
     expect(screen.getByText('3 de 3')).toBeInTheDocument()
@@ -51,9 +56,13 @@ describe('ficha', () => {
     expect(api.pedidos('/api/libros/1')).toHaveLength(2)
 
     // Volver al catálogo: la lista se invalidó, así que se vuelve a pedir pese al staleTime.
-    await act(() => router.navigate({ to: '/catalogo', search: { page: 1, pageSize: 12 } }))
+    await act(() =>
+      router.navigate({ to: '/catalogo', search: { page: 1, pageSize: 12 } }),
+    )
     expect(await screen.findByText('2 disponibles')).toBeInTheDocument()
-    const listados = api.pedidos('/api/libros').filter((url) => url.searchParams.get('pageSize') === '12')
+    const listados = api
+      .pedidos('/api/libros')
+      .filter((url) => url.searchParams.get('pageSize') === '12')
     expect(listados).toHaveLength(2)
   })
 
@@ -61,9 +70,17 @@ describe('ficha', () => {
     const user = userEvent.setup()
     entrarComo('Lector')
     server.use(
-      http.post('http://api.test/api/reservas', () => problema('reserva-duplicada')),
+      http.post('http://api.test/api/reservas', () =>
+        problema('reserva-duplicada'),
+      ),
       http.get('http://api.test/api/lectores/:id/reservas', () =>
-        HttpResponse.json({ items: [], page: 1, pageSize: 50, totalCount: 0, totalPages: 0 }),
+        HttpResponse.json({
+          items: [],
+          page: 1,
+          pageSize: 50,
+          totalCount: 0,
+          totalPages: 0,
+        }),
       ),
     )
     await renderEn('/libros/1')
@@ -71,7 +88,9 @@ describe('ficha', () => {
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
-    expect(await screen.findByText(mensajeDeError('reserva-duplicada', ''))).toBeInTheDocument()
+    expect(
+      await screen.findByText(mensajeDeError('reserva-duplicada', '')),
+    ).toBeInTheDocument()
   })
 
   it('sin stock (409) cierra el diálogo, deja visible el mensaje y no cambia nada', async () => {
@@ -80,7 +99,10 @@ describe('ficha', () => {
     const api = crearApiFake([{ titulo: 'El Principito', copias: 1 }])
     // La ficha dice 1 disponible, pero otra persona se la llevó: la API responde 409 sin-stock.
     // En un mismo server.use gana el primer handler que coincide: el override va antes que la API fake.
-    server.use(http.post('http://api.test/api/reservas', () => problema('sin-stock')), ...api.handlers)
+    server.use(
+      http.post('http://api.test/api/reservas', () => problema('sin-stock')),
+      ...api.handlers,
+    )
     await renderEn('/libros/1', { staleTime: STALE_TIME_APP })
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
     expect(screen.getByText('1 disponible')).toBeInTheDocument()
@@ -88,8 +110,12 @@ describe('ficha', () => {
     await user.click(screen.getByRole('button', { name: 'Reservar' }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar' }))
 
-    const mensaje = await screen.findByText('No hay ejemplares disponibles para este libro.')
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    const mensaje = await screen.findByText(
+      'No hay ejemplares disponibles para este libro.',
+    )
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument(),
+    )
     // Con el diálogo cerrado la página ya no queda aria-hidden: el mensaje es visible y accesible.
     expect(mensaje).toBeVisible()
     expect(mensaje.closest('[aria-hidden="true"]')).toBeNull()
@@ -117,6 +143,8 @@ describe('ficha', () => {
     await screen.findByRole('heading', { name: 'El Principito', level: 1 })
 
     expect(screen.queryByText('BIB-001')).not.toBeInTheDocument()
-    expect(screen.queryByRole('heading', { name: 'Ejemplares' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('heading', { name: 'Ejemplares' }),
+    ).not.toBeInTheDocument()
   })
 })

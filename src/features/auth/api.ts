@@ -9,7 +9,10 @@ type SesionApi = {
   lectorId: number | null
 }
 
-export async function iniciarSesion(input: { correo: string; password: string }) {
+export async function iniciarSesion(input: {
+  correo: string
+  password: string
+}) {
   const sesion = await api<SesionApi>('/api/auth/login', {
     method: 'POST',
     body: input,

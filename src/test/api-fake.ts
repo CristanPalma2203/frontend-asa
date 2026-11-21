@@ -12,8 +12,15 @@ import type { EstadoEjemplar } from '@/features/biblioteca/types/estados'
 
 const base = 'http://api.test'
 
-type EjemplarFake = { idEjemplar: number; codigoInventario: string; estado: EstadoEjemplar; rowVersion: string }
-type LibroFake = Omit<Libro, 'totalEjemplares' | 'disponibles'> & { ejemplares: EjemplarFake[] }
+type EjemplarFake = {
+  idEjemplar: number
+  codigoInventario: string
+  estado: EstadoEjemplar
+  rowVersion: string
+}
+type LibroFake = Omit<Libro, 'totalEjemplares' | 'disponibles'> & {
+  ejemplares: EjemplarFake[]
+}
 
 export type LibroSemilla = {
   titulo: string
@@ -70,7 +77,10 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     disponibles: disponibles(libro),
     ejemplares: libro.ejemplares.map((e) => ({ ...e })),
   })
-  const buscarLibro = (id: unknown) => libros.find((l) => l.idLibro === Number(id))
+  const buscarLibro = (id: unknown) =>
+    libros.find((l) => l.idLibro === Number(id))
+  const buscarEjemplar = (id: unknown) =>
+    libros.flatMap((l) => l.ejemplares).find((e) => e.idEjemplar === Number(id))
   const problema = (status: number, code: string) =>
     HttpResponse.json(
       { status, title: code, code },
@@ -83,17 +93,24 @@ export function crearApiFake(semillas: LibroSemilla[]) {
       registrar(request)
       const params = new URL(request.url).searchParams
       // Como el backend: `search` es alias de `buscar` (si llegan los dos, manda `buscar`).
-      const buscar = (params.get('buscar') || params.get('search') || '').toLowerCase()
+      const buscar = (
+        params.get('buscar') ||
+        params.get('search') ||
+        ''
+      ).toLowerCase()
       const autor = (params.get('autor') ?? '').toLowerCase()
       const page = Number(params.get('page') ?? 1)
       const pageSize = Number(params.get('pageSize') ?? 10)
       const filtrados = libros.filter(
         (l) =>
-          [l.titulo, l.autor, l.isbn].some((campo) => campo.toLowerCase().includes(buscar)) &&
-          l.autor.toLowerCase().includes(autor),
+          [l.titulo, l.autor, l.isbn].some((campo) =>
+            campo.toLowerCase().includes(buscar),
+          ) && l.autor.toLowerCase().includes(autor),
       )
       const respuesta: PagedResponse<Libro> = {
-        items: filtrados.slice((page - 1) * pageSize, page * pageSize).map(resumen),
+        items: filtrados
+          .slice((page - 1) * pageSize, page * pageSize)
+          .map(resumen),
         page,
         pageSize,
         totalCount: filtrados.length,
@@ -104,7 +121,9 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     http.get(`${base}/api/libros/:id`, ({ request, params }) => {
       registrar(request)
       const libro = buscarLibro(params.id)
-      return libro ? HttpResponse.json(detalle(libro)) : problema(404, 'libro-no-encontrado')
+      return libro
+        ? HttpResponse.json(detalle(libro))
+        : problema(404, 'libro-no-encontrado')
     }),
     http.get(`${base}/api/libros/:id/ejemplares`, ({ request, params }) => {
       registrar(request)
@@ -113,21 +132,65 @@ export function crearApiFake(semillas: LibroSemilla[]) {
       const items: EjemplarLista[] = libro.ejemplares.map((e) => ({ ...e }))
       return HttpResponse.json(items)
     }),
-    http.put(`${base}/api/libros/:id/ejemplares/:idEjemplar/estado`, async ({ request, params }) => {
+    http.put(
+      `${base}/api/libros/:id/ejemplares/:idEjemplar/estado`,
+      async ({ request, params }) => {
+        registrar(request)
+        const ejemplar = buscarLibro(params.id)?.ejemplares.find(
+          (e) => e.idEjemplar === Number(params.idEjemplar),
+        )
+        if (!ejemplar) return problema(404, 'ejemplar-no-encontrado')
+        const cuerpo = (await request.json()) as {
+          estado: EstadoEjemplar
+          rowVersion: string
+        }
+        if (cuerpo.rowVersion !== ejemplar.rowVersion)
+          return problema(409, 'conflicto-concurrencia')
+        ejemplar.estado = cuerpo.estado
+        ejemplar.rowVersion = `${ejemplar.rowVersion}+`
+        return new HttpResponse(null, { status: 204 })
+      },
+    ),
+    http.put(
+      `${base}/api/ejemplares/:idEjemplar`,
+      async ({ request, params }) => {
+        registrar(request)
+        const ejemplar = buscarEjemplar(params.idEjemplar)
+        if (!ejemplar) return problema(404, 'ejemplar-no-encontrado')
+        const cuerpo = (await request.json()) as {
+          codigoInventario: string
+          rowVersion: string
+        }
+        if (cuerpo.rowVersion !== ejemplar.rowVersion)
+          return problema(409, 'conflicto-concurrencia')
+        const duplicado = libros.some((l) =>
+          l.ejemplares.some(
+            (e) =>
+              e !== ejemplar && e.codigoInventario === cuerpo.codigoInventario,
+          ),
+        )
+        if (duplicado) return problema(409, 'codigo-inventario-duplicado')
+        ejemplar.codigoInventario = cuerpo.codigoInventario
+        ejemplar.rowVersion = `${ejemplar.rowVersion}+`
+        return new HttpResponse(null, { status: 204 })
+      },
+    ),
+    http.delete(`${base}/api/ejemplares/:idEjemplar`, ({ request, params }) => {
       registrar(request)
-      const ejemplar = buscarLibro(params.id)?.ejemplares.find(
-        (e) => e.idEjemplar === Number(params.idEjemplar),
-      )
+      const ejemplar = buscarEjemplar(params.idEjemplar)
       if (!ejemplar) return problema(404, 'ejemplar-no-encontrado')
-      const cuerpo = (await request.json()) as { estado: EstadoEjemplar; rowVersion: string }
-      if (cuerpo.rowVersion !== ejemplar.rowVersion) return problema(409, 'conflicto-concurrencia')
-      ejemplar.estado = cuerpo.estado
+      if (ejemplar.estado === 'Reservado')
+        return problema(409, 'ejemplar-reservado')
+      ejemplar.estado = 'Inactivo'
       ejemplar.rowVersion = `${ejemplar.rowVersion}+`
       return new HttpResponse(null, { status: 204 })
     }),
     http.post(`${base}/api/reservas`, async ({ request }) => {
       registrar(request)
-      const { libroId } = (await request.json()) as { lectorId: number; libroId: number }
+      const { libroId } = (await request.json()) as {
+        lectorId: number
+        libroId: number
+      }
       const libro = buscarLibro(libroId)
       if (!libro) return problema(404, 'libro-no-encontrado')
       const copia = libro.ejemplares.find((e) => e.estado === 'Disponible')
@@ -144,7 +207,13 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     }),
     http.get(`${base}/api/lectores/:id/reservas`, ({ request }) => {
       registrar(request)
-      const vacia: PagedResponse<Reserva> = { items: [], page: 1, pageSize: 50, totalCount: 0, totalPages: 0 }
+      const vacia: PagedResponse<Reserva> = {
+        items: [],
+        page: 1,
+        pageSize: 50,
+        totalCount: 0,
+        totalPages: 0,
+      }
       return HttpResponse.json(vacia)
     }),
   ]
@@ -153,6 +222,7 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     handlers,
     libros,
     /** URLs pedidas a una ruta exacta (sin query string). */
-    pedidos: (pathname: string) => requests.filter((url) => url.pathname === pathname),
+    pedidos: (pathname: string) =>
+      requests.filter((url) => url.pathname === pathname),
   }
 }

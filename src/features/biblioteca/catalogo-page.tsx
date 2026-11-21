@@ -4,9 +4,15 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 
 import { Button, buttonVariants } from '@/components/ui/button'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
-import { LibroCard, LibroCardFantasma } from '@/features/biblioteca/components/libro-card'
+import {
+  LibroCard,
+  LibroCardFantasma,
+} from '@/features/biblioteca/components/libro-card'
 import { LibroResumenPanel } from '@/features/biblioteca/components/libro-resumen-panel'
-import { useLibros, useResumenHome } from '@/features/biblioteca/hooks/use-libros'
+import {
+  useLibros,
+  useResumenHome,
+} from '@/features/biblioteca/hooks/use-libros'
 import type { CatalogoSearch } from '@/features/biblioteca/schemas/catalogo-search.schema'
 import type { Libro } from '@/features/biblioteca/types/api'
 import { useMotion } from '@/hooks/use-motion'
@@ -29,7 +35,9 @@ export function CatalogoPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
   const [filtros, setFiltros] = useState<Filtros>(() => filtrosDeUrl(search))
-  const [filtrosUrl, setFiltrosUrl] = useState<Filtros>(() => filtrosDeUrl(search))
+  const [filtrosUrl, setFiltrosUrl] = useState<Filtros>(() =>
+    filtrosDeUrl(search),
+  )
   const [abierto, setAbierto] = useState<Libro | null>(null)
 
   // Si la URL cambia desde fuera (atrás/adelante, chips, buscador global), los inputs la siguen.
@@ -79,7 +87,14 @@ export function CatalogoPage() {
     }, 300)
 
     return () => window.clearTimeout(timer)
-  }, [filtros, navigate, search.autor, search.buscar, search.categoria, search.pageSize])
+  }, [
+    filtros,
+    navigate,
+    search.autor,
+    search.buscar,
+    search.categoria,
+    search.pageSize,
+  ])
 
   const items = libros.data?.items ?? []
   const gridRef = useRef<HTMLUListElement>(null)
@@ -89,7 +104,7 @@ export function CatalogoPage() {
     ? `${search.page}|${search.buscar ?? ''}|${search.categoria ?? ''}|${search.autor ?? ''}|${items.map((l) => l.idLibro).join(',')}`
     : ''
 
-  // Tarjetas: co() de Flito (stagger 0.05) y [data-lift] de Wynlo.
+  // Tarjetas: cardsIn (stagger 0.05) y [data-lift] al pasar el puntero.
   useMotion(
     gridRef,
     (root) => {
@@ -98,8 +113,12 @@ export function CatalogoPage() {
     },
     [claveResultados],
   )
-  // Chips de categoría: so() de Flito en horizontal.
-  useMotion(chipsRef, (root) => reveal(root.children, { x: 10, y: 0, stagger: 0.05 }), [categorias.length])
+  // Chips de categoría: reveal en horizontal.
+  useMotion(
+    chipsRef,
+    (root) => reveal(root.children, { x: 10, y: 0, stagger: 0.05 }),
+    [categorias.length],
+  )
   const totalPages = libros.data?.totalPages ?? 0
   const totalCount = libros.data?.totalCount ?? 0
   const hayFiltros = Boolean(search.buscar || search.categoria || search.autor)
@@ -125,7 +144,8 @@ export function CatalogoPage() {
           </h1>
           {libros.isSuccess ? (
             <p className="text-texto-3 text-sm">
-              {totalCount.toLocaleString('es')} {totalCount === 1 ? 'título' : 'títulos'}
+              {totalCount.toLocaleString('es')}{' '}
+              {totalCount === 1 ? 'título' : 'títulos'}
               {hayFiltros ? ' con estos filtros' : ''}
             </p>
           ) : null}
@@ -143,7 +163,9 @@ export function CatalogoPage() {
               id="buscar-libros"
               type="search"
               value={filtros.buscar}
-              onChange={(event) => setFiltros({ ...filtros, buscar: event.target.value })}
+              onChange={(event) =>
+                setFiltros({ ...filtros, buscar: event.target.value })
+              }
               placeholder="Título, autor o ISBN"
               className={claseInput('pl-11')}
             />
@@ -152,7 +174,9 @@ export function CatalogoPage() {
             <input
               id="filtro-categoria"
               value={filtros.categoria}
-              onChange={(event) => setFiltros({ ...filtros, categoria: event.target.value })}
+              onChange={(event) =>
+                setFiltros({ ...filtros, categoria: event.target.value })
+              }
               placeholder="Todas"
               className={claseInput()}
             />
@@ -161,7 +185,9 @@ export function CatalogoPage() {
             <input
               id="filtro-autor"
               value={filtros.autor}
-              onChange={(event) => setFiltros({ ...filtros, autor: event.target.value })}
+              onChange={(event) =>
+                setFiltros({ ...filtros, autor: event.target.value })
+              }
               placeholder="Todos"
               className={claseInput()}
             />
@@ -169,9 +195,14 @@ export function CatalogoPage() {
         </form>
 
         {categorias.length > 0 ? (
-          <ul ref={chipsRef} aria-label="Categorías sugeridas" className="flex flex-wrap gap-2">
+          <ul
+            ref={chipsRef}
+            aria-label="Categorías sugeridas"
+            className="flex flex-wrap gap-2"
+          >
             {categorias.map((categoria) => {
-              const activa = search.categoria?.toLowerCase() === categoria.toLowerCase()
+              const activa =
+                search.categoria?.toLowerCase() === categoria.toLowerCase()
               return (
                 <li key={categoria}>
                   <button
@@ -196,7 +227,11 @@ export function CatalogoPage() {
       </section>
 
       {libros.isPending ? (
-        <ul aria-label="Cargando libros" aria-busy className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+        <ul
+          aria-label="Cargando libros"
+          aria-busy
+          className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"
+        >
           {Array.from({ length: search.pageSize }, (_, i) => (
             <li key={i}>
               <LibroCardFantasma />
@@ -208,7 +243,10 @@ export function CatalogoPage() {
       {libros.isError ? (
         <section className="bg-card border-linea shadow-card rounded-xl border p-8">
           <h2 className="text-xl">No se pudo cargar el catálogo</h2>
-          <ErrorReintentar error={libros.error} onRetry={() => void libros.refetch()} />
+          <ErrorReintentar
+            error={libros.error}
+            onRetry={() => void libros.refetch()}
+          />
         </section>
       ) : null}
 
@@ -225,7 +263,11 @@ export function CatalogoPage() {
             <Link
               to="/catalogo"
               search={{ page: 1, pageSize: search.pageSize }}
-              className={buttonVariants({ variant: 'outline', size: 'sm', className: 'mt-3' })}
+              className={buttonVariants({
+                variant: 'outline',
+                size: 'sm',
+                className: 'mt-3',
+              })}
             >
               Limpiar filtros
             </Link>
@@ -234,7 +276,10 @@ export function CatalogoPage() {
       ) : null}
 
       {libros.isSuccess && items.length > 0 ? (
-        <ul ref={gridRef} className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4">
+        <ul
+          ref={gridRef}
+          className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"
+        >
           {items.map((libro) => (
             <li key={libro.idLibro}>
               <LibroCard libro={libro} onAbrir={setAbierto} />
@@ -249,7 +294,8 @@ export function CatalogoPage() {
           className="border-linea flex flex-col items-center justify-between gap-3 border-t pt-6 sm:flex-row"
         >
           <p className="text-texto-3 text-sm">
-            {totalCount} libros · página {search.page} de {Math.max(totalPages, 1)}
+            {totalCount} libros · página {search.page} de{' '}
+            {Math.max(totalPages, 1)}
           </p>
           <div className="flex gap-2">
             <Button

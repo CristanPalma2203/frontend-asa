@@ -12,6 +12,7 @@ import { useRef, type ReactNode } from 'react'
 
 import { CountUp } from '@/components/ui/count-up'
 import { Hueso } from '@/components/ui/hueso'
+import { HUESO_OSCURO } from '@/components/ui/hueso.bones'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import { useResumenAdmin } from '@/features/biblioteca/hooks/use-resumen-admin'
 import { useMotion } from '@/hooks/use-motion'
@@ -23,7 +24,7 @@ export function ResumenAdminPage() {
   const resumen = useResumenAdmin()
   const datos = resumen.data
   const metricasRef = useRef<HTMLUListElement>(null)
-  // Tarjetas de métricas: co() de Flito con delay 0.1 (las cifras cuentan con CountUp).
+  // Tarjetas de métricas con cardsIn (delay 0.1); las cifras cuentan con CountUp.
   useMotion(metricasRef, (root) => cardsIn(root.children, { delay: 0.1 }))
 
   return (
@@ -38,10 +39,17 @@ export function ResumenAdminPage() {
       {resumen.isError ? (
         <section className="bg-card border-linea shadow-card rounded-xl border p-8">
           <h2 className="text-xl">No se pudieron cargar las métricas</h2>
-          <ErrorReintentar error={resumen.error} onRetry={() => void resumen.refetch()} />
+          <ErrorReintentar
+            error={resumen.error}
+            onRetry={() => void resumen.refetch()}
+          />
         </section>
       ) : (
-        <ul ref={metricasRef} aria-label="Métricas" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <ul
+          ref={metricasRef}
+          aria-label="Métricas"
+          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
+        >
           <Metrica
             icono={BookOpen}
             etiqueta="Libros"
@@ -52,7 +60,9 @@ export function ResumenAdminPage() {
             icono={BookCheck}
             etiqueta="Ejemplares disponibles"
             valor={datos?.disponibles}
-            detalle={datos ? `de ${datos.ejemplares} ejemplares en total` : undefined}
+            detalle={
+              datos ? `de ${datos.ejemplares} ejemplares en total` : undefined
+            }
             destacada
           />
           <Metrica
@@ -86,7 +96,10 @@ export function ResumenAdminPage() {
             <ArrowRight aria-hidden className="size-4" strokeWidth={2.2} />
           </Link>
         </Acceso>
-        <Acceso titulo="Lectores" texto="Da de alta lectores, edita sus datos y revisa sus reservas.">
+        <Acceso
+          titulo="Lectores"
+          texto="Da de alta lectores, edita sus datos y revisa sus reservas."
+        >
           <Link to="/admin/lectores" search={lista}>
             Gestionar lectores
             <ArrowRight aria-hidden className="size-4" strokeWidth={2.2} />
@@ -119,7 +132,13 @@ function Metrica({
       }
     >
       <div className="flex items-center justify-between gap-3">
-        <p className={destacada ? 'text-[13px] font-semibold text-white/75' : 'text-texto-3 text-[13px] font-semibold'}>
+        <p
+          className={
+            destacada
+              ? 'text-[13px] font-semibold text-white/75'
+              : 'text-texto-3 text-[13px] font-semibold'
+          }
+        >
           {etiqueta}
         </p>
         <span
@@ -133,9 +152,16 @@ function Metrica({
         </span>
       </div>
       {valor === undefined ? (
-        // Solo el hueco de la cifra (≈ KpiRowSkeleton de Corelux: 62 % × 26, r6); la etiqueta ya se ve.
+        // Solo el hueco de la cifra (62 % × 26, r6): la etiqueta ya se ve.
         <div className="flex h-10 items-center">
-          <Hueso cargando ancho="62%" alto={26} radio={6} className="w-full" />
+          <Hueso
+            cargando
+            ancho="62%"
+            alto={26}
+            radio={6}
+            className="w-full"
+            {...(destacada ? HUESO_OSCURO : {})}
+          />
         </div>
       ) : (
         <p
@@ -148,7 +174,11 @@ function Metrica({
           <CountUp value={valor} duration={1.2} />
         </p>
       )}
-      <p className={destacada ? 'text-[13px] text-white/65' : 'text-texto-3 text-[13px]'}>
+      <p
+        className={
+          destacada ? 'text-[13px] text-white/65' : 'text-texto-3 text-[13px]'
+        }
+      >
         {detalle ?? ' '}
       </p>
     </li>
@@ -168,7 +198,7 @@ function Acceso({
     <div className="bg-card border-linea flex flex-col gap-2 rounded-xl border p-6">
       <h2 className="text-lg">{titulo}</h2>
       <p className="text-texto-3 text-[15px]">{texto}</p>
-      <div className="text-pino-800 mt-3 [&>a]:inline-flex [&>a]:items-center [&>a]:gap-1.5 [&>a]:text-sm [&>a]:font-semibold [&>a:hover]:underline [&>a]:underline-offset-4">
+      <div className="text-pino-800 mt-3 [&>a]:inline-flex [&>a]:items-center [&>a]:gap-1.5 [&>a]:text-sm [&>a]:font-semibold [&>a]:underline-offset-4 [&>a:hover]:underline">
         {children}
       </div>
     </div>

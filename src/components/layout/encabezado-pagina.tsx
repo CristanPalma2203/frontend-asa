@@ -32,7 +32,9 @@ export function EncabezadoPagina({
               </>
             ) : null}
           </h1>
-          {detalle ? <div className="text-texto-3 text-[15px]">{detalle}</div> : null}
+          {detalle ? (
+            <div className="text-texto-3 text-[15px]">{detalle}</div>
+          ) : null}
         </div>
         {accion}
       </div>
@@ -41,7 +43,10 @@ export function EncabezadoPagina({
 }
 
 /** Buscador de una lista (con icono de lupa). */
-export function BuscadorLista({ className, ...props }: ComponentProps<'input'>) {
+export function BuscadorLista({
+  className,
+  ...props
+}: ComponentProps<'input'>) {
   return (
     <div className={cn('relative w-full max-w-md', className)}>
       <Search

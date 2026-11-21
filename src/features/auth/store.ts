@@ -1,6 +1,9 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
 
+import { clearHistory } from '@/features/luxia/services/historial'
+import { useLuxiaStore } from '@/features/luxia/store'
+
 export type AuthSession = {
   token: string
   expiresAt: string | number
@@ -39,7 +42,10 @@ export const useAuthStore = create<AuthState>()(
           lectorId: session.lectorId,
           correo: session.correo ?? null,
         }),
-      logout: () =>
+      logout: () => {
+        // La conversación de LuxIA es de quien la tuvo: se borra con la sesión.
+        clearHistory()
+        useLuxiaStore.getState().reiniciar()
         set({
           token: null,
           expiresAt: null,
@@ -47,7 +53,8 @@ export const useAuthStore = create<AuthState>()(
           nombre: null,
           lectorId: null,
           correo: null,
-        }),
+        })
+      },
     }),
     {
       name: 'asa-auth',

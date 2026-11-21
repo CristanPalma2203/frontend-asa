@@ -2,8 +2,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { queryKeys } from '@/features/biblioteca/queryKeys'
 import type { LibroForm } from '@/features/biblioteca/schemas/libro.schema'
-import { crearLibro, desactivarLibro, editarLibro } from '@/features/biblioteca/services/libros.mutation'
-import { listarLibros, obtenerLibro } from '@/features/biblioteca/services/libros.read'
+import {
+  crearLibro,
+  desactivarLibro,
+  editarLibro,
+} from '@/features/biblioteca/services/libros.mutation'
+import {
+  listarLibros,
+  obtenerLibro,
+} from '@/features/biblioteca/services/libros.read'
 import type { Libro, ListarLibrosParams } from '@/features/biblioteca/types/api'
 
 export function useLibros(params: ListarLibrosParams) {
@@ -63,7 +70,10 @@ export function useLibro(id: number) {
 }
 
 /** Crea un libro o, si se pasa `libro`, lo edita. */
-export function useGuardarLibro(libro: Libro | null, opciones: { onSuccess?: () => void } = {}) {
+export function useGuardarLibro(
+  libro: Libro | null,
+  opciones: { onSuccess?: () => void } = {},
+) {
   const queryClient = useQueryClient()
 
   return useMutation({

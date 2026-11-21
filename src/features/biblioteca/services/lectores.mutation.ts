@@ -1,5 +1,8 @@
 import { api } from '@/lib/api/client'
-import type { CrearLectorBody, EditarLectorBody } from '@/features/biblioteca/types/api'
+import type {
+  CrearLectorBody,
+  EditarLectorBody,
+} from '@/features/biblioteca/types/api'
 
 export function crearLector(body: CrearLectorBody) {
   return api<void>('/api/lectores', {

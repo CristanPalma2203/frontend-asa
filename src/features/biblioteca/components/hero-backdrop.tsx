@@ -14,12 +14,14 @@ import {
   loseWebGlCanvases,
 } from '@/features/biblioteca/components/hero-backdrop.webgl'
 
-// Fondo animado del hero, portado de la landing de Corelux (HeroBackdrop.tsx).
+// Fondo animado del hero.
 // Capas: wash (radiales lima sobre bosque) · MeshGradient (WebGL, lazy) · rejilla con celdas
 // lima en canvas · viñeta. Los estilos viven en index.css (`.hero-fx*`).
 
 const MeshGradientLazy = lazy(() =>
-  import('@paper-design/shaders-react').then((mod) => ({ default: mod.MeshGradient })),
+  import('@paper-design/shaders-react').then((mod) => ({
+    default: mod.MeshGradient,
+  })),
 )
 
 const SHADER_COLORS = ['#032A21', '#021912', '#C2F968', '#0A3D32', '#1E1E1E']
@@ -37,7 +39,10 @@ function suscribirMovimiento(avisar: () => void) {
 }
 
 function movimientoReducido() {
-  return typeof window.matchMedia === 'function' && window.matchMedia(consultaReducida).matches
+  return (
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia(consultaReducida).matches
+  )
 }
 
 function suscribirVisibilidad(avisar: () => void) {
@@ -95,8 +100,16 @@ function MeshGradientHost({ live }: { live: boolean }) {
 }
 
 export function HeroBackdrop() {
-  const reduce = useSyncExternalStore(suscribirMovimiento, movimientoReducido, () => true)
-  const visible = useSyncExternalStore(suscribirVisibilidad, pestanaVisible, () => false)
+  const reduce = useSyncExternalStore(
+    suscribirMovimiento,
+    movimientoReducido,
+    () => true,
+  )
+  const visible = useSyncExternalStore(
+    suscribirVisibilidad,
+    pestanaVisible,
+    () => false,
+  )
   const [software] = useState(isSoftwareWebGL)
   const [enPantalla, setEnPantalla] = useState(true)
   const [shaderListo, setShaderListo] = useState(false)
@@ -152,9 +165,22 @@ const SEMILLAS_ESTATICAS = [
   [5, 7, 0.14],
 ] as const
 
-type Celda = { col: number; row: number; born: number; life: number; peak: number; used: boolean }
+type Celda = {
+  col: number
+  row: number
+  born: number
+  life: number
+  peak: number
+  used: boolean
+}
 
-function HeroGrid({ paused, staticCells }: { paused: boolean; staticCells: boolean }) {
+function HeroGrid({
+  paused,
+  staticCells,
+}: {
+  paused: boolean
+  staticCells: boolean
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const pausedRef = useRef(paused)
   const kickRef = useRef<() => void>(() => {})
@@ -232,7 +258,8 @@ function HeroGrid({ paused, staticCells }: { paused: boolean; staticCells: boole
           cell.used = false
           continue
         }
-        const envelope = t < 0.18 ? t / 0.18 : t > 0.72 ? 1 - (t - 0.72) / 0.28 : 1
+        const envelope =
+          t < 0.18 ? t / 0.18 : t > 0.72 ? 1 - (t - 0.72) / 0.28 : 1
         paintCell(cell.col, cell.row, cell.peak * envelope)
       }
       raf = window.requestAnimationFrame(tick)

@@ -31,7 +31,11 @@ export function ReservarDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+          >
             Cancelar
           </Button>
           <Button type="button" disabled={deshabilitado} onClick={onConfirmar}>

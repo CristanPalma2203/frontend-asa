@@ -1,18 +1,27 @@
-import type { Libro, ListarLibrosParams, PagedResponse } from '@/features/biblioteca/types/api'
+import type {
+  Libro,
+  ListarLibrosParams,
+  PagedResponse,
+} from '@/features/biblioteca/types/api'
 import { interpretar } from '@/features/luxia/interpretar'
 import type { ChatMsg } from '@/features/luxia/types/chat'
 
 /** Cuántos libros enlaza LuxIA en una respuesta. */
 export const RESULTADOS = 5
 
-export type BuscarLibros = (params: ListarLibrosParams) => Promise<PagedResponse<Libro>>
+export type BuscarLibros = (
+  params: ListarLibrosParams,
+) => Promise<PagedResponse<Libro>>
 
 /**
  * Consulta por reglas (sin LLM): interpreta la pregunta y busca con GET /api/libros.
  * LuxIA nunca reserva: si lo piden, remite al botón «Reservar» de la ficha y la enlaza.
  * Lanza si la API falla (el panel muestra el error con Reintentar).
  */
-export async function consultarLuxia(pregunta: string, buscar: BuscarLibros): Promise<ChatMsg> {
+export async function consultarLuxia(
+  pregunta: string,
+  buscar: BuscarLibros,
+): Promise<ChatMsg> {
   const intencion = interpretar(pregunta)
 
   if (intencion.tipo === 'vacia') {
@@ -25,7 +34,11 @@ export async function consultarLuxia(pregunta: string, buscar: BuscarLibros): Pr
     return { role: 'assistant', text: textoReservar(0) }
   }
 
-  const pagina = await buscar({ page: 1, pageSize: RESULTADOS, buscar: intencion.consulta })
+  const pagina = await buscar({
+    page: 1,
+    pageSize: RESULTADOS,
+    buscar: intencion.consulta,
+  })
   const libros = pagina.items.map(({ idLibro, titulo, disponibles }) => ({
     idLibro,
     titulo,

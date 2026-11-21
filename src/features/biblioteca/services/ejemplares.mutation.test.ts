@@ -10,10 +10,13 @@ describe('ejemplares.mutation', () => {
   it('envía el estado del ejemplar como texto', async () => {
     let cuerpo: unknown
     server.use(
-      http.put(`${base}/api/libros/:idLibro/ejemplares/:idEjemplar/estado`, async ({ request }) => {
-        cuerpo = await request.json()
-        return new HttpResponse(null, { status: 204 })
-      }),
+      http.put(
+        `${base}/api/libros/:idLibro/ejemplares/:idEjemplar/estado`,
+        async ({ request }) => {
+          cuerpo = await request.json()
+          return new HttpResponse(null, { status: 204 })
+        },
+      ),
     )
 
     await cambiarEstadoEjemplar(1, 7, 'Inactivo', 'AAAAAAAAB9E=')

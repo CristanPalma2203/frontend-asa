@@ -14,6 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Hueso } from '@/components/ui/hueso'
+import { DesactivarEjemplarDialog } from '@/features/biblioteca/components/desactivar-ejemplar-dialog'
+import { EditarEjemplarDialog } from '@/features/biblioteca/components/editar-ejemplar-dialog'
 import { EjemplarFormDialog } from '@/features/biblioteca/components/ejemplar-form-dialog'
 import { EjemplaresAdminTable } from '@/features/biblioteca/components/ejemplares-admin-table'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
@@ -22,6 +24,7 @@ import { badgeLibro } from '@/features/biblioteca/components/estado-badge.styles
 import { mensajeDeError } from '@/features/biblioteca/errores'
 import {
   useCambiarEstadoEjemplar,
+  useDesactivarEjemplar,
   useEjemplares,
 } from '@/features/biblioteca/hooks/use-ejemplares'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
@@ -37,6 +40,14 @@ export function LibroAdminPage() {
   const ejemplares = useEjemplares(id)
   const [abierto, setAbierto] = useState(false)
   const [aInactivar, setAInactivar] = useState<EjemplarLista | null>(null)
+  const [aEditar, setAEditar] = useState<EjemplarLista | null>(null)
+  const [aDesactivar, setADesactivar] = useState<EjemplarLista | null>(null)
+  const desactivar = useDesactivarEjemplar(id, {
+    onSuccess: () => {
+      setADesactivar(null)
+      toast.success('Ejemplar desactivado')
+    },
+  })
   const estado = useCambiarEstadoEjemplar(id, {
     onConflicto: () => toast.error('Otro usuario cambió este ejemplar'),
   })
@@ -44,7 +55,11 @@ export function LibroAdminPage() {
   // Mientras carga: cabecera y tabla ya pintadas, huecos en el título, los datos y las filas.
   if (libro.isPending || ejemplares.isPending) {
     return (
-      <main aria-busy aria-label="Cargando libro" className="flex flex-col gap-6 pt-2">
+      <main
+        aria-busy
+        aria-label="Cargando libro"
+        className="flex flex-col gap-6 pt-2"
+      >
         <Link
           to="/admin/libros"
           search={{ page: 1, pageSize: 12 }}
@@ -60,7 +75,12 @@ export function LibroAdminPage() {
         </div>
         <section className="flex flex-col gap-3">
           <h2 className="text-xl">Ejemplares</h2>
-          <EjemplaresAdminTable ejemplares={[]} cargando deshabilitado onCambiarEstado={() => undefined} />
+          <EjemplaresAdminTable
+            ejemplares={[]}
+            cargando
+            deshabilitado
+            onCambiarEstado={() => undefined}
+          />
         </section>
       </main>
     )
@@ -71,7 +91,9 @@ export function LibroAdminPage() {
         <h1 className="text-xl">No se pudo cargar el libro</h1>
         <ErrorReintentar
           error={libro.error ?? ejemplares.error}
-          onRetry={() => void Promise.all([libro.refetch(), ejemplares.refetch()])}
+          onRetry={() =>
+            void Promise.all([libro.refetch(), ejemplares.refetch()])
+          }
         />
       </section>
     )
@@ -119,7 +141,10 @@ export function LibroAdminPage() {
         }
       />
 
-      <section aria-labelledby="ejemplares-titulo" className="flex flex-col gap-3">
+      <section
+        aria-labelledby="ejemplares-titulo"
+        className="flex flex-col gap-3"
+      >
         <div className="flex items-baseline justify-between">
           <h2 id="ejemplares-titulo" className="text-xl">
             Ejemplares
@@ -135,35 +160,71 @@ export function LibroAdminPage() {
         ) : (
           <EjemplaresAdminTable
             ejemplares={filas}
-            deshabilitado={estado.isPending}
+            deshabilitado={estado.isPending || desactivar.isPending}
+            onEditar={setAEditar}
+            onDesactivar={(item) => {
+              desactivar.reset()
+              setADesactivar(item)
+            }}
             onCambiarEstado={(item) =>
-              item.estado === 'Inactivo' ? cambiarEstado(item) : setAInactivar(item)
+              item.estado === 'Inactivo'
+                ? cambiarEstado(item)
+                : setAInactivar(item)
             }
           />
         )}
-        {estado.error instanceof ApiError && estado.error.code !== 'conflicto-concurrencia' ? (
+        {estado.error instanceof ApiError &&
+        estado.error.code !== 'conflicto-concurrencia' ? (
           <p
             role="alert"
             className="border-rojo-600/20 bg-rojo-50 text-rojo-800 rounded-xl border px-4 py-3 text-sm font-medium"
           >
-            {mensajeDeError(estado.error.code, estado.error.detail || estado.error.title)}
+            {mensajeDeError(
+              estado.error.code,
+              estado.error.detail || estado.error.title,
+            )}
           </p>
         ) : null}
       </section>
 
-      <EjemplarFormDialog idLibro={id} abierto={abierto} onOpenChange={setAbierto} />
+      <EjemplarFormDialog
+        idLibro={id}
+        abierto={abierto}
+        onOpenChange={setAbierto}
+      />
+      <EditarEjemplarDialog
+        idLibro={id}
+        ejemplar={aEditar}
+        onClose={() => setAEditar(null)}
+      />
+      <DesactivarEjemplarDialog
+        ejemplar={aDesactivar}
+        onClose={() => setADesactivar(null)}
+        onConfirmar={(item) => desactivar.mutate(item.idEjemplar)}
+        pending={desactivar.isPending}
+        error={desactivar.error}
+      />
 
-      <Dialog open={aInactivar !== null} onOpenChange={(open) => !open && setAInactivar(null)}>
+      <Dialog
+        open={aInactivar !== null}
+        onOpenChange={(open) => !open && setAInactivar(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Inactivar ejemplar</DialogTitle>
             <DialogDescription>
-              <span className="font-mono text-[13px]">{aInactivar?.codigoInventario}</span> dejará
-              de estar disponible para reservar.
+              <span className="font-mono text-[13px]">
+                {aInactivar?.codigoInventario}
+              </span>{' '}
+              dejará de estar disponible para reservar.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setAInactivar(null)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setAInactivar(null)}
+            >
               Volver
             </Button>
             <Button

@@ -12,7 +12,11 @@ export function PaginaNoEncontrada() {
         aria-hidden
         className="text-pino-800 font-serif text-[120px] leading-none italic sm:text-[160px]"
       >
-        4<span className="text-lima-400 [-webkit-text-stroke:2px_var(--color-pino-800)]">0</span>4
+        4
+        <span className="text-lima-400 [-webkit-text-stroke:2px_var(--color-pino-800)]">
+          0
+        </span>
+        4
       </p>
       <p className="eyebrow mt-6">Error 404</p>
       <h1 className="mt-2 text-[32px] leading-tight sm:text-[40px]">
@@ -26,7 +30,11 @@ export function PaginaNoEncontrada() {
           <ArrowLeft aria-hidden />
           Volver al inicio
         </Link>
-        <Link to="/catalogo" search={{ page: 1, pageSize: 12 }} className={buttonVariants({ variant: 'outline' })}>
+        <Link
+          to="/catalogo"
+          search={{ page: 1, pageSize: 12 }}
+          className={buttonVariants({ variant: 'outline' })}
+        >
           Ir al catálogo
         </Link>
       </div>
@@ -44,13 +52,16 @@ export function ErrorGeneral({ reset }: ErrorComponentProps) {
       />
       <Brand tono="oscuro" />
       <main className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center text-center">
-        <p className="text-[13px] font-semibold tracking-[0.12em] text-white/60 uppercase">Algo salió mal</p>
+        <p className="text-[13px] font-semibold tracking-[0.12em] text-white/60 uppercase">
+          Algo salió mal
+        </p>
         <h1 className="text-papel mt-3 text-[36px] leading-tight sm:text-[48px]">
           No pudimos mostrar
           <span className="titulo-serif text-lima-400 block">esta página.</span>
         </h1>
         <p className="mt-4 text-[15px] text-white/70">
-          Fue un error inesperado. Puedes intentarlo de nuevo o volver al inicio.
+          Fue un error inesperado. Puedes intentarlo de nuevo o volver al
+          inicio.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-3">
           <Button type="button" variant="accent" onClick={reset}>
@@ -61,7 +72,8 @@ export function ErrorGeneral({ reset }: ErrorComponentProps) {
             href="/"
             className={buttonVariants({
               variant: 'outline',
-              className: 'text-papel border-white/25 bg-transparent hover:border-white/60',
+              className:
+                'text-papel border-white/25 bg-transparent hover:border-white/60',
             })}
           >
             <ArrowLeft aria-hidden />

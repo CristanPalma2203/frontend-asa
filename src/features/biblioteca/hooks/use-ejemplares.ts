@@ -1,10 +1,20 @@
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query'
 
 import { queryKeys } from '@/features/biblioteca/queryKeys'
-import type { EjemplarForm } from '@/features/biblioteca/schemas/ejemplar.schema'
+import type {
+  EjemplarEdicion,
+  EjemplarForm,
+} from '@/features/biblioteca/schemas/ejemplar.schema'
 import {
   cambiarEstadoEjemplar,
   crearEjemplar,
+  desactivarEjemplar,
+  editarEjemplar,
 } from '@/features/biblioteca/services/ejemplares.mutation'
 import { listarEjemplares } from '@/features/biblioteca/services/ejemplares.read'
 import type { EjemplarLista } from '@/features/biblioteca/types/api'
@@ -39,15 +49,74 @@ export function useCrearEjemplar(
  * Crear un ejemplar o cambiar su estado cambia "disponibles" del libro. Invalida la lista de
  * ejemplares, el detalle del libro (ficha y admin) y todas las listas de libros (catálogo y admin).
  */
-async function invalidarDisponibilidad(queryClient: QueryClient, idLibro: number) {
+async function invalidarDisponibilidad(
+  queryClient: QueryClient,
+  idLibro: number,
+) {
   await Promise.all([
-    queryClient.invalidateQueries({ queryKey: queryKeys.ejemplares.list(idLibro) }),
-    queryClient.invalidateQueries({ queryKey: queryKeys.libros.detail(idLibro) }),
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.ejemplares.list(idLibro),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: queryKeys.libros.detail(idLibro),
+    }),
     queryClient.invalidateQueries({ queryKey: queryKeys.libros.lists() }),
   ])
 }
 
-export type CambioEstadoEjemplar = EjemplarLista & { siguiente: EstadoEjemplarEditable }
+/**
+ * Edita el código de inventario (PUT /api/ejemplares/{id}) con el rowVersion de la fila. Si otro
+ * usuario lo cambió antes (`conflicto-concurrencia`), recarga la lista para tomar el rowVersion nuevo.
+ */
+export function useEditarEjemplar(
+  idLibro: number,
+  opciones: { onSuccess?: () => void; onError?: (error: Error) => void } = {},
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({
+      idEjemplar,
+      ...body
+    }: EjemplarEdicion & { idEjemplar: number }) =>
+      editarEjemplar(idEjemplar, body),
+    onSuccess: async () => {
+      opciones.onSuccess?.()
+      await invalidarDisponibilidad(queryClient, idLibro)
+    },
+    onError: async (error) => {
+      opciones.onError?.(error)
+      if (
+        error instanceof ApiError &&
+        error.code === 'conflicto-concurrencia'
+      ) {
+        await queryClient.refetchQueries({
+          queryKey: queryKeys.ejemplares.list(idLibro),
+        })
+      }
+    },
+  })
+}
+
+/** Desactiva un ejemplar (DELETE /api/ejemplares/{id}); cambia los disponibles del libro. */
+export function useDesactivarEjemplar(
+  idLibro: number,
+  opciones: { onSuccess?: () => void } = {},
+) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (idEjemplar: number) => desactivarEjemplar(idEjemplar),
+    onSuccess: async () => {
+      opciones.onSuccess?.()
+      await invalidarDisponibilidad(queryClient, idLibro)
+    },
+  })
+}
+
+export type CambioEstadoEjemplar = EjemplarLista & {
+  siguiente: EstadoEjemplarEditable
+}
 
 /**
  * Cambia el estado con concurrencia optimista (rowVersion). Si otro usuario lo cambió antes
@@ -61,14 +130,24 @@ export function useCambiarEstadoEjemplar(
 
   return useMutation({
     mutationFn: (item: CambioEstadoEjemplar) =>
-      cambiarEstadoEjemplar(idLibro, item.idEjemplar, item.siguiente, item.rowVersion),
+      cambiarEstadoEjemplar(
+        idLibro,
+        item.idEjemplar,
+        item.siguiente,
+        item.rowVersion,
+      ),
     onSuccess: async () => {
       await invalidarDisponibilidad(queryClient, idLibro)
     },
     onError: async (error) => {
-      if (error instanceof ApiError && error.code === 'conflicto-concurrencia') {
+      if (
+        error instanceof ApiError &&
+        error.code === 'conflicto-concurrencia'
+      ) {
         opciones.onConflicto?.()
-        await queryClient.refetchQueries({ queryKey: queryKeys.ejemplares.list(idLibro) })
+        await queryClient.refetchQueries({
+          queryKey: queryKeys.ejemplares.list(idLibro),
+        })
       }
     },
   })

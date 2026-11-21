@@ -30,9 +30,13 @@ export function CancelarReservaDialog({
         <DialogHeader>
           <DialogTitle>Cancelar reserva</DialogTitle>
           <DialogDescription>
-            Se libera <span className="text-tinta font-semibold">{reserva?.titulo}</span> (
-            <span className="font-mono text-[13px]">{reserva?.codigoInventario}</span>) para otros
-            lectores.
+            Se libera{' '}
+            <span className="text-tinta font-semibold">{reserva?.titulo}</span>{' '}
+            (
+            <span className="font-mono text-[13px]">
+              {reserva?.codigoInventario}
+            </span>
+            ) para otros lectores.
           </DialogDescription>
         </DialogHeader>
         {error instanceof ApiError ? (

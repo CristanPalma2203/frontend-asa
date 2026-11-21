@@ -17,7 +17,11 @@ describe('lectorSchema', () => {
   it('exige al menos 8 caracteres si viene contraseña', () => {
     const corta = lectorSchema.safeParse({ ...base, password: '1234567' })
     expect(corta.success).toBe(false)
-    expect(corta.error?.issues[0]?.message).toBe('La contraseña debe tener al menos 8 caracteres.')
-    expect(lectorSchema.safeParse({ ...base, password: '12345678' }).success).toBe(true)
+    expect(corta.error?.issues[0]?.message).toBe(
+      'La contraseña debe tener al menos 8 caracteres.',
+    )
+    expect(
+      lectorSchema.safeParse({ ...base, password: '12345678' }).success,
+    ).toBe(true)
   })
 })

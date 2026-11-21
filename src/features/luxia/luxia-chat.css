@@ -1,15 +1,8 @@
 /*
- * LuxIA (chat + avatar flotante). Portado de Corelux LuxiaFab.scss a CSS plano: misma geometría,
- * clases .luxia-fab__* / .luxia-chat__*, tiempos y keyframes. Paleta antigua → tokens Corelux
- * de src/index.css:
- *   #1e3d2e (verde)      → #042c24 (pino-800)      rgba(30,61,46,a) → rgba(4,44,36,a)
- *   #c3d73b (lima)       → #c2f968 (lima-400)      rgba(195,215,59,.35) → rgba(194,249,104,.4) (foco)
- *   #fef8ec (crema)      → #fafaf8 (niebla)
- *   #f4f2ec (burbuja)    → #f6f6f6 (hueso)
- *   #e4e8e2 / #c9d3cc    → #e6e2da (linea) / #d4cfc6 (linea-fuerte)
- *   #4a6356 (texto 2.º)  → #525252 (texto-3)
- * Foco: los outlines lima de Corelux (1,2:1 sobre blanco) pasan al foco del repo: outline pino-800.
- * Se quitaron .luxia-chat__alt, .luxia-chat__wa y .luxia-chat__msg-wa (WhatsApp).
+ * LuxIA (chat + avatar flotante), CSS plano con los tokens de src/index.css: pino-800 #042c24,
+ * lima-400 #c2f968, niebla #fafaf8, hueso #f6f6f6, linea #e6e2da, linea-fuerte #d4cfc6,
+ * texto-3 #525252.
+ * Foco: outline pino-800 y no lima, porque el lima sobre blanco solo da 1,2:1 de contraste.
  */
 .luxia-fab {
   --lx-lime: #c2f968;
@@ -98,7 +91,11 @@
   bottom: 2%;
   height: 12%;
   border-radius: 50%;
-  background: radial-gradient(closest-side, rgba(4, 44, 36, 0.28), rgba(4, 44, 36, 0));
+  background: radial-gradient(
+    closest-side,
+    rgba(4, 44, 36, 0.28),
+    rgba(4, 44, 36, 0)
+  );
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;

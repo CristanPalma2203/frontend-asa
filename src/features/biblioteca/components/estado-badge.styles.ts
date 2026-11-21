@@ -14,7 +14,10 @@ export type EstiloBadge = {
   className?: string
 }
 
-const apagado = { variant: 'secondary', className: 'border border-linea' } as const
+const apagado = {
+  variant: 'secondary',
+  className: 'border border-linea',
+} as const
 
 export const badgeEjemplar: Record<EstadoEjemplar, EstiloBadge> = {
   Disponible: { etiqueta: 'Disponible', variant: 'disponible' },

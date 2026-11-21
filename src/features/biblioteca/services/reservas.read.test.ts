@@ -12,27 +12,30 @@ describe('reservas.read', () => {
     ['Activa', 'Activa'],
     ['Cancelada', 'Cancelada'],
     ['Todas', null],
-  ] as const)('filtra mis reservas %s con estado=%s', async (filtro, esperado) => {
-    let estado: string | null | undefined
-    let lector: string | readonly string[] | undefined
-    server.use(
-      http.get(`${base}/api/lectores/:id/reservas`, ({ request, params }) => {
-        estado = new URL(request.url).searchParams.get('estado')
-        lector = params.id
-        const vacia: PagedResponse<Reserva> = {
-          items: [],
-          page: 1,
-          pageSize: 20,
-          totalCount: 0,
-          totalPages: 0,
-        }
-        return HttpResponse.json(vacia)
-      }),
-    )
+  ] as const)(
+    'filtra mis reservas %s con estado=%s',
+    async (filtro, esperado) => {
+      let estado: string | null | undefined
+      let lector: string | readonly string[] | undefined
+      server.use(
+        http.get(`${base}/api/lectores/:id/reservas`, ({ request, params }) => {
+          estado = new URL(request.url).searchParams.get('estado')
+          lector = params.id
+          const vacia: PagedResponse<Reserva> = {
+            items: [],
+            page: 1,
+            pageSize: 20,
+            totalCount: 0,
+            totalPages: 0,
+          }
+          return HttpResponse.json(vacia)
+        }),
+      )
 
-    await listarReservasDeLector(2, filtro)
+      await listarReservasDeLector(2, filtro)
 
-    expect(estado).toBe(esperado)
-    expect(lector).toBe('2')
-  })
+      expect(estado).toBe(esperado)
+      expect(lector).toBe('2')
+    },
+  )
 })

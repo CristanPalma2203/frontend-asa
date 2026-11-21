@@ -14,5 +14,7 @@ export function listarReservasDeLector(
   })
   if (filtro !== 'Todas') query.set('estado', filtro)
 
-  return api<PagedResponse<Reserva>>(`/api/lectores/${lectorId}/reservas?${query.toString()}`)
+  return api<PagedResponse<Reserva>>(
+    `/api/lectores/${lectorId}/reservas?${query.toString()}`,
+  )
 }

@@ -10,7 +10,10 @@ import { server } from '@/test/server'
 describe('PortadaConCarga', () => {
   it('muestra shimmer (aria-busy) hasta que la imagen carga', () => {
     const { container } = render(
-      <PortadaConCarga src="https://covers.test/a.jpg" respaldo={<span>respaldo</span>} />,
+      <PortadaConCarga
+        src="https://covers.test/a.jpg"
+        respaldo={<span>respaldo</span>}
+      />,
     )
     const img = container.querySelector('img') as HTMLImageElement
     expect(container.querySelector('[aria-busy="true"]')).not.toBeNull()
@@ -24,7 +27,10 @@ describe('PortadaConCarga', () => {
 
   it('si la imagen falla muestra el respaldo', () => {
     const { container } = render(
-      <PortadaConCarga src="https://covers.test/b.jpg" respaldo={<span>respaldo</span>} />,
+      <PortadaConCarga
+        src="https://covers.test/b.jpg"
+        respaldo={<span>respaldo</span>}
+      />,
     )
     fireEvent.error(container.querySelector('img') as HTMLImageElement)
 
@@ -46,7 +52,9 @@ describe('Hueso', () => {
   })
 
   it('con cargando=true pinta el hueso y reserva el alto', () => {
-    const { container } = render(<Hueso cargando ancho={96} alto={24} radio={999} />)
+    const { container } = render(
+      <Hueso cargando ancho={96} alto={24} radio={999} />,
+    )
     expect(container.querySelector('[data-boneyard-overlay]')).not.toBeNull()
     expect(container.querySelector('[data-boneyard-bone]')).not.toBeNull()
   })
@@ -67,7 +75,9 @@ describe('estados de carga con huecos', () => {
     // La tarjeta se pinta tal cual: no está dentro de ningún Skeleton; solo sus huecos lo están.
     for (const tarjeta of fantasmas) {
       expect(tarjeta.closest('[data-boneyard-content]')).toBeNull()
-      expect(tarjeta.querySelectorAll('[data-boneyard-overlay]').length).toBeGreaterThan(0)
+      expect(
+        tarjeta.querySelectorAll('[data-boneyard-overlay]').length,
+      ).toBeGreaterThan(0)
     }
   })
 
@@ -80,9 +90,15 @@ describe('estados de carga con huecos', () => {
     )
     await renderEn('/admin/libros?page=1&pageSize=12')
 
-    expect(await screen.findByRole('columnheader', { name: 'Título' })).toBeVisible()
-    expect(screen.getByRole('columnheader', { name: 'Disponibles' })).toBeVisible()
+    expect(
+      await screen.findByRole('columnheader', { name: 'Título' }),
+    ).toBeVisible()
+    expect(
+      screen.getByRole('columnheader', { name: 'Disponibles' }),
+    ).toBeVisible()
     expect(screen.getAllByTestId('fila-fantasma')).toHaveLength(8)
-    expect(screen.getByRole('searchbox', { name: 'Buscar libros' })).toBeVisible()
+    expect(
+      screen.getByRole('searchbox', { name: 'Buscar libros' }),
+    ).toBeVisible()
   })
 })

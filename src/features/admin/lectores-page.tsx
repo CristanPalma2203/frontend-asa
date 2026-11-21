@@ -2,12 +2,18 @@ import { getRouteApi } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { BuscadorLista, EncabezadoPagina } from '@/components/layout/encabezado-pagina'
+import {
+  BuscadorLista,
+  EncabezadoPagina,
+} from '@/components/layout/encabezado-pagina'
 import { Button } from '@/components/ui/button'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import { LectorFormDialog } from '@/features/biblioteca/components/lector-form-dialog'
 import { LectoresTable } from '@/features/biblioteca/components/lectores-table'
-import { useLector, useLectores } from '@/features/biblioteca/hooks/use-lectores'
+import {
+  useLector,
+  useLectores,
+} from '@/features/biblioteca/hooks/use-lectores'
 import type { LectorLista } from '@/features/biblioteca/types/api'
 
 const Route = getRouteApi('/admin/lectores')
@@ -51,7 +57,9 @@ export function LectoresAdminPage() {
         eyebrow="Gestión"
         titulo="Lectores"
         serif="registrados"
-        detalle={lectores.isSuccess ? `${lectores.data.totalCount} lectores` : null}
+        detalle={
+          lectores.isSuccess ? `${lectores.data.totalCount} lectores` : null
+        }
         accion={
           <Button type="button" onClick={() => setModo('crear')}>
             <Plus aria-hidden />
@@ -67,7 +75,10 @@ export function LectoresAdminPage() {
       />
       {lectores.isError ? (
         <div className="bg-card border-linea rounded-xl border p-6">
-          <ErrorReintentar error={lectores.error} onRetry={() => void lectores.refetch()} />
+          <ErrorReintentar
+            error={lectores.error}
+            onRetry={() => void lectores.refetch()}
+          />
         </div>
       ) : null}
       {lectores.isSuccess && items.length === 0 ? (
@@ -83,7 +94,9 @@ export function LectoresAdminPage() {
           detalle={detalle.data}
           cargandoDetalle={detalle.isPending}
           onEdit={setModo}
-          onToggle={(lector) => setAbiertoId(abiertoId === lector.idLector ? null : lector.idLector)}
+          onToggle={(lector) =>
+            setAbiertoId(abiertoId === lector.idLector ? null : lector.idLector)
+          }
         />
       ) : null}
       <LectorFormDialog lector={modo} onClose={() => setModo(null)} />

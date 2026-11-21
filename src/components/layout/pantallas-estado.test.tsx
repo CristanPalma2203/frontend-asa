@@ -6,7 +6,11 @@ import { renderEn } from '@/test/render'
 describe('404', () => {
   it('una ruta inexistente muestra la página no encontrada con botón para volver', async () => {
     await renderEn('/no-existe')
-    expect(await screen.findByRole('heading', { name: 'Página no encontrada' })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/')
+    expect(
+      await screen.findByRole('heading', { name: 'Página no encontrada' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: 'Volver al inicio' }),
+    ).toHaveAttribute('href', '/')
   })
 })

@@ -35,7 +35,9 @@ export function LuxiaBoton({
         aria-hidden
         className={cn(
           'grid place-items-center rounded-full',
-          variante === 'sidebar' ? 'size-6' : 'bg-pino-950 text-lima-400 size-8',
+          variante === 'sidebar'
+            ? 'size-6'
+            : 'bg-pino-950 text-lima-400 size-8',
         )}
       >
         <Sparkles className="size-4" strokeWidth={2} />

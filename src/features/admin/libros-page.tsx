@@ -2,7 +2,10 @@ import { getRouteApi } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { BuscadorLista, EncabezadoPagina } from '@/components/layout/encabezado-pagina'
+import {
+  BuscadorLista,
+  EncabezadoPagina,
+} from '@/components/layout/encabezado-pagina'
 import { Button } from '@/components/ui/button'
 import { DesactivarLibroDialog } from '@/features/biblioteca/components/desactivar-libro-dialog'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
@@ -74,7 +77,10 @@ export function LibrosAdminPage() {
       />
       {libros.isError ? (
         <div className="bg-card border-linea rounded-xl border p-6">
-          <ErrorReintentar error={libros.error} onRetry={() => void libros.refetch()} />
+          <ErrorReintentar
+            error={libros.error}
+            onRetry={() => void libros.refetch()}
+          />
         </div>
       ) : null}
       {libros.isSuccess && items.length === 0 ? (
@@ -91,7 +97,10 @@ export function LibrosAdminPage() {
         />
       ) : null}
       {libros.isSuccess ? (
-        <nav aria-label="Paginación" className="flex items-center justify-between gap-3">
+        <nav
+          aria-label="Paginación"
+          className="flex items-center justify-between gap-3"
+        >
           <p className="text-texto-3 text-sm">
             Página {search.page} de {Math.max(libros.data.totalPages, 1)}
           </p>
@@ -101,7 +110,9 @@ export function LibrosAdminPage() {
               variant="outline"
               size="sm"
               disabled={search.page <= 1}
-              onClick={() => void navigate({ search: { ...search, page: search.page - 1 } })}
+              onClick={() =>
+                void navigate({ search: { ...search, page: search.page - 1 } })
+              }
             >
               Anterior
             </Button>
@@ -110,7 +121,9 @@ export function LibrosAdminPage() {
               variant="outline"
               size="sm"
               disabled={search.page >= (libros.data.totalPages || 1)}
-              onClick={() => void navigate({ search: { ...search, page: search.page + 1 } })}
+              onClick={() =>
+                void navigate({ search: { ...search, page: search.page + 1 } })
+              }
             >
               Siguiente
             </Button>

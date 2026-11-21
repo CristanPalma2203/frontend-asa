@@ -88,6 +88,19 @@ docker run --rm -p 5173:80 --name frontend-asa frontend-asa
 
 Si `npm run dev` ya ocupa el 5173, hay que pararlo antes de `docker run`. Si no, el navegador seguirá llegando a Vite.
 
+## Despliegue (Cloudflare con wrangler)
+
+**En vivo:** _URL pendiente: pon aquí la que devuelve `wrangler deploy`._
+
+`wrangler.jsonc` publica `dist/` como assets estáticos de un Worker, con `not_found_handling: "single-page-application"` para que los deep links (`/libros/1`, `/admin/...`) caigan en `index.html`.
+
+```bash
+npm run build           # con VITE_API_URL apuntando a la API pública
+npx wrangler deploy
+```
+
+`public/_headers` se copia a `dist/` y añade a todas las respuestas `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` y una `Permissions-Policy` que apaga cámara, micrófono, geolocalización, pagos y USB.
+
 ## Variables de entorno
 
 | Variable | Obligatoria | Ejemplo |
@@ -128,7 +141,12 @@ Los tests de invalidación usan el `staleTime` de la app (30 s). Así, un dato s
   - reservar muestra "Tu ejemplar: <código>" y la disponibilidad baja de 3 a 2 en la ficha y en el catálogo;
   - `reserva-duplicada`;
   - sin stock (409): se cierra el diálogo, queda el mensaje y no cambia nada.
-- **Admin:** inactivar un ejemplar baja los disponibles del libro en el detalle y en la lista.
+- **Admin:**
+  - inactivar un ejemplar baja los disponibles del libro en el detalle y en la lista;
+  - editar un ejemplar (`PUT /api/ejemplares/{id}` con `rowVersion`): validación Zod, código duplicado en el campo y conflicto de concurrencia;
+  - desactivar un ejemplar (`DELETE /api/ejemplares/{id}`): pide confirmación, invalida libros y ejemplares y muestra el `code` del ProblemDetails si falla.
+- **LuxIA:** apertura y cierre con foco, respuestas desde `/api/libros`, historial limitado y borrado al cerrar sesión.
+- **Movimiento:** con movimiento reducido todo queda visible al instante, `CountUp` llega al valor final y al desmontar no quedan tweens vivos.
 - **Mis reservas:**
   - cancelación con *update optimista* y rollback si el servidor falla;
   - fecha mostrada en hora de El Salvador.
@@ -138,7 +156,16 @@ Los tests de invalidación usan el `staleTime` de la app (30 s). Así, un dato s
 - **Schema del lector:** contraseña opcional, mínimo 8.
 - **Formateo de fechas.**
 
-En Windows, si Vitest responde "failed to find the runner", hay que abrir la terminal en `C:\…` (con la unidad en mayúscula). Es un problema conocido de Vitest con la letra de unidad.
+### Tests en Windows
+
+Lanza los comandos desde la ruta con la unidad en **mayúscula**:
+
+```powershell
+cd C:\Users\<usuario>\Desktop\frontend-asa
+npm test
+```
+
+Si la terminal está en `c:\…` (minúscula, lo habitual en la terminal integrada de VS Code), Vitest carga dos veces el mismo módulo y todos los archivos fallan con "failed to find the runner". No es un fallo de los tests. El timeout por test es de 15 s (`vite.config.ts`) para que los tests de integración no fallen en máquinas lentas.
 
 ## Decisiones
 
@@ -172,6 +199,24 @@ En Windows, si Vitest responde "failed to find the runner", hay que abrir la ter
 
 - La API devuelve todo en UTC con `Z`. `formatearFecha` lo muestra con `Intl.DateTimeFormat('es-SV', { timeZone: 'America/El_Salvador' })`, sin depender de la zona del navegador.
 - Si llegara un ISO sin zona, lo trato como UTC.
+
+**LuxIA (asistente consultivo).**
+
+- Responde preguntas sobre el catálogo («¿hay ejemplares de Dune?», «libros de García Márquez») con **reglas**: interpreta la pregunta y consulta `GET /api/libros`. No usa ningún LLM, no necesita llaves ni endpoints nuevos y **no reserva**: enlaza a la ficha del libro.
+- Solo aparece en las pantallas con sidebar (no en la Home, el login, el 404 ni la pantalla de error).
+- El avatar es una animación Rive cargada bajo demanda; el runtime `.wasm` se sirve desde `/luxia/`, sin CDN. Con movimiento reducido o sin canvas se usa una imagen estática.
+- El historial se guarda en `localStorage` (`asa-luxia-history`, últimos 10 mensajes) y se borra al cerrar sesión.
+
+**Animaciones con GSAP.**
+
+- `src/lib/motion.ts` reúne las entradas (`reveal`, `cardsIn`, `titleLines`, `pop`), los diálogos y los efectos de puntero (`lift`, `magnetic`). `useMotion` las ata a un contenedor con `useGSAP`, así todo se revierte al desmontar.
+- Con `prefers-reduced-motion` todas las duraciones valen 0 y el contenido queda visible al instante.
+
+**Placeholders con boneyard.**
+
+- Mientras llegan los datos, cada hueco (portada, título, cifra, fila de tabla) muestra un hueso con shimmer y el resto de la pantalla ya está pintado: no hay pantallas de carga completas.
+- `Hueso` y `PortadaConCarga` (`components/ui/hueso.tsx`) envuelven el `<Skeleton>` de boneyard. Sobre fondos oscuros se usan colores lima translúcidos.
+- Con movimiento reducido el shimmer se detiene.
 
 **Contrato tipado.** Los estados son uniones de texto (`'Activa' | 'Cancelada' | …`) que coinciden con lo que serializa el backend. Las etiquetas y colores de cada badge salen de `estados.ts`.
 

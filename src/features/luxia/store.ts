@@ -11,6 +11,8 @@ type LuxiaState = {
   cerrar: () => void
   alternar: (opener?: HTMLElement | null) => void
   setAbierto: (abierto: boolean) => void
+  /** Vuelve al estado inicial (cerrado, sin opener). */
+  reiniciar: () => void
 }
 
 export const useLuxiaStore = create<LuxiaState>((set, get) => ({
@@ -21,4 +23,5 @@ export const useLuxiaStore = create<LuxiaState>((set, get) => ({
   alternar: (opener = null) =>
     get().abierto ? set({ abierto: false }) : set({ abierto: true, opener }),
   setAbierto: (abierto) => set({ abierto }),
+  reiniciar: () => set({ abierto: false, opener: null }),
 }))

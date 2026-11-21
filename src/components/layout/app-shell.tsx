@@ -57,12 +57,21 @@ function LayoutConSidebar({
   const barraRef = useRef<HTMLDivElement>(null)
   const rutaRef = useRef<HTMLDivElement>(null)
 
-  // Arranque del shell, solo la primera vez (enterNodes de Wynlo sidebar.tsx).
+  // Arranque del shell, solo la primera vez.
   useMotion(asideRef, (root) =>
-    reveal(root.querySelectorAll('nav [data-item-nav]'), { x: -12, y: 0, stagger: 0.04, delay: 0.15 }),
+    reveal(root.querySelectorAll('nav [data-item-nav]'), {
+      x: -12,
+      y: 0,
+      stagger: 0.04,
+      delay: 0.15,
+    }),
   )
   useMotion(barraRef, (root) =>
-    reveal(root.querySelectorAll('header > *'), { y: -12, stagger: 0.05, delay: 0.05 }),
+    reveal(root.querySelectorAll('header > *'), {
+      y: -12,
+      stagger: 0.05,
+      delay: 0.05,
+    }),
   )
 
   // Transición de ruta: arriba del todo, contenedor con so() y 12, h1 por palabras y bloques de
@@ -89,7 +98,10 @@ function LayoutConSidebar({
 
   return (
     <div className="bg-background min-h-svh lg:flex">
-      <aside ref={asideRef} className="sticky top-0 hidden h-svh w-66 flex-none lg:block">
+      <aside
+        ref={asideRef}
+        className="sticky top-0 hidden h-svh w-66 flex-none lg:block"
+      >
         <Sidebar />
       </aside>
       <div className="flex min-h-svh min-w-0 flex-1 flex-col">

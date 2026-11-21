@@ -5,12 +5,19 @@ import { Input } from '@/components/ui/input'
 import { cn } from '@/lib/utils'
 
 /** Input de contraseña con botón para mostrarla u ocultarla. */
-export function PasswordInput({ className, ...props }: Omit<ComponentProps<'input'>, 'type'>) {
+export function PasswordInput({
+  className,
+  ...props
+}: Omit<ComponentProps<'input'>, 'type'>) {
   const [visible, setVisible] = useState(false)
 
   return (
     <div className="relative">
-      <Input {...props} type={visible ? 'text' : 'password'} className={cn('pr-12', className)} />
+      <Input
+        {...props}
+        type={visible ? 'text' : 'password'}
+        className={cn('pr-12', className)}
+      />
       <button
         type="button"
         aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}

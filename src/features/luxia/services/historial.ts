@@ -1,6 +1,6 @@
 import type { ChatLibro, ChatMsg } from '@/features/luxia/types/chat'
 
-// Portado de Corelux luxiaChat.ts (solo historial y límites). Aquí en localStorage.
+// Historial del chat en localStorage, con límites de tamaño.
 export const MAX_MESSAGE = 1000
 export const HISTORY_LIMIT = 10
 export const STORAGE_KEY = 'asa-luxia-history'
@@ -23,12 +23,16 @@ export function loadHistory(): ChatMsg[] {
     return parsed
       .filter(
         (m): m is ChatMsg =>
-          !!m && (m.role === 'user' || m.role === 'assistant') && typeof m.text === 'string',
+          !!m &&
+          (m.role === 'user' || m.role === 'assistant') &&
+          typeof m.text === 'string',
       )
       .map((m) => ({
         role: m.role,
         text: m.text.slice(0, MAX_MESSAGE),
-        ...(Array.isArray(m.libros) ? { libros: m.libros.filter(esLibro) } : {}),
+        ...(Array.isArray(m.libros)
+          ? { libros: m.libros.filter(esLibro) }
+          : {}),
         ...(typeof m.consulta === 'string' ? { consulta: m.consulta } : {}),
         ...(typeof m.total === 'number' ? { total: m.total } : {}),
       }))
@@ -40,7 +44,19 @@ export function loadHistory(): ChatMsg[] {
 
 export function saveHistory(list: ChatMsg[]) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list.slice(-HISTORY_LIMIT)))
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(list.slice(-HISTORY_LIMIT)),
+    )
+  } catch {
+    /* localStorage no disponible */
+  }
+}
+
+/** Borra el historial guardado (al cerrar sesión: el siguiente usuario no ve la conversación). */
+export function clearHistory() {
+  try {
+    localStorage.removeItem(STORAGE_KEY)
   } catch {
     /* localStorage no disponible */
   }

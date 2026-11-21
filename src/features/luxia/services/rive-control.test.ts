@@ -9,7 +9,12 @@ import {
 } from '@/features/luxia/services/rive-control'
 
 function fakeRive() {
-  const list: RiveInputLike[] = ['estado', 'aparecer', 'desaparecer', 'variante'].map((name) => ({
+  const list: RiveInputLike[] = [
+    'estado',
+    'aparecer',
+    'desaparecer',
+    'variante',
+  ].map((name) => ({
     name,
     value: undefined,
     fire: vi.fn(),

@@ -7,8 +7,14 @@ import {
   desactivarLector,
   editarLector,
 } from '@/features/biblioteca/services/lectores.mutation'
-import { listarLectores, obtenerLector } from '@/features/biblioteca/services/lectores.read'
-import type { LectorLista, ListarLectoresParams } from '@/features/biblioteca/types/api'
+import {
+  listarLectores,
+  obtenerLector,
+} from '@/features/biblioteca/services/lectores.read'
+import type {
+  LectorLista,
+  ListarLectoresParams,
+} from '@/features/biblioteca/types/api'
 
 export function useLectores(params: ListarLectoresParams) {
   return useQuery({

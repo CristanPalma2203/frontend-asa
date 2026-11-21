@@ -4,7 +4,13 @@ import { StockBadge } from '@/features/biblioteca/components/stock-badge'
 import type { Libro } from '@/features/biblioteca/types/api'
 
 /** Tarjeta del catálogo. Toda la tarjeta es clicable: el botón del título se estira encima. */
-export function LibroCard({ libro, onAbrir }: { libro: Libro; onAbrir: (libro: Libro) => void }) {
+export function LibroCard({
+  libro,
+  onAbrir,
+}: {
+  libro: Libro
+  onAbrir: (libro: Libro) => void
+}) {
   return (
     <article
       data-lift
@@ -53,7 +59,10 @@ export function LibroCardFantasma() {
       </div>
       <div className="flex flex-1 flex-col gap-1.5 px-2 pt-4 pb-2">
         <Hueso cargando ancho="35%" alto={10} />
-        <div data-testid="titulo-fantasma" className="flex flex-col gap-1.5 py-0.5">
+        <div
+          data-testid="titulo-fantasma"
+          className="flex flex-col gap-1.5 py-0.5"
+        >
           <Hueso cargando alto={14} />
           <Hueso cargando ancho="70%" alto={14} />
         </div>

@@ -1,4 +1,4 @@
-/** Textos de LuxIA en español. Sustituye al bloque lsite.luxia de Corelux (sin i18n). */
+/** Textos de LuxIA en español (sin i18n). */
 export const textos = {
   open: 'Abrir chat con LuxIA',
   close: 'Cerrar chat',

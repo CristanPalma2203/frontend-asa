@@ -5,7 +5,12 @@ import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Hueso } from '@/components/ui/hueso'
 import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
-import { isSessionActive, selectIsAdmin, selectIsLector, useAuthStore } from '@/features/auth/store'
+import {
+  isSessionActive,
+  selectIsAdmin,
+  selectIsLector,
+  useAuthStore,
+} from '@/features/auth/store'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import { LibroNoEncontrado } from '@/features/biblioteca/components/libro-no-encontrado'
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
@@ -13,7 +18,10 @@ import { ReservaError } from '@/features/biblioteca/components/reserva-error'
 import { ReservarDialog } from '@/features/biblioteca/components/reservar-dialog'
 import { textoDisponibles } from '@/features/biblioteca/disponibilidad'
 import { useLibro } from '@/features/biblioteca/hooks/use-libros'
-import { useMisReservas, useReservar } from '@/features/biblioteca/hooks/use-reservas'
+import {
+  useMisReservas,
+  useReservar,
+} from '@/features/biblioteca/hooks/use-reservas'
 import type { LibroDetalle } from '@/features/biblioteca/types/api'
 import { useMotion } from '@/hooks/use-motion'
 import { ApiError } from '@/lib/api/client'
@@ -38,7 +46,10 @@ export function LibroPage() {
 
   if (libro.isError) {
     const error = libro.error
-    if (error instanceof ApiError && (error.code === 'libro-no-encontrado' || error.status === 404)) {
+    if (
+      error instanceof ApiError &&
+      (error.code === 'libro-no-encontrado' || error.status === 404)
+    ) {
       return <LibroNoEncontrado />
     }
     return (
@@ -58,15 +69,19 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
   const cargando = !detalle
   const ref = useRef<HTMLDivElement>(null)
 
-  // Al llegar el libro: portada (co de Flito, 1 elemento), título por palabras y metadatos +
-  // bloque Reservar (so, y 14, stagger 0.07, t 0.12). «Reservar» magnético (Wynlo).
+  // Al llegar el libro: portada (cardsIn), título por palabras y metadatos + bloque Reservar
+  // (reveal, y 14, stagger 0.07, t 0.12). «Reservar» magnético.
   useMotion(
     ref,
     (root) => {
       if (cargando) return
       cardsIn(root.querySelector('[data-m="portada"]'))
       titleLines(root.querySelector('h1'))
-      reveal(root.querySelectorAll('[data-m="meta"]'), { y: 14, stagger: 0.07, delay: 0.12 })
+      reveal(root.querySelectorAll('[data-m="meta"]'), {
+        y: 14,
+        stagger: 0.07,
+        delay: 0.12,
+      })
       return magnetic(root)
     },
     [cargando],
@@ -122,7 +137,11 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
                 </p>
               </>
             ) : (
-              <div aria-busy aria-label="Cargando libro" className="flex flex-col">
+              <div
+                aria-busy
+                aria-label="Cargando libro"
+                className="flex flex-col"
+              >
                 <Hueso cargando ancho={96} alto={11} />
                 <div className="mt-4 flex flex-col gap-2.5">
                   <Hueso cargando ancho="85%" alto={40} radio={6} />
@@ -132,7 +151,10 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
               </div>
             )}
 
-            <dl data-m="meta" className="border-linea-fuerte/70 mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-y py-5 sm:grid-cols-3">
+            <dl
+              data-m="meta"
+              className="border-linea-fuerte/70 mt-8 grid grid-cols-2 gap-x-6 gap-y-4 border-y py-5 sm:grid-cols-3"
+            >
               <Dato etiqueta="ISBN" mono cargando={cargando}>
                 {detalle?.isbn}
               </Dato>
@@ -140,12 +162,18 @@ function Ficha({ detalle }: { detalle?: LibroDetalle }) {
                 {detalle?.categoria}
               </Dato>
               <Dato etiqueta="Ejemplares" mono cargando={cargando}>
-                {detalle ? `${detalle.disponibles} de ${detalle.ejemplares.length}` : null}
+                {detalle
+                  ? `${detalle.disponibles} de ${detalle.ejemplares.length}`
+                  : null}
               </Dato>
             </dl>
 
             <div data-m="meta">
-              {detalle ? <AccionReserva detalle={detalle} /> : <AccionReservaCargando />}
+              {detalle ? (
+                <AccionReserva detalle={detalle} />
+              ) : (
+                <AccionReservaCargando />
+              )}
             </div>
           </div>
         </div>
@@ -168,8 +196,17 @@ function Dato({
   return (
     <div className="min-w-0">
       <dt className="text-texto-3 text-xs font-medium">{etiqueta}</dt>
-      <dd className={cn('text-texto mt-1 truncate', mono ? 'font-mono text-[13px]' : 'text-[15px]')}>
-        {cargando ? <Hueso cargando ancho="70%" alto={16} className="mt-0.5" /> : children}
+      <dd
+        className={cn(
+          'text-texto mt-1 truncate',
+          mono ? 'font-mono text-[13px]' : 'text-[15px]',
+        )}
+      >
+        {cargando ? (
+          <Hueso cargando ancho="70%" alto={16} className="mt-0.5" />
+        ) : (
+          children
+        )}
       </dd>
     </div>
   )
@@ -206,9 +243,11 @@ function AccionReserva({ detalle }: { detalle: LibroDetalle }) {
   const yaReservado =
     isLector &&
     activas.data?.items.some(
-      (reserva) => reserva.idLibro === detalle.idLibro && reserva.estado === 'Activa',
+      (reserva) =>
+        reserva.idLibro === detalle.idLibro && reserva.estado === 'Activa',
     )
-  const errorReserva = reservar.error instanceof ApiError ? reservar.error : null
+  const errorReserva =
+    reservar.error instanceof ApiError ? reservar.error : null
   const sinStock = detalle.disponibles === 0
   const idDisponibilidad = `disponibilidad-${detalle.idLibro}`
 
@@ -223,7 +262,8 @@ function AccionReserva({ detalle }: { detalle: LibroDetalle }) {
         },
         // Sin stock no hay nada que confirmar: cierro el diálogo y queda a la vista el mensaje.
         onError: (error) => {
-          if (error instanceof ApiError && error.code === 'sin-stock') setAbierto(false)
+          if (error instanceof ApiError && error.code === 'sin-stock')
+            setAbierto(false)
         },
       },
     )
@@ -241,10 +281,14 @@ function AccionReserva({ detalle }: { detalle: LibroDetalle }) {
         aria-hidden
         className={cn(
           'size-2 rounded-full',
-          sinStock ? 'bg-texto-5' : 'bg-lima-400 shadow-[0_0_0_3px_var(--color-lima-glow)]',
+          sinStock
+            ? 'bg-texto-5'
+            : 'bg-lima-400 shadow-[0_0_0_3px_var(--color-lima-glow)]',
         )}
       />
-      {sinStock ? 'Sin ejemplares disponibles' : textoDisponibles(detalle.disponibles)}
+      {sinStock
+        ? 'Sin ejemplares disponibles'
+        : textoDisponibles(detalle.disponibles)}
     </p>
   )
 
@@ -255,14 +299,22 @@ function AccionReserva({ detalle }: { detalle: LibroDetalle }) {
       {codigo ? null : yaReservado ? (
         <p className="text-texto-2 text-[15px]">
           Ya lo tienes reservado.{' '}
-          <Link to="/mis-reservas" className="text-pino-800 font-semibold underline-offset-4 hover:underline">
+          <Link
+            to="/mis-reservas"
+            className="text-pino-800 font-semibold underline-offset-4 hover:underline"
+          >
             Mis reservas
           </Link>
         </p>
       ) : (
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
           {sinStock ? (
-            <Button type="button" size="lg" disabled aria-describedby={idDisponibilidad}>
+            <Button
+              type="button"
+              size="lg"
+              disabled
+              aria-describedby={idDisponibilidad}
+            >
               Reservar
             </Button>
           ) : !sesion ? (
@@ -309,7 +361,7 @@ function AccionReserva({ detalle }: { detalle: LibroDetalle }) {
   )
 }
 
-/** «Tu ejemplar: …» con el código real de la API; entra con pop (uo de Flito). */
+/** «Tu ejemplar: …» con el código real de la API; entra con pop. */
 function ExitoReserva({ codigo }: { codigo: string }) {
   const ref = useRef<HTMLDivElement>(null)
   useMotion(ref, (root) => pop(root))
@@ -319,12 +371,18 @@ function ExitoReserva({ codigo }: { codigo: string }) {
       role="status"
       className="bg-card border-linea shadow-card flex items-start gap-3 rounded-xl border p-4"
     >
-      <CheckCircle2 aria-hidden className="text-exito-600 mt-0.5 size-5 flex-none" />
+      <CheckCircle2
+        aria-hidden
+        className="text-exito-600 mt-0.5 size-5 flex-none"
+      />
       <div className="flex flex-col gap-1">
         <p className="text-tinta font-semibold">Tu ejemplar: {codigo}</p>
         <p className="text-texto-3 text-sm">
           Lo encontrarás en{' '}
-          <Link to="/mis-reservas" className="text-pino-800 font-semibold underline-offset-4 hover:underline">
+          <Link
+            to="/mis-reservas"
+            className="text-pino-800 font-semibold underline-offset-4 hover:underline"
+          >
             Mis reservas
           </Link>
           .
