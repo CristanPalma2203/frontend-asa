@@ -26,6 +26,70 @@ afterEach(() => {
 })
 
 describe('LuxIA', () => {
+  it('abrir y cerrar el chat (con vuelo real al header y vuelta) no deja errores en consola', async () => {
+    // Con movimiento y con layout: jsdom no mide nada, así que se simula un tamaño para que
+    // el muelle se mida y LuxIA vuele de verdad (GSAP con su ticker real).
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: false,
+      media: query,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    }))
+    const medidas = ['offsetWidth', 'offsetHeight', 'offsetParent'] as const
+    const originales = medidas.map((prop) =>
+      Object.getOwnPropertyDescriptor(HTMLElement.prototype, prop),
+    )
+    for (const prop of medidas)
+      Object.defineProperty(HTMLElement.prototype, prop, {
+        configurable: true,
+        get(this: HTMLElement) {
+          return prop === 'offsetParent' ? this.parentElement : 48
+        },
+      })
+    const errores: unknown[] = []
+    const consola = vi
+      .spyOn(console, 'error')
+      .mockImplementation((...args) => errores.push(args))
+    const alError = (e: ErrorEvent) => errores.push(e.error ?? e.message)
+    window.addEventListener('error', alError)
+
+    try {
+      await renderEn(CATALOGO)
+      const { user } = await abrir()
+      await waitFor(() =>
+        expect(screen.getByTestId('luxia-anchor')).toHaveAttribute(
+          'data-dock',
+          'header',
+        ),
+      )
+      // Deja correr el vuelo de ida (750 ms).
+      await act(() => new Promise((r) => setTimeout(r, 900)))
+
+      await user.keyboard('{Escape}')
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: 'LuxIA' })).toBeNull(),
+      )
+      await waitFor(() =>
+        expect(screen.getByTestId('luxia-anchor')).toHaveAttribute(
+          'data-dock',
+          'corner',
+        ),
+      )
+      // Vuelo de vuelta a la esquina.
+      await act(() => new Promise((r) => setTimeout(r, 900)))
+
+      expect(errores).toEqual([])
+    } finally {
+      window.removeEventListener('error', alError)
+      consola.mockRestore()
+      medidas.forEach((prop, i) => {
+        const original = originales[i]
+        if (original)
+          Object.defineProperty(HTMLElement.prototype, prop, original)
+      })
+    }
+  })
+
   it.each([['¿qué libros de ciencia hay disponibles?'], ['Ciencia']])(
     '«%s» busca por la categoría Ciencia',
     async (pregunta) => {

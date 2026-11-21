@@ -7,6 +7,7 @@ import {
   EncabezadoPagina,
 } from '@/components/layout/encabezado-pagina'
 import { Button } from '@/components/ui/button'
+import { Paginacion } from '@/components/ui/paginacion'
 import { DesactivarLibroDialog } from '@/features/biblioteca/components/desactivar-libro-dialog'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import { LibroFormDialog } from '@/features/biblioteca/components/libro-form-dialog'
@@ -97,38 +98,11 @@ export function LibrosAdminPage() {
         />
       ) : null}
       {libros.isSuccess ? (
-        <nav
-          aria-label="Paginación"
-          className="flex items-center justify-between gap-3"
-        >
-          <p className="text-texto-3 text-sm">
-            Página {search.page} de {Math.max(libros.data.totalPages, 1)}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={search.page <= 1}
-              onClick={() =>
-                void navigate({ search: { ...search, page: search.page - 1 } })
-              }
-            >
-              Anterior
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={search.page >= (libros.data.totalPages || 1)}
-              onClick={() =>
-                void navigate({ search: { ...search, page: search.page + 1 } })
-              }
-            >
-              Siguiente
-            </Button>
-          </div>
-        </nav>
+        <Paginacion
+          page={search.page}
+          totalPages={libros.data.totalPages}
+          onPage={(page) => void navigate({ search: { ...search, page } })}
+        />
       ) : null}
       <LibroFormDialog
         abierto={modo !== null}

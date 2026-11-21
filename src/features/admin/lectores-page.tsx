@@ -7,6 +7,7 @@ import {
   EncabezadoPagina,
 } from '@/components/layout/encabezado-pagina'
 import { Button } from '@/components/ui/button'
+import { Paginacion } from '@/components/ui/paginacion'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
 import { LectorFormDialog } from '@/features/biblioteca/components/lector-form-dialog'
 import { LectoresTable } from '@/features/biblioteca/components/lectores-table'
@@ -97,6 +98,13 @@ export function LectoresAdminPage() {
           onToggle={(lector) =>
             setAbiertoId(abiertoId === lector.idLector ? null : lector.idLector)
           }
+        />
+      ) : null}
+      {lectores.isSuccess ? (
+        <Paginacion
+          page={search.page}
+          totalPages={lectores.data.totalPages}
+          onPage={(page) => void navigate({ search: { ...search, page } })}
         />
       ) : null}
       <LectorFormDialog lector={modo} onClose={() => setModo(null)} />

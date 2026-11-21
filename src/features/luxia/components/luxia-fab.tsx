@@ -259,7 +259,6 @@ export function LuxiaFab() {
       const vuelo = dockAnim(muelle.to, muelle.from, reduced)
       // En la esquina el muelle no lleva transform: al llegar se limpia el estilo en línea.
       const alaEsquina = muelle.to === null
-      const limpiar = alaEsquina ? 'transform,opacity' : undefined
       gsap.killTweensOf(el)
       if (primerVuelo.current) {
         primerVuelo.current = false
@@ -291,7 +290,8 @@ export function LuxiaFab() {
           duration: tramo,
           ease: 'none',
         })),
-        clearProps: limpiar,
+        // clearProps solo si hay algo que limpiar: GSAP falla con undefined («reading 'split'»).
+        ...(alaEsquina && { clearProps: 'transform,opacity' }),
       })
     },
     { scope: rootRef, dependencies: [muelle, reduced] },

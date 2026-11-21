@@ -214,6 +214,7 @@ function MobileNav() {
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="bg-pino-950/45 data-[state=open]:animate-in data-[state=open]:fade-in-0 fixed inset-0 z-50 lg:hidden" />
         <DialogPrimitive.Content
+          data-slot="sheet-content"
           aria-describedby={undefined}
           className="data-[state=open]:animate-in data-[state=open]:slide-in-from-left fixed inset-y-0 left-0 z-50 w-[min(300px,85vw)] lg:hidden"
         >

@@ -44,7 +44,7 @@ export function EjemplaresAdminTable({
         {cargando ? <FilasFantasma columnas={2} filas={4} /> : null}
         {ejemplares.map((item) => (
           <TableRow key={item.idEjemplar}>
-            <TableCell className="text-tinta font-mono text-[13px] font-medium">
+            <TableCell className="text-tinta font-mono text-[13px] font-medium whitespace-nowrap">
               {item.codigoInventario}
             </TableCell>
             <TableCell>
