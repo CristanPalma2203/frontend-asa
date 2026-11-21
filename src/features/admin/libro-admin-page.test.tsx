@@ -78,25 +78,4 @@ describe('admin de ejemplares', () => {
       .filter((url) => url.searchParams.get('pageSize') === '12')
     expect(listados).toHaveLength(2)
   })
-
-  it('el resumen muestra las métricas calculadas con los endpoints existentes', async () => {
-    entrarComo('Admin')
-    const api = crearApiFake([
-      { titulo: 'El Principito', copias: 3 },
-      { titulo: 'Dune', copias: 2 },
-    ])
-    server.use(...api.handlers)
-    await renderEn('/admin')
-
-    const metricas = await screen.findByRole('list', { name: 'Métricas' })
-    const valor = (etiqueta: string) =>
-      within(within(metricas).getByText(etiqueta).closest('li') as HTMLElement)
-
-    expect(await valor('Libros').findByText('2')).toBeInTheDocument()
-    expect(valor('Ejemplares disponibles').getByText('5')).toBeInTheDocument()
-    expect(
-      valor('Ejemplares disponibles').getByText('de 5 ejemplares en total'),
-    ).toBeInTheDocument()
-    expect(valor('Ejemplares reservados').getByText('0')).toBeInTheDocument()
-  })
 })

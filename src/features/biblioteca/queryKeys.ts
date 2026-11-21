@@ -11,8 +11,13 @@ const librosAll = ['libros'] as const
 const lectoresAll = ['lectores'] as const
 const reservasAll = ['reservas'] as const
 const ejemplaresAll = ['ejemplares'] as const
+const resumenAll = ['resumen'] as const
 
 export const queryKeys = {
+  resumen: {
+    all: resumenAll,
+    detail: (dias: 14 | 30) => [...resumenAll, dias] as const,
+  },
   libros: {
     all: librosAll,
     lists: () => [...librosAll, 'list'] as const,

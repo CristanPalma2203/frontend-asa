@@ -32,6 +32,7 @@ export function LibrosAdminPage() {
     page: search.page,
     pageSize: search.pageSize,
     buscar: search.buscar,
+    categoria: search.categoria,
   })
   const editando = typeof modo === 'object' ? modo : null
   const guardar = useGuardarLibro(editando, { onSuccess: () => setModo(null) })
@@ -48,11 +49,16 @@ export function LibrosAdminPage() {
       if (next === search.buscar) return
       void navigate({
         replace: true,
-        search: { page: 1, pageSize: search.pageSize, buscar: next },
+        search: {
+          page: 1,
+          pageSize: search.pageSize,
+          buscar: next,
+          categoria: search.categoria,
+        },
       })
     }, 300)
     return () => window.clearTimeout(timer)
-  }, [navigate, search.buscar, search.pageSize, texto])
+  }, [navigate, search.buscar, search.categoria, search.pageSize, texto])
 
   const items = libros.data?.items ?? []
 

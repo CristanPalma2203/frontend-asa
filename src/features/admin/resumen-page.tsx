@@ -1,34 +1,27 @@
 import { Link } from '@tanstack/react-router'
-import {
-  ArrowRight,
-  BookCheck,
-  BookMarked,
-  BookOpen,
-  CalendarCheck,
-  Users,
-  type LucideIcon,
-} from 'lucide-react'
-import { useRef, type ReactNode } from 'react'
+import { ArrowRight } from 'lucide-react'
+import { useState } from 'react'
 
-import { CountUp } from '@/components/ui/count-up'
-import { Hueso } from '@/components/ui/hueso'
-import { HUESO_OSCURO } from '@/components/ui/hueso.bones'
+import { ActividadFeed } from '@/features/admin/components/actividad-feed'
+import { CategoriasChart } from '@/features/admin/components/categorias-chart'
+import { MasReservados } from '@/features/admin/components/mas-reservados'
+import { PorAgotarse } from '@/features/admin/components/por-agotarse'
+import { ReservasChart } from '@/features/admin/components/reservas-chart'
+import { ResumenKpis } from '@/features/admin/components/resumen-kpis'
+import { useResumen } from '@/features/admin/hooks/use-resumen'
+import type { DiasResumen } from '@/features/admin/types/resumen'
 import { ErrorReintentar } from '@/features/biblioteca/components/error-reintentar'
-import { useResumenAdmin } from '@/features/biblioteca/hooks/use-resumen-admin'
-import { useMotion } from '@/hooks/use-motion'
-import { cardsIn } from '@/lib/motion'
 
 const lista = { page: 1, pageSize: 12 } as const
 
 export function ResumenAdminPage() {
-  const resumen = useResumenAdmin()
-  const datos = resumen.data
-  const metricasRef = useRef<HTMLUListElement>(null)
-  // Tarjetas de métricas con cardsIn (delay 0.1); las cifras cuentan con CountUp.
-  useMotion(metricasRef, (root) => cardsIn(root.children, { delay: 0.1 }))
+  const [dias, setDias] = useState<DiasResumen>(14)
+  const resumen = useResumen(dias)
+  const data = resumen.data
+  const cargando = resumen.isPending
 
   return (
-    <main className="flex flex-col gap-8 pt-2">
+    <main className="flex w-full flex-col gap-4 pt-2">
       <header className="flex flex-col gap-3">
         <p className="eyebrow">Panel de administración</p>
         <h1 className="text-[36px] leading-[1.02] sm:text-[44px]">
@@ -45,162 +38,108 @@ export function ResumenAdminPage() {
           />
         </section>
       ) : (
-        <ul
-          ref={metricasRef}
-          aria-label="Métricas"
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5"
-        >
-          <Metrica
-            icono={BookOpen}
-            etiqueta="Libros"
-            valor={datos?.libros}
-            detalle="títulos activos en el catálogo"
-          />
-          <Metrica
-            icono={BookCheck}
-            etiqueta="Ejemplares disponibles"
-            valor={datos?.disponibles}
-            detalle={
-              datos ? `de ${datos.ejemplares} ejemplares en total` : undefined
-            }
-            destacada
-          />
-          <Metrica
-            icono={BookMarked}
-            etiqueta="Ejemplares reservados"
-            valor={datos?.reservados}
-            detalle="apartados por lectores"
-          />
-          <Metrica
-            icono={Users}
-            etiqueta="Lectores"
-            valor={datos?.lectores}
-            detalle={datos ? `${datos.lectoresActivos} activos` : undefined}
-          />
-          <Metrica
-            icono={CalendarCheck}
-            etiqueta="Reservas activas"
-            valor={datos?.reservasActivas}
-            detalle="de todos los lectores"
-          />
-        </ul>
-      )}
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
+          {/* Fila 1 — 6 KPIs */}
+          <div className="min-w-0 lg:col-span-12">
+            <ResumenKpis resumen={data} cargando={cargando} />
+          </div>
 
-      <section className="grid gap-4 md:grid-cols-2">
-        <Acceso
-          titulo="Libros y ejemplares"
-          texto="Crea, edita o desactiva títulos y gestiona sus ejemplares."
-        >
-          <Link to="/admin/libros" search={lista}>
-            Gestionar libros
-            <ArrowRight aria-hidden className="size-4" strokeWidth={2.2} />
-          </Link>
-        </Acceso>
-        <Acceso
-          titulo="Lectores"
-          texto="Da de alta lectores, edita sus datos y revisa sus reservas."
-        >
-          <Link to="/admin/lectores" search={lista}>
-            Gestionar lectores
-            <ArrowRight aria-hidden className="size-4" strokeWidth={2.2} />
-          </Link>
-        </Acceso>
-      </section>
+          {/* Fila 2 — chart 8 + actividad 4 */}
+          <div className="flex min-h-[320px] min-w-0 lg:col-span-8">
+            <ReservasChart
+              serie={data?.serieDiaria ?? []}
+              dias={dias}
+              onDias={setDias}
+              cargando={cargando}
+              className="w-full"
+            />
+          </div>
+          <div className="flex min-h-[320px] min-w-0 lg:col-span-4">
+            <ActividadFeed
+              items={data?.actividad ?? []}
+              cargando={cargando}
+              className="w-full"
+            />
+          </div>
+
+          {/* Fila 3 — categorías 7 + más reservados 5 */}
+          <div className="flex min-h-[280px] min-w-0 lg:col-span-7">
+            <CategoriasChart
+              categorias={data?.porCategoria ?? []}
+              cargando={cargando}
+              className="w-full"
+            />
+          </div>
+          <div className="flex min-h-[280px] min-w-0 lg:col-span-5">
+            <MasReservados
+              items={data?.masReservados ?? []}
+              cargando={cargando}
+              className="w-full"
+            />
+          </div>
+
+          {/* Fila 4 — por agotarse full */}
+          <div className="min-w-0 lg:col-span-12">
+            <PorAgotarse
+              items={data?.porAgotarse ?? []}
+              cargando={cargando}
+            />
+          </div>
+
+          {/* Fila 5 — accesos 6+6 */}
+          <div className="min-w-0 lg:col-span-6">
+            <AccesoCompacto
+              titulo="Libros y ejemplares"
+              texto="Catálogo y gestión de ejemplares."
+              to="/admin/libros"
+              search={lista}
+              cta="Gestionar libros"
+            />
+          </div>
+          <div className="min-w-0 lg:col-span-6">
+            <AccesoCompacto
+              titulo="Lectores"
+              texto="Altas, ediciones y reservas."
+              to="/admin/lectores"
+              search={lista}
+              cta="Gestionar lectores"
+            />
+          </div>
+        </div>
+      )}
     </main>
   )
 }
 
-function Metrica({
-  icono: Icono,
-  etiqueta,
-  valor,
-  detalle,
-  destacada = false,
-}: {
-  icono: LucideIcon
-  etiqueta: string
-  valor: number | undefined
-  detalle?: string
-  destacada?: boolean
-}) {
-  return (
-    <li
-      className={
-        destacada
-          ? 'bg-pino-950 text-papel shadow-card flex flex-col gap-4 rounded-xl p-5'
-          : 'bg-card border-linea shadow-card flex flex-col gap-4 rounded-xl border p-5'
-      }
-    >
-      <div className="flex items-center justify-between gap-3">
-        <p
-          className={
-            destacada
-              ? 'text-[13px] font-semibold text-white/75'
-              : 'text-texto-3 text-[13px] font-semibold'
-          }
-        >
-          {etiqueta}
-        </p>
-        <span
-          className={
-            destacada
-              ? 'bg-lima-400 text-pino-800 grid size-9 place-items-center rounded-full'
-              : 'bg-lima-wash text-pino-800 grid size-9 place-items-center rounded-full'
-          }
-        >
-          <Icono aria-hidden className="size-[18px]" strokeWidth={2} />
-        </span>
-      </div>
-      {valor === undefined ? (
-        // Solo el hueco de la cifra (62 % × 26, r6): la etiqueta ya se ve.
-        <div className="flex h-10 items-center">
-          <Hueso
-            cargando
-            ancho="62%"
-            alto={26}
-            radio={6}
-            className="w-full"
-            {...(destacada ? HUESO_OSCURO : {})}
-          />
-        </div>
-      ) : (
-        <p
-          className={
-            destacada
-              ? 'text-lima-400 font-mono text-[40px] leading-none font-medium tracking-[-0.04em]'
-              : 'text-tinta font-mono text-[40px] leading-none font-medium tracking-[-0.04em]'
-          }
-        >
-          <CountUp value={valor} duration={1.2} />
-        </p>
-      )}
-      <p
-        className={
-          destacada ? 'text-[13px] text-white/65' : 'text-texto-3 text-[13px]'
-        }
-      >
-        {detalle ?? ' '}
-      </p>
-    </li>
-  )
-}
-
-function Acceso({
+function AccesoCompacto({
   titulo,
   texto,
-  children,
+  to,
+  search,
+  cta,
 }: {
   titulo: string
   texto: string
-  children: ReactNode
+  to: '/admin/libros' | '/admin/lectores'
+  search: typeof lista
+  cta: string
 }) {
   return (
-    <div className="bg-card border-linea flex flex-col gap-2 rounded-xl border p-6">
-      <h2 className="text-lg">{titulo}</h2>
-      <p className="text-texto-3 text-[15px]">{texto}</p>
-      <div className="text-pino-800 mt-3 [&>a]:inline-flex [&>a]:items-center [&>a]:gap-1.5 [&>a]:text-sm [&>a]:font-semibold [&>a]:underline-offset-4 [&>a:hover]:underline">
-        {children}
+    <div className="bg-card border-linea flex h-full items-center justify-between gap-4 rounded-xl border px-5 py-4">
+      <div className="min-w-0">
+        <h2 className="text-base font-semibold tracking-[-0.02em]">
+          {titulo}
+        </h2>
+        <p className="text-texto-3 text-sm">{texto}</p>
       </div>
+      <Link
+        to={to}
+        search={search}
+        className="text-pino-800 focus-visible:shadow-foco inline-flex shrink-0 items-center gap-1.5 text-sm font-semibold underline-offset-4 outline-none hover:underline"
+      >
+        {cta}
+        <ArrowRight aria-hidden className="size-4" strokeWidth={2.2} />
+      </Link>
     </div>
   )
 }
