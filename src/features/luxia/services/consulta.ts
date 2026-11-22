@@ -105,8 +105,10 @@ export async function consultarLuxia(
   }
 }
 
+const ESTADOS_RESPALDO = new Set([429, 502, 503, 504])
+
 function usarRespaldo(error: unknown) {
-  if (error instanceof ApiError) return error.status === 503
+  if (error instanceof ApiError) return ESTADOS_RESPALDO.has(error.status)
   if (error instanceof ZodError || error instanceof TypeError) return true
   return (
     error instanceof DOMException &&
