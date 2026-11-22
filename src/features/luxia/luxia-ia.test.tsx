@@ -128,6 +128,23 @@ describe('LuxIA con IA del backend', () => {
     expect(within(panel).queryByRole('alert')).toBeNull()
   })
 
+  it('sin sesión responde con las reglas, sin avisar', async () => {
+    catalogo()
+    server.use(
+      http.post(
+        '*/api/luxia/preguntar',
+        () => new HttpResponse(null, { status: 401 }),
+      ),
+    )
+
+    const { panel } = await preguntar('Dune')
+
+    expect(
+      await within(panel).findByText('Quedan 3 ejemplares de «Dune».'),
+    ).toBeInTheDocument()
+    expect(within(panel).queryByRole('alert')).toBeNull()
+  })
+
   it('ante un error de red responde con las reglas, sin avisar', async () => {
     catalogo()
     server.use(http.post('*/api/luxia/preguntar', () => HttpResponse.error()))
