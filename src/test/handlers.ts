@@ -88,6 +88,9 @@ export const handlers = [
     if (cancelarFalla) return problema(409, 'reserva-no-activa')
     return new HttpResponse(null, { status: 204 })
   }),
+  http.post(`${base}/api/luxia/preguntar`, () =>
+    problema(503, 'luxia-no-disponible'),
+  ),
   http.post(`${base}/api/auth/login`, () =>
     problema(401, 'credenciales-invalidas'),
   ),

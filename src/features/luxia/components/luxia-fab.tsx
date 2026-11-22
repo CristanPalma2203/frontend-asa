@@ -16,7 +16,10 @@ import {
   resumirHome,
 } from '@/features/biblioteca/hooks/use-libros'
 import { queryKeys } from '@/features/biblioteca/queryKeys'
-import { listarLibros } from '@/features/biblioteca/services/libros.read'
+import {
+  listarLibros,
+  obtenerLibro as obtenerLibroApi,
+} from '@/features/biblioteca/services/libros.read'
 import type { ListarLibrosParams } from '@/features/biblioteca/types/api'
 import { LuxiaAvatar } from '@/features/luxia/components/luxia-avatar'
 import { useLuxiaController } from '@/features/luxia/hooks/use-luxia-controller'
@@ -61,6 +64,7 @@ export function LuxiaFab() {
   const [msgs, setMsgs] = useState<ChatMsg[]>(loadHistory)
   const [draft, setDraft] = useState('')
   const [busy, setBusy] = useState(false)
+  const enviando = useRef(false)
   const [error, setError] = useState(false)
   const shown = true
 
@@ -291,6 +295,15 @@ export function LuxiaFab() {
     [queryClient],
   )
 
+  const obtenerLibro = useCallback(
+    (idLibro: number) =>
+      queryClient.fetchQuery({
+        queryKey: queryKeys.libros.detail(idLibro),
+        queryFn: () => obtenerLibroApi(idLibro),
+      }),
+    [queryClient],
+  )
+
   const categorias = useCallback(
     async () =>
       resumirHome(
@@ -306,20 +319,26 @@ export function LuxiaFab() {
 
   const send = async (preset?: string, base: ChatMsg[] = msgs) => {
     const text = (preset ?? draft).trim().slice(0, MAX_MESSAGE)
-    if (!text || busy) return
+    if (!text || enviando.current) return
+    enviando.current = true
     setMsgs([...base, { role: 'user', text }])
     setDraft('')
     setError(false)
     setBusy(true)
     setMood('thinking')
     try {
-      const reply = await consultarLuxia(text, buscar, categorias, base)
+      const reply = await consultarLuxia(
+        text,
+        { buscar, categorias, obtenerLibro },
+        base,
+      )
       setMsgs((m) => [...m, reply])
       setMood('talking')
     } catch {
       setError(true)
       setMood('error')
     } finally {
+      enviando.current = false
       setBusy(false)
     }
   }

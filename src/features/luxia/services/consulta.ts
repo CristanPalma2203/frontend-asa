@@ -1,3 +1,5 @@
+import { ZodError } from 'zod'
+
 import type {
   Libro,
   ListarLibrosParams,
@@ -16,7 +18,17 @@ import {
   primeraNueva,
   type ContextoSugerencia,
 } from '@/features/luxia/services/sugerencia'
+import {
+  type PreguntaLuxia,
+  type RespuestaLuxia,
+} from '@/features/luxia/schemas/respuesta.schema'
+import { preguntarLuxia } from '@/features/luxia/services/luxia.mutation'
+import {
+  fichasDeLibros,
+  type ObtenerLibro,
+} from '@/features/luxia/services/luxia.read'
 import type { ChatLibro, ChatMsg } from '@/features/luxia/types/chat'
+import { ApiError } from '@/lib/api/client'
 
 export const RESULTADOS = 3
 
@@ -32,7 +44,83 @@ function variar(plantillas: string[], semilla: number) {
 
 const ejemplares = (n: number) => (n === 1 ? 'ejemplar' : 'ejemplares')
 
+export const TURNOS_PARA_IA = 6
+
+export type FuentesLuxia = {
+  buscar: BuscarLibros
+  categorias?: () => Promise<string[]>
+  obtenerLibro: ObtenerLibro
+  preguntar?: (cuerpo: PreguntaLuxia) => Promise<RespuestaLuxia>
+}
+
 export async function consultarLuxia(
+  pregunta: string,
+  {
+    buscar,
+    categorias,
+    obtenerLibro,
+    preguntar = preguntarLuxia,
+  }: FuentesLuxia,
+  historial: ChatMsg[] = [],
+): Promise<ChatMsg> {
+  const respuesta = await preguntar({
+    pregunta,
+    historial: historial.slice(-TURNOS_PARA_IA).map((m) => ({
+      rol: m.role === 'user' ? 'usuario' : 'luxia',
+      texto: m.text,
+    })),
+  }).catch((error: unknown) => {
+    if (usarRespaldo(error)) return null
+    throw error
+  })
+  if (!respuesta) {
+    return consultarConReglas(pregunta, buscar, categorias, historial)
+  }
+
+  const mostrados = librosMostrados(historial)
+  const libros = await fichasDeLibros(respuesta.idsLibros, obtenerLibro)
+  const nuevos = libros.filter((l) => !mostrados.has(l.idLibro))
+  const primero = libros[0]
+  const sugerencia = primeraNueva(
+    candidatasTras(
+      primero
+        ? {
+            tipo: 'libro',
+            autor: primero.autor,
+            categoria: primero.categoria,
+          }
+        : { tipo: 'nada' },
+    ),
+    preguntasHechas(historial, [pregunta]),
+  )
+
+  return {
+    role: 'assistant',
+    text:
+      libros.length > 0 && nuevos.length === 0
+        ? `${respuesta.texto} ${ARRIBA}`
+        : respuesta.texto,
+    ...(nuevos.length > 0 ? { libros: nuevos.slice(0, RESULTADOS) } : {}),
+    ...(sugerencia ? { sugerencia } : {}),
+  }
+}
+
+function usarRespaldo(error: unknown) {
+  if (error instanceof ApiError) return error.status === 503
+  if (error instanceof ZodError || error instanceof TypeError) return true
+  return (
+    error instanceof DOMException &&
+    (error.name === 'TimeoutError' || error.name === 'AbortError')
+  )
+}
+
+function librosMostrados(historial: ChatMsg[]) {
+  return new Set(
+    historial.flatMap((m) => m.libros?.map((l) => l.idLibro) ?? []),
+  )
+}
+
+export async function consultarConReglas(
   pregunta: string,
   buscar: BuscarLibros,
   categorias: () => Promise<string[]> = async () => [],
@@ -43,9 +131,7 @@ export async function consultarLuxia(
   const previas = preguntasHechas(historial)
   const repetida = previas.has(normalizarPregunta(pregunta))
   const hechas = preguntasHechas(historial, [pregunta])
-  const mostrados = new Set(
-    historial.flatMap((m) => m.libros?.map((l) => l.idLibro) ?? []),
-  )
+  const mostrados = librosMostrados(historial)
   const yaExplicoReserva = historial.some(
     (m) => m.role === 'user' && interpretar(m.text).tipo === 'reservar',
   )
