@@ -28,7 +28,8 @@ const Route = getRouteApi('/catalogo')
 const claseZonaLibros =
   '[--ancho-tarjeta:160px] [--hueco:16px] empty:hidden sm:[--ancho-tarjeta:200px] lg:[--hueco:20px]'
 const claseRejillaLibros = 'flex flex-wrap justify-center gap-(--hueco)'
-const claseCeldaLibro = 'flex w-(--ancho-tarjeta) flex-none'
+const claseCeldaLibro =
+  'flex w-(--ancho-tarjeta) max-w-(--ancho-tarjeta) min-w-0 flex-[0_0_var(--ancho-tarjeta)]'
 
 export function CatalogoPage() {
   const search = Route.useSearch()

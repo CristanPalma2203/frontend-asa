@@ -61,6 +61,7 @@ export function PortadaConCarga({
   alto = 168,
   radio = 6,
   respaldo,
+  contener = false,
 }: {
   src: string
   alt?: string
@@ -68,6 +69,7 @@ export function PortadaConCarga({
   alto?: number
   radio?: number | string
   respaldo: ReactNode
+  contener?: boolean
 }) {
   return (
     <PortadaConCargaInterna
@@ -78,6 +80,7 @@ export function PortadaConCarga({
       alto={alto}
       radio={radio}
       respaldo={respaldo}
+      contener={contener}
     />
   )
 }
@@ -89,6 +92,7 @@ function PortadaConCargaInterna({
   alto,
   radio,
   respaldo,
+  contener,
 }: {
   src: string
   alt: string
@@ -96,6 +100,7 @@ function PortadaConCargaInterna({
   alto: number
   radio: number | string
   respaldo: ReactNode
+  contener: boolean
 }) {
   const [listo, setListo] = useState(false)
   const [fallo, setFallo] = useState(false)
@@ -122,7 +127,10 @@ function PortadaConCargaInterna({
         onLoad={() => setListo(true)}
         onError={() => setFallo(true)}
         className={cn(
-          'block h-full w-full object-cover opacity-0 transition-opacity duration-200 ease-out motion-reduce:transition-none',
+          'block h-full w-full opacity-0 transition-opacity duration-200 ease-out motion-reduce:transition-none',
+          contener
+            ? 'mx-auto max-h-full max-w-full object-contain'
+            : 'object-cover',
           listo && 'opacity-100',
         )}
       />

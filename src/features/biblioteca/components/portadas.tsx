@@ -48,11 +48,13 @@ export function PortadaLibro({
   titulo,
   tamano = 'M',
   className,
+  contener = false,
 }: {
   isbn: string
   titulo: string
   tamano?: 'S' | 'M' | 'L'
   className?: string
+  contener?: boolean
 }) {
   const limpio = isbnLimpio(isbn)
   const base = cn(
@@ -70,6 +72,7 @@ export function PortadaLibro({
       alto={tamano === 'L' ? 252 : 168}
       radio={6}
       respaldo={respaldo}
+      contener={contener}
     />
   )
 }

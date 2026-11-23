@@ -9,18 +9,19 @@ export function LibroCard({ libro }: { libro: Libro }) {
   return (
     <article
       data-lift
-      className="group bg-card border-linea shadow-card hover:shadow-card-hover has-focus-visible:shadow-foco relative flex h-full flex-col rounded-xl border p-3 transition-shadow duration-300"
+      className="group bg-card border-linea shadow-card hover:shadow-card-hover has-focus-visible:shadow-foco relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border p-3 transition-shadow duration-300"
     >
       <div className="bg-hueso flex justify-center rounded-[14px] px-6 pt-7 pb-6">
         <PortadaLibro
           isbn={libro.isbn}
           titulo={libro.titulo}
+          contener
           className="w-[112px] transition-transform duration-300 group-hover:-translate-y-1"
         />
       </div>
-      <div className="flex flex-1 flex-col gap-1 px-2 pt-4 pb-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-1 px-2 pt-4 pb-2">
         <p className="eyebrow truncate">{libro.categoria}</p>
-        <h2 className="text-tinta line-clamp-2 text-[17px] leading-snug tracking-[-0.02em]">
+        <h2 className="text-tinta line-clamp-2 min-w-0 text-[17px] leading-snug tracking-[-0.02em] break-words">
           <Link
             to="/libros/$idLibro"
             params={{ idLibro: String(libro.idLibro) }}
@@ -29,7 +30,9 @@ export function LibroCard({ libro }: { libro: Libro }) {
             {libro.titulo}
           </Link>
         </h2>
-        <p className="text-texto-3 truncate text-sm">{libro.autor}</p>
+        <p className="text-texto-3 line-clamp-2 min-w-0 text-sm break-words">
+          {libro.autor}
+        </p>
         <div className="mt-auto pt-3">
           <StockBadge disponibles={libro.disponibles} />
         </div>
@@ -43,12 +46,12 @@ export function LibroCardFantasma() {
     <article
       aria-hidden
       data-testid="libro-card-fantasma"
-      className="bg-card border-linea shadow-card relative flex h-full flex-col rounded-xl border p-3"
+      className="bg-card border-linea shadow-card relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-xl border p-3"
     >
       <div className="bg-hueso flex justify-center rounded-[14px] px-6 pt-7 pb-6">
         <Hueso cargando ancho={112} alto={168} radio={6} className="shrink-0" />
       </div>
-      <div className="flex flex-1 flex-col gap-1.5 px-2 pt-4 pb-2">
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 px-2 pt-4 pb-2">
         <Hueso cargando ancho="35%" alto={10} />
         <div
           data-testid="titulo-fantasma"

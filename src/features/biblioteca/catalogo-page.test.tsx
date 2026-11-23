@@ -1,4 +1,4 @@
-import { act, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
@@ -459,7 +459,12 @@ describe('catálogo', () => {
         const celdas = within(lista).getAllByRole('listitem')
         expect(celdas).toHaveLength(cantidad)
         for (const celda of celdas)
-          expect(celda).toHaveClass('w-(--ancho-tarjeta)', 'flex-none')
+          expect(celda).toHaveClass(
+            'w-(--ancho-tarjeta)',
+            'max-w-(--ancho-tarjeta)',
+            'min-w-0',
+            'flex-[0_0_var(--ancho-tarjeta)]',
+          )
       },
     )
 
@@ -531,6 +536,72 @@ describe('catálogo', () => {
       expect(tamanos).not.toContain('12')
       expect(within(rejilla()).getAllByRole('listitem')).toHaveLength(14)
       expect(screen.getByText(/página 1 de 2/)).toBeInTheDocument()
+    })
+
+    it('una portada horizontal y un autor largo no ensanchan su tarjeta', async () => {
+      server.use(
+        ...crearApiFake([
+          {
+            titulo: 'Design Patterns',
+            autor: 'Erich Gamma, Richard Helm, Ralph Johnson, John Vlissides',
+            categoria: 'Tecnología',
+          },
+          {
+            titulo: 'Clean Code',
+            autor: 'Robert C. Martin',
+            categoria: 'Tecnología',
+          },
+          {
+            titulo: 'Refactoring',
+            autor: 'Martin Fowler',
+            categoria: 'Tecnología',
+          },
+        ]).handlers,
+      )
+      await renderEn('/catalogo?page=1&pageSize=12')
+
+      const tarjeta = (titulo: string) => {
+        const articulo = screen
+          .getByRole('heading', { name: titulo })
+          .closest('article')
+        if (!articulo) throw new Error(`sin tarjeta para ${titulo}`)
+        return articulo
+      }
+      await screen.findByRole('heading', { name: 'Design Patterns' })
+      const disenio = tarjeta('Design Patterns')
+      const portada = disenio.querySelector('img')
+      if (!portada) throw new Error('sin portada')
+      Object.defineProperties(portada, {
+        complete: { value: true },
+        naturalWidth: { value: 640 },
+        naturalHeight: { value: 320 },
+      })
+      fireEvent.load(portada)
+
+      expect(portada).toHaveClass(
+        'object-contain',
+        'max-w-full',
+        'max-h-full',
+        'opacity-100',
+      )
+      expect(disenio).toHaveClass('w-full', 'min-w-0', 'overflow-hidden')
+      const autor = within(disenio).getByText(/^Erich Gamma/)
+      expect(autor).toHaveClass('line-clamp-2', 'min-w-0', 'break-words')
+      expect(autor).not.toHaveClass('truncate')
+
+      for (const otro of ['Clean Code', 'Refactoring']) {
+        expect(disenio.parentElement?.className).toBe(
+          tarjeta(otro).parentElement?.className,
+        )
+        expect(disenio.className).toBe(tarjeta(otro).className)
+        expect(portada.closest('.aspect-\\[2\\/3\\]')?.className).toBe(
+          tarjeta(otro).querySelector('.aspect-\\[2\\/3\\]')?.className,
+        )
+      }
+      expect(disenio.parentElement).toHaveClass(
+        'w-(--ancho-tarjeta)',
+        'max-w-(--ancho-tarjeta)',
+      )
     })
 
     it('una búsqueda sin resultados no deja una cuadrícula vacía', async () => {
