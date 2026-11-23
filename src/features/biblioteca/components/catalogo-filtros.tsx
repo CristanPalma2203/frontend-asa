@@ -1,7 +1,12 @@
 import { ChevronDown, Search, X } from 'lucide-react'
 import { useRef } from 'react'
 
-import { mismaCategoria } from '@/features/biblioteca/hooks/use-categorias'
+import { SugerenciasCategorias } from '@/features/biblioteca/components/sugerencias-categorias'
+import { useSugerenciasCategorias } from '@/features/biblioteca/hooks/use-sugerencias-categorias'
+import {
+  categoriaExacta,
+  mismaCategoria,
+} from '@/features/biblioteca/hooks/use-categorias'
 import {
   ORDENES,
   type Disponibilidad,
@@ -104,15 +109,21 @@ export function BarraCatalogo({
   orden,
   onOrden,
   totalLibros,
+  onCategoria,
 }: {
   texto: string
   onTexto: (texto: string) => void
+  onCategoria: (categoria: string, conservarTexto: boolean) => void
   disponibilidad: Disponibilidad | undefined
   onDisponibilidad: (valor: Disponibilidad | undefined) => void
   orden: Orden | undefined
   onOrden: (orden: Orden | undefined) => void
   totalLibros: number | undefined
 }) {
+  const sugerencias = useSugerenciasCategorias({
+    texto,
+    onElegir: (categoria) => onCategoria(categoria.nombre, false),
+  })
   const rapidos: { valor: Disponibilidad; etiqueta: string }[] = [
     { valor: 'disponibles', etiqueta: 'Disponibles' },
     { valor: 'agotados', etiqueta: 'Agotados' },
@@ -122,7 +133,11 @@ export function BarraCatalogo({
     <div className="bg-card shadow-card flex flex-col gap-2.5 rounded-[20px] p-2.5 md:flex-row md:items-center">
       <form
         role="search"
-        onSubmit={(event) => event.preventDefault()}
+        onSubmit={(event) => {
+          event.preventDefault()
+          const exacta = categoriaExacta(sugerencias.categorias, texto)
+          if (exacta) onCategoria(exacta.nombre, true)
+        }}
         className="bg-hueso relative flex h-11 min-w-0 flex-1 items-center rounded-xl md:max-w-[420px]"
       >
         <Search
@@ -135,11 +150,13 @@ export function BarraCatalogo({
           name="buscar"
           type="search"
           aria-label="Buscar"
+          {...sugerencias.propsEntrada}
           value={texto}
           onChange={(event) => onTexto(event.target.value)}
           placeholder="Busca por título, autor o categoría"
           className="text-tinta placeholder:text-texto-4 focus-visible:shadow-foco h-full w-full rounded-xl bg-transparent pr-3 pl-10 text-[15px] outline-none"
         />
+        <SugerenciasCategorias {...sugerencias.lista} />
       </form>
 
       <div className="tira-sin-barra -mx-2.5 flex items-center gap-2 overflow-x-auto px-2.5 md:mx-0 md:overflow-visible md:px-0">

@@ -21,6 +21,10 @@ import { cardsIn, lift } from '@/lib/motion'
 
 const Route = getRouteApi('/catalogo')
 
+const claseRejillaLibros =
+  'grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4 sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] lg:gap-5'
+const claseCeldaLibro = 'w-full max-w-[18rem] justify-self-center'
+
 export function CatalogoPage() {
   const search = Route.useSearch()
   const navigate = Route.useNavigate()
@@ -95,7 +99,10 @@ export function CatalogoPage() {
         </h1>
       </header>
 
-      <section aria-label="Filtros" className="flex flex-col gap-4">
+      <section
+        aria-label="Filtros"
+        className="relative z-20 flex flex-col gap-4"
+      >
         <ChipsCategorias
           categorias={categorias.data}
           activa={search.categoria}
@@ -109,6 +116,13 @@ export function CatalogoPage() {
           orden={search.orden}
           onOrden={(orden) => irCon({ orden })}
           totalLibros={libros.isSuccess ? totalCount : undefined}
+          onCategoria={(categoria, conservarTexto) => {
+            const buscar = conservarTexto
+              ? texto.trim() || undefined
+              : undefined
+            if (!conservarTexto) setTexto('')
+            irCon({ categoria, buscar })
+          }}
         />
         {search.autor ? (
           <p className="flex">
@@ -136,10 +150,10 @@ export function CatalogoPage() {
         <ul
           aria-label="Cargando libros"
           aria-busy
-          className="grid grid-cols-2 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] lg:gap-5"
+          className={claseRejillaLibros}
         >
           {Array.from({ length: search.pageSize }, (_, i) => (
-            <li key={i}>
+            <li key={i} className={claseCeldaLibro}>
               <LibroCardFantasma />
             </li>
           ))}
@@ -182,12 +196,9 @@ export function CatalogoPage() {
       ) : null}
 
       {libros.isSuccess && items.length > 0 ? (
-        <ul
-          ref={gridRef}
-          className="grid grid-cols-2 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(200px,1fr))] lg:gap-5"
-        >
+        <ul ref={gridRef} className={claseRejillaLibros}>
           {items.map((libro) => (
-            <li key={libro.idLibro}>
+            <li key={libro.idLibro} className={claseCeldaLibro}>
               <LibroCard libro={libro} />
             </li>
           ))}

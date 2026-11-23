@@ -8,7 +8,9 @@ import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
 import { HeroBackdrop } from '@/features/biblioteca/components/hero-backdrop'
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { textoDisponibles } from '@/features/biblioteca/disponibilidad'
-import { useCategorias } from '@/features/biblioteca/hooks/use-categorias'
+import { SugerenciasCategorias } from '@/features/biblioteca/components/sugerencias-categorias'
+import { useSugerenciasCategorias } from '@/features/biblioteca/hooks/use-sugerencias-categorias'
+import { categoriaExacta } from '@/features/biblioteca/hooks/use-categorias'
 import type { ResumenHome } from '@/features/biblioteca/hooks/use-libros'
 import type { Libro } from '@/features/biblioteca/types/api'
 import { useMotion } from '@/hooks/use-motion'
@@ -59,7 +61,7 @@ export function HomeHero({
           </span>
         </h1>
 
-        <div data-m="bloque" className="mt-7 lg:mt-8">
+        <div data-m="bloque" className="relative z-20 mt-7 lg:mt-8">
           <BuscadorHome />
         </div>
 
@@ -88,9 +90,18 @@ export function HomeHero({
 
 function BuscadorHome() {
   const navigate = useNavigate()
-  const categorias = useCategorias()
   const [texto, setTexto] = useState('')
   const [categoria, setCategoria] = useState('')
+  const sugerencias = useSugerenciasCategorias({
+    texto,
+    onElegir: (elegida) => {
+      setTexto('')
+      void navigate({
+        to: '/catalogo',
+        search: { ...catalogoInicial, categoria: elegida.nombre },
+      })
+    },
+  })
 
   return (
     <form
@@ -99,16 +110,18 @@ function BuscadorHome() {
       onSubmit={(event) => {
         event.preventDefault()
         const buscar = texto.trim()
+        const filtro =
+          categoria || categoriaExacta(sugerencias.categorias, buscar)?.nombre
         void navigate({
           to: '/catalogo',
           search: {
             ...catalogoInicial,
             ...(buscar ? { buscar } : {}),
-            ...(categoria ? { categoria } : {}),
+            ...(filtro ? { categoria: filtro } : {}),
           },
         })
       }}
-      className="bg-card flex w-full max-w-[720px] flex-col gap-2 rounded-[20px] p-2 shadow-[0_24px_60px_-18px_rgb(0_0_0/0.55)] sm:h-16 sm:flex-row sm:items-center sm:gap-0"
+      className="bg-card relative flex w-full max-w-[720px] flex-col gap-2 rounded-[20px] p-2 shadow-[0_24px_60px_-18px_rgb(0_0_0/0.55)] sm:h-16 sm:flex-row sm:items-center sm:gap-0"
     >
       <div className="relative flex-none">
         <select
@@ -119,7 +132,7 @@ function BuscadorHome() {
           className="bg-hueso text-tinta focus-visible:shadow-foco h-12 w-full cursor-pointer appearance-none rounded-xl pr-9 pl-3.5 text-sm font-medium outline-none sm:w-auto"
         >
           <option value="">Todas las categorías</option>
-          {categorias.data?.map(({ nombre }) => (
+          {sugerencias.categorias?.map(({ nombre }) => (
             <option key={nombre} value={nombre}>
               {nombre}
             </option>
@@ -143,6 +156,7 @@ function BuscadorHome() {
           <input
             type="search"
             name="buscar"
+            {...sugerencias.propsEntrada}
             value={texto}
             onChange={(event) => setTexto(event.target.value)}
             placeholder="Busca por título, autor o categoría"
@@ -156,6 +170,7 @@ function BuscadorHome() {
           Buscar
         </button>
       </div>
+      <SugerenciasCategorias {...sugerencias.lista} />
     </form>
   )
 }

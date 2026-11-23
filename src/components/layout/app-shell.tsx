@@ -7,6 +7,9 @@ import { Brand } from '@/components/layout/brand'
 import { Sidebar } from '@/components/layout/sidebar'
 import { useSesion } from '@/components/layout/use-sesion'
 import { VistaPill } from '@/components/layout/vista-pill'
+import { SugerenciasCategorias } from '@/features/biblioteca/components/sugerencias-categorias'
+import { useSugerenciasCategorias } from '@/features/biblioteca/hooks/use-sugerencias-categorias'
+import { categoriaExacta } from '@/features/biblioteca/hooks/use-categorias'
 import { LuxiaFab } from '@/features/luxia/components/luxia-fab'
 import { useMotion } from '@/hooks/use-motion'
 import { reveal, titleLines } from '@/lib/motion'
@@ -113,7 +116,7 @@ function Topbar({ enInicio }: { enInicio: boolean }) {
   const sesion = useSesion()
   if (enInicio && !sesion.isAdmin) return null
   return (
-    <header className="relative flex h-[92px] items-center justify-between gap-6 px-14">
+    <header className="relative z-30 flex h-[92px] items-center justify-between gap-6 px-14">
       {enInicio ? <span /> : <BuscadorGlobal />}
       <VistaPill className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
     </header>
@@ -146,6 +149,16 @@ function AdminTopbar({ pathname }: { pathname: string }) {
 function BuscadorGlobal({ className = 'w-[440px]' }: { className?: string }) {
   const navigate = useNavigate()
   const [texto, setTexto] = useState('')
+  const sugerencias = useSugerenciasCategorias({
+    texto,
+    onElegir: (categoria) => {
+      setTexto('')
+      void navigate({
+        to: '/catalogo',
+        search: { page: 1, pageSize: 12, categoria: categoria.nombre },
+      })
+    },
+  })
 
   return (
     <form
@@ -154,9 +167,18 @@ function BuscadorGlobal({ className = 'w-[440px]' }: { className?: string }) {
       onSubmit={(event) => {
         event.preventDefault()
         const buscar = texto.trim()
+        const categoria = categoriaExacta(
+          sugerencias.categorias,
+          buscar,
+        )?.nombre
         void navigate({
           to: '/catalogo',
-          search: { page: 1, pageSize: 12, ...(buscar ? { buscar } : {}) },
+          search: {
+            page: 1,
+            pageSize: 12,
+            ...(buscar ? { buscar } : {}),
+            ...(categoria ? { categoria } : {}),
+          },
         })
       }}
     >
@@ -169,11 +191,13 @@ function BuscadorGlobal({ className = 'w-[440px]' }: { className?: string }) {
         type="search"
         name="buscar"
         aria-label="Buscar en el catálogo"
+        {...sugerencias.propsEntrada}
         placeholder="Busca por título, autor o categoría"
         value={texto}
         onChange={(event) => setTexto(event.target.value)}
         className="border-linea bg-papel text-tinta focus-visible:border-pino-800 focus-visible:shadow-foco h-[46px] w-full rounded-full border pr-[18px] pl-[46px] text-sm transition-[border-color,box-shadow] outline-none"
       />
+      <SugerenciasCategorias {...sugerencias.lista} />
     </form>
   )
 }

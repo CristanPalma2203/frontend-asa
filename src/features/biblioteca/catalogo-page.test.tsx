@@ -376,4 +376,95 @@ describe('catálogo', () => {
       expect(screen.getByLabelText('Buscar')).toHaveValue('')
     })
   })
+
+  describe('cuadrícula de libros', () => {
+    const CATALOGO_26 = [
+      { titulo: 'Liderar con propósito', categoria: 'Liderazgo' },
+      { titulo: 'Cosmos', categoria: 'Ciencia' },
+      { titulo: 'Breve historia del tiempo', categoria: 'Ciencia' },
+      { titulo: 'El gen egoísta', categoria: 'Ciencia' },
+      ...Array.from({ length: 22 }, (_, i) => ({
+        titulo: `Novela ${String(i + 1).padStart(2, '0')}`,
+        categoria: 'Novela',
+      })),
+    ]
+
+    function rejilla() {
+      const lista = screen
+        .getAllByRole('list')
+        .find((ul) => ul.querySelector('article'))
+      if (!lista) throw new Error('no hay cuadrícula de libros')
+      return lista
+    }
+
+    function esperarContrato(lista: HTMLElement, tarjetas: number) {
+      expect(lista).toHaveClass(
+        'grid-cols-[repeat(auto-fit,minmax(150px,1fr))]',
+        'sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]',
+      )
+      expect(lista.className).not.toMatch(/auto-fill|grid-cols-2/)
+      const celdas = within(lista).getAllByRole('listitem')
+      expect(celdas).toHaveLength(tarjetas)
+      for (const celda of celdas)
+        expect(celda).toHaveClass(
+          'w-full',
+          'max-w-[18rem]',
+          'justify-self-center',
+        )
+    }
+
+    it.each([
+      ['Todas', '', 26, 'Novela 22'],
+      ['Liderazgo', '&categoria=Liderazgo', 1, 'Liderar con propósito'],
+      ['Ciencia', '&categoria=Ciencia', 3, 'El gen egoísta'],
+    ])(
+      'con %s las columnas se ajustan al ancho y las tarjetas no se estiran',
+      async (_nombre, filtro, cantidad, ultimo) => {
+        server.use(...crearApiFake(CATALOGO_26).handlers)
+        await renderEn(`/catalogo?page=1&pageSize=30${filtro}`)
+        await screen.findByRole('heading', { name: ultimo })
+
+        esperarContrato(rejilla(), cantidad)
+      },
+    )
+
+    it('los huecos de carga usan la misma cuadrícula y el mismo tamaño de celda', async () => {
+      let soltar: () => void = () => {}
+      server.use(
+        http.get('*/api/libros', async () => {
+          await new Promise<void>((resolve) => {
+            soltar = resolve
+          })
+          return undefined
+        }),
+        ...crearApiFake(CATALOGO_26).handlers,
+      )
+      await renderEn('/catalogo?page=1&pageSize=12')
+
+      const cargando = await screen.findByRole('list', {
+        name: 'Cargando libros',
+      })
+      const claseCarga = cargando.className
+      const celdaCarga = within(cargando).getAllByRole('listitem')[0]?.className
+      expect(
+        within(cargando).getAllByTestId('libro-card-fantasma'),
+      ).toHaveLength(12)
+      soltar()
+
+      await screen.findByRole('heading', { name: 'Cosmos' })
+      const lista = rejilla()
+      expect(lista.className).toBe(claseCarga)
+      expect(within(lista).getAllByRole('listitem')[0]?.className).toBe(
+        celdaCarga,
+      )
+    })
+
+    it('una búsqueda sin resultados no deja una cuadrícula vacía', async () => {
+      server.use(...crearApiFake(CATALOGO_26).handlers)
+      await renderEn('/catalogo?page=1&pageSize=12&buscar=zzz')
+
+      expect(await screen.findByText('Sin resultados')).toBeInTheDocument()
+      expect(document.querySelector('ul article')).toBeNull()
+    })
+  })
 })
