@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import type {
+  Categoria,
   EjemplarLista,
   Libro,
   LibroDetalle,
@@ -11,6 +12,10 @@ import type {
 import type { EstadoEjemplar } from '@/features/biblioteca/types/estados'
 
 const base = 'http://api.test'
+
+function sinAcentos(texto: string) {
+  return texto.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim()
+}
 
 type EjemplarFake = {
   idEjemplar: number
@@ -87,22 +92,20 @@ export function crearApiFake(semillas: LibroSemilla[]) {
     http.get(`${base}/api/libros`, ({ request }) => {
       registrar(request)
       const params = new URL(request.url).searchParams
-      const buscar = (
-        params.get('buscar') ||
-        params.get('search') ||
-        ''
-      ).toLowerCase()
+      const buscar = sinAcentos(
+        params.get('buscar') || params.get('search') || '',
+      )
       const autor = (params.get('autor') ?? '').toLowerCase()
       const categoria = params.get('categoria')
       const page = Number(params.get('page') ?? 1)
       const pageSize = Number(params.get('pageSize') ?? 10)
       const filtrados = libros.filter(
         (l) =>
-          [l.titulo, l.autor, l.isbn].some((campo) =>
-            campo.toLowerCase().includes(buscar),
+          [l.titulo, l.autor, l.isbn, l.categoria].some((campo) =>
+            sinAcentos(campo).includes(buscar),
           ) &&
           l.autor.toLowerCase().includes(autor) &&
-          (!categoria || l.categoria === categoria),
+          (!categoria || sinAcentos(l.categoria) === sinAcentos(categoria)),
       )
       const respuesta: PagedResponse<Libro> = {
         items: filtrados
@@ -114,6 +117,20 @@ export function crearApiFake(semillas: LibroSemilla[]) {
         totalPages: Math.ceil(filtrados.length / pageSize),
       }
       return HttpResponse.json(respuesta)
+    }),
+    http.get(`${base}/api/categorias`, ({ request }) => {
+      registrar(request)
+      const conteo = new Map<string, number>()
+      for (const libro of libros)
+        conteo.set(libro.categoria, (conteo.get(libro.categoria) ?? 0) + 1)
+      const categorias: Categoria[] = [...conteo]
+        .sort(([a], [b]) => a.localeCompare(b, 'es'))
+        .map(([nombre, cantidadLibros]) => ({
+          id: nombre,
+          nombre,
+          cantidadLibros,
+        }))
+      return HttpResponse.json(categorias)
     }),
     http.get(`${base}/api/libros/:id`, ({ request, params }) => {
       registrar(request)

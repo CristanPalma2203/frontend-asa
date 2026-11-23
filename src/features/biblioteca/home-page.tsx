@@ -7,6 +7,7 @@ import {
   HomeReservaActiva,
   HomeReservaActivaCargando,
 } from '@/features/biblioteca/components/home-reserva-activa'
+import { useCategorias } from '@/features/biblioteca/hooks/use-categorias'
 import { useResumenHome } from '@/features/biblioteca/hooks/use-libros'
 import { useMisReservas } from '@/features/biblioteca/hooks/use-reservas'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,7 @@ const DEMORA_HUECO_MS = 300
 
 export function HomePage() {
   const resumen = useResumenHome()
+  const categorias = useCategorias()
   const sesion = useSesion()
   const activas = useMisReservas('Activa', 1, 20)
   const [demorada, setDemorada] = useState(false)
@@ -57,8 +59,9 @@ export function HomePage() {
         ) : null}
         <div className="lg:order-1">
           <HomeCategorias
-            categorias={resumen.data?.conteoCategorias}
-            cargando={resumen.isPending}
+            categorias={categorias.data}
+            portadas={resumen.data?.portadasCategorias}
+            cargando={categorias.isPending}
             anchoCompleto={!conColumna}
           />
         </div>

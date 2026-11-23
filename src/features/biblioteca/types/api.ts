@@ -5,6 +5,12 @@ import type {
   EstadoReserva,
 } from '@/features/biblioteca/types/estados'
 
+export type Categoria = {
+  id: string
+  nombre: string
+  cantidadLibros: number
+}
+
 export type Libro = {
   idLibro: number
   isbn: string

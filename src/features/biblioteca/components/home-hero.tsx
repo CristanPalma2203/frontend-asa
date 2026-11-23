@@ -8,6 +8,7 @@ import { PalabrasAnimadas } from '@/components/ui/palabras-animadas'
 import { HeroBackdrop } from '@/features/biblioteca/components/hero-backdrop'
 import { PortadaLibro } from '@/features/biblioteca/components/portadas'
 import { textoDisponibles } from '@/features/biblioteca/disponibilidad'
+import { useCategorias } from '@/features/biblioteca/hooks/use-categorias'
 import type { ResumenHome } from '@/features/biblioteca/hooks/use-libros'
 import type { Libro } from '@/features/biblioteca/types/api'
 import { useMotion } from '@/hooks/use-motion'
@@ -59,7 +60,7 @@ export function HomeHero({
         </h1>
 
         <div data-m="bloque" className="mt-7 lg:mt-8">
-          <BuscadorHome categorias={resumen?.categorias ?? []} />
+          <BuscadorHome />
         </div>
 
         <div
@@ -85,8 +86,9 @@ export function HomeHero({
   )
 }
 
-function BuscadorHome({ categorias }: { categorias: string[] }) {
+function BuscadorHome() {
   const navigate = useNavigate()
+  const categorias = useCategorias()
   const [texto, setTexto] = useState('')
   const [categoria, setCategoria] = useState('')
 
@@ -117,7 +119,7 @@ function BuscadorHome({ categorias }: { categorias: string[] }) {
           className="bg-hueso text-tinta focus-visible:shadow-foco h-12 w-full cursor-pointer appearance-none rounded-xl pr-9 pl-3.5 text-sm font-medium outline-none sm:w-auto"
         >
           <option value="">Todas las categorías</option>
-          {categorias.map((nombre) => (
+          {categorias.data?.map(({ nombre }) => (
             <option key={nombre} value={nombre}>
               {nombre}
             </option>
@@ -137,13 +139,13 @@ function BuscadorHome({ categorias }: { categorias: string[] }) {
             className="text-niebla-fg size-[19px] flex-none"
             strokeWidth={2}
           />
-          <span className="sr-only">Buscar por título, autor o ISBN</span>
+          <span className="sr-only">Buscar por título, autor o categoría</span>
           <input
             type="search"
             name="buscar"
             value={texto}
             onChange={(event) => setTexto(event.target.value)}
-            placeholder="Busca por título, autor o ISBN"
+            placeholder="Busca por título, autor o categoría"
             className="text-tinta placeholder:text-texto-4 h-12 min-w-0 flex-1 bg-transparent text-base outline-none"
           />
         </label>

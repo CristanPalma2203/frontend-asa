@@ -21,7 +21,10 @@ const CATALOGO = [
 
 describe('home', () => {
   it('mientras carga muestra los huecos de recomendados y categorías', async () => {
-    server.use(http.get('*/api/libros', () => new Promise<never>(() => {})))
+    server.use(
+      http.get('*/api/libros', () => new Promise<never>(() => {})),
+      http.get('*/api/categorias', () => new Promise<never>(() => {})),
+    )
     await renderEn('/')
 
     expect(
@@ -97,7 +100,7 @@ describe('home', () => {
       'Novela',
     )
     await user.type(
-      within(buscador).getByLabelText('Buscar por título, autor o ISBN'),
+      within(buscador).getByLabelText('Buscar por título, autor o categoría'),
       'rayuela',
     )
     await user.click(within(buscador).getByRole('button', { name: 'Buscar' }))
@@ -223,6 +226,99 @@ describe('home', () => {
   })
 })
 
+describe('home: explora por categoría', () => {
+  it('usa GET /api/categorias: no muestra categorías que la API no devuelve', async () => {
+    server.use(
+      http.get('*/api/categorias', () =>
+        HttpResponse.json([
+          { id: 'Ciencia', nombre: 'Ciencia', cantidadLibros: 1 },
+          { id: 'Novela', nombre: 'Novela', cantidadLibros: 3 },
+        ]),
+      ),
+      ...crearApiFake(CATALOGO).handlers,
+    )
+    await renderEn('/')
+
+    const categorias = await screen.findByRole('list', { name: 'Categorías' })
+    expect(
+      within(categorias)
+        .getAllByRole('link')
+        .map((enlace) => enlace.getAttribute('aria-label')),
+    ).toEqual(['Ver libros de Novela', 'Ver libros de Ciencia'])
+    expect(
+      within(categorias).queryByRole('link', {
+        name: 'Ver libros de Infantil',
+      }),
+    ).toBeNull()
+  })
+
+  it('la cuadrícula no deja celdas vacías: filas que se reparten el ancho, también en carga', async () => {
+    let soltar: () => void = () => {}
+    server.use(
+      http.get('*/api/categorias', async () => {
+        await new Promise<void>((resolve) => {
+          soltar = resolve
+        })
+        return HttpResponse.json([
+          { id: 'Ciencia', nombre: 'Ciencia', cantidadLibros: 1 },
+          { id: 'Infantil', nombre: 'Infantil', cantidadLibros: 1 },
+          { id: 'Novela', nombre: 'Novela', cantidadLibros: 3 },
+        ])
+      }),
+      ...crearApiFake(CATALOGO).handlers,
+    )
+    await renderEn('/')
+
+    const cargando = await screen.findByRole('list', {
+      name: 'Cargando categorías',
+    })
+    const celdasCargando = within(cargando).getAllByRole('listitem')
+    soltar()
+    const categorias = await screen.findByRole('list', { name: 'Categorías' })
+    const celdas = within(categorias).getAllByRole('listitem')
+
+    expect(celdas).toHaveLength(3)
+    for (const lista of [cargando, categorias]) {
+      expect(lista).toHaveClass('flex', 'flex-wrap')
+      expect(lista.className).not.toMatch(/grid-cols|auto-fill/)
+    }
+    for (const celda of [...celdasCargando, ...celdas]) {
+      expect(celda).toHaveClass('flex-[1_1_10rem]', 'sm:flex-[1_1_13.75rem]')
+    }
+  })
+
+  it('al tocar una categoría abre el buscador filtrado, con el nombre codificado en la URL', async () => {
+    const user = userEvent.setup()
+    server.use(
+      ...crearApiFake([
+        { titulo: 'Dune', categoria: 'Ciencia ficción' },
+        { titulo: 'Rayuela', categoria: 'Novela' },
+      ]).handlers,
+    )
+    const { router } = await renderEn('/')
+
+    const categorias = await screen.findByRole('list', { name: 'Categorías' })
+    const enlace = within(categorias).getByRole('link', {
+      name: 'Ver libros de Ciencia ficción',
+    })
+    expect(enlace.getAttribute('href')).toContain(
+      `categoria=${encodeURIComponent('Ciencia ficción')}`,
+    )
+    await user.click(enlace)
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/catalogo'),
+    )
+    expect(router.state.location.search).toMatchObject({
+      categoria: 'Ciencia ficción',
+    })
+    expect(
+      await screen.findByRole('heading', { name: 'Dune' }),
+    ).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Rayuela' })).toBeNull()
+  })
+})
+
 describe('resumirHome', () => {
   const libro = (
     id: number,
@@ -235,26 +331,20 @@ describe('resumirHome', () => {
     disponibles,
   })
 
-  it('pone primero los libros con stock, ordena categorías por frecuencia y elige portada con stock', () => {
+  it('pone primero los libros con stock y elige por categoría una portada con stock', () => {
     const items = [
       libro(1, 'Poesía', 0),
       libro(2, 'Novela', 0),
       libro(3, 'Novela', 2),
     ]
-    const resumen = resumirHome({ items, totalCount: 30 })
+    const resumen = resumirHome({ items })
 
-    expect(resumen.totalTitulos).toBe(30)
     expect(resumen.destacados.map((l) => l.idLibro)).toEqual([3, 1, 2])
-    expect(resumen.categorias).toEqual(['Novela', 'Poesía'])
     expect(
-      resumen.conteoCategorias.map((c) => [
-        c.categoria,
-        c.cantidad,
-        c.portada.idLibro,
-      ]),
+      resumen.portadasCategorias.map((c) => [c.categoria, c.portada.idLibro]),
     ).toEqual([
-      ['Novela', 2, 3],
-      ['Poesía', 1, 1],
+      ['Poesía', 1],
+      ['Novela', 3],
     ])
   })
 })

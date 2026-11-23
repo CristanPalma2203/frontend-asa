@@ -1,6 +1,7 @@
 import { http, HttpResponse } from 'msw'
 
 import type {
+  Categoria,
   PagedResponse,
   Reserva,
   ReservaCreada,
@@ -54,6 +55,15 @@ export const handlers = [
     return HttpResponse.json(pagina(items))
   }),
   http.get(`${base}/api/libros/:id`, () => HttpResponse.json(detalleEjemplo)),
+  http.get(`${base}/api/categorias`, () =>
+    HttpResponse.json([
+      {
+        id: libroEjemplo.categoria,
+        nombre: libroEjemplo.categoria,
+        cantidadLibros: 1,
+      },
+    ] satisfies Categoria[]),
+  ),
   http.post(`${base}/api/reservas`, () =>
     HttpResponse.json(
       {

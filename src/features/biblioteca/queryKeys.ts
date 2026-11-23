@@ -9,8 +9,12 @@ const lectoresAll = ['lectores'] as const
 const reservasAll = ['reservas'] as const
 const ejemplaresAll = ['ejemplares'] as const
 const resumenAll = ['resumen'] as const
+const categoriasAll = ['categorias'] as const
 
 export const queryKeys = {
+  categorias: {
+    all: categoriasAll,
+  },
   resumen: {
     all: resumenAll,
     detail: (dias: 14 | 30) => [...resumenAll, dias] as const,

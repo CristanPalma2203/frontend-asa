@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/sonner'
 import { sesionExpiradaAlCargar } from '@/features/auth/store'
 import { olvidarLuxia } from '@/features/luxia/reset'
 import { ApiError, setUnauthorizedHandler } from '@/lib/api/client'
+import { stringifySearch } from '@/lib/busqueda-url'
 import { routeTree } from '@/routeTree.gen'
 
 import '@/lib/boneyard'
@@ -39,7 +40,7 @@ const queryClient = new QueryClient({
   },
 })
 
-const router = createRouter({ routeTree })
+const router = createRouter({ routeTree, stringifySearch })
 
 if (sesionExpiradaAlCargar) olvidarLuxia()
 

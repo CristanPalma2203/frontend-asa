@@ -1,11 +1,13 @@
 import { ChevronDown, Search, X } from 'lucide-react'
 import { useRef } from 'react'
 
+import { mismaCategoria } from '@/features/biblioteca/hooks/use-categorias'
 import {
   ORDENES,
   type Disponibilidad,
   type Orden,
 } from '@/features/biblioteca/schemas/catalogo-search.schema'
+import type { Categoria } from '@/features/biblioteca/types/api'
 import { useMotion } from '@/hooks/use-motion'
 import { reveal } from '@/lib/motion'
 import { cn } from '@/lib/utils'
@@ -14,29 +16,41 @@ const claseChip =
   'focus-visible:shadow-foco flex h-[42px] flex-none cursor-pointer items-center gap-2 rounded-full border px-4 text-sm font-medium whitespace-nowrap transition-colors outline-none'
 
 export function ChipsCategorias({
-  total,
   categorias,
   activa,
   onElegir,
 }: {
-  total: number | undefined
-  categorias: { categoria: string; cantidad: number }[]
+  categorias: Categoria[] | undefined
   activa: string | undefined
   onElegir: (categoria: string | undefined) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
+  const lista = categorias ?? []
   useMotion(
     ref,
     (root) => reveal(root.children, { x: 10, y: 0, stagger: 0.04 }),
-    [categorias.length],
+    [lista.length],
   )
-  const opciones = [
-    { valor: undefined, etiqueta: 'Todos', cantidad: total },
-    ...categorias.map((c) => ({
-      valor: c.categoria,
-      etiqueta: c.categoria,
-      cantidad: c.cantidad,
+  const activaFueraDeLista =
+    activa && !lista.some((c) => mismaCategoria(c.nombre, activa))
+  const opciones: {
+    valor: string | undefined
+    etiqueta: string
+    cantidad?: number
+  }[] = [
+    {
+      valor: undefined,
+      etiqueta: 'Todas',
+      cantidad: categorias
+        ? lista.reduce((total, c) => total + c.cantidadLibros, 0)
+        : undefined,
+    },
+    ...lista.map((c) => ({
+      valor: c.nombre,
+      etiqueta: c.nombre,
+      cantidad: c.cantidadLibros,
     })),
+    ...(activaFueraDeLista ? [{ valor: activa, etiqueta: activa }] : []),
   ]
 
   return (
@@ -48,7 +62,9 @@ export function ChipsCategorias({
     >
       {opciones.map((opcion) => {
         const seleccionada =
-          (opcion.valor ?? '').toLowerCase() === (activa ?? '').toLowerCase()
+          opcion.valor === undefined
+            ? !activa
+            : Boolean(activa && mismaCategoria(opcion.valor, activa))
         return (
           <button
             key={opcion.etiqueta}
@@ -121,7 +137,7 @@ export function BarraCatalogo({
           aria-label="Buscar"
           value={texto}
           onChange={(event) => onTexto(event.target.value)}
-          placeholder="Busca por título, autor o ISBN"
+          placeholder="Busca por título, autor o categoría"
           className="text-tinta placeholder:text-texto-4 focus-visible:shadow-foco h-full w-full rounded-xl bg-transparent pr-3 pl-10 text-[15px] outline-none"
         />
       </form>

@@ -169,7 +169,7 @@ describe('catálogo', () => {
 
     const chips = await screen.findByRole('group', { name: 'Categorías' })
     expect(
-      await within(chips).findByRole('button', { name: /^Todos\s*3$/ }),
+      await within(chips).findByRole('button', { name: /^Todas\s*3$/ }),
     ).toHaveAttribute('aria-pressed', 'true')
     await user.click(
       within(chips).getByRole('button', { name: /^Novela\s*2$/ }),
@@ -250,5 +250,130 @@ describe('catálogo', () => {
         name: 'No se pudo cargar el catálogo',
       }),
     ).toBeInTheDocument()
+  })
+
+  describe('categorías en el buscador', () => {
+    const LIBROS = [
+      { titulo: 'Dune', autor: 'Frank Herbert', categoria: 'Ciencia ficción' },
+      {
+        titulo: 'Fundación',
+        autor: 'Isaac Asimov',
+        categoria: 'Ciencia ficción',
+      },
+      { titulo: 'Rayuela', autor: 'Julio Cortázar', categoria: 'Novela' },
+      { titulo: 'Cosmos', autor: 'Carl Sagan', categoria: 'Divulgación' },
+    ]
+    const titulosVisibles = () =>
+      screen
+        .getAllByRole('heading', { level: 2 })
+        .map((h) => h.textContent)
+        .filter((t) => LIBROS.some((l) => l.titulo === t))
+
+    it('los chips salen de GET /api/categorias, con «Todas» y su conteo', async () => {
+      const api = crearApiFake(LIBROS)
+      server.use(...api.handlers)
+      await renderEn('/catalogo?page=1&pageSize=12')
+
+      const chips = await screen.findByRole('group', { name: 'Categorías' })
+      await within(chips).findByRole('button', { name: /^Novela\s*1$/ })
+      expect(
+        within(chips)
+          .getAllByRole('button')
+          .map((b) => b.textContent),
+      ).toEqual(['Todas4', 'Ciencia ficción2', 'Divulgación1', 'Novela1'])
+      expect(api.pedidos('/api/categorias').length).toBeGreaterThan(0)
+    })
+
+    it('escribir el nombre de una categoría muestra sus libros', async () => {
+      const user = userEvent.setup()
+      const api = crearApiFake(LIBROS)
+      server.use(...api.handlers)
+      await renderEn('/catalogo?page=1&pageSize=12')
+      await screen.findByRole('heading', { name: 'Dune' })
+
+      expect(screen.getByLabelText('Buscar')).toHaveAttribute(
+        'placeholder',
+        'Busca por título, autor o categoría',
+      )
+      await user.type(screen.getByLabelText('Buscar'), 'novela')
+
+      await waitFor(() => expect(titulosVisibles()).toEqual(['Rayuela']))
+      expect(pedidosCatalogo(api).at(-1)?.searchParams.get('search')).toBe(
+        'novela',
+      )
+    })
+
+    it('elegir una categoría la combina con el texto y la deja en la URL con encodeURIComponent', async () => {
+      const user = userEvent.setup()
+      const api = crearApiFake(LIBROS)
+      server.use(...api.handlers)
+      const { router } = await renderEn('/catalogo?page=1&pageSize=12')
+      await screen.findByRole('heading', { name: 'Dune' })
+
+      await user.type(screen.getByLabelText('Buscar'), 'fun')
+      await waitFor(() =>
+        expect(router.state.location.search).toMatchObject({ buscar: 'fun' }),
+      )
+      const chips = screen.getByRole('group', { name: 'Categorías' })
+      await user.click(
+        await within(chips).findByRole('button', {
+          name: /^Ciencia ficción\s*2$/,
+        }),
+      )
+
+      await waitFor(() => expect(titulosVisibles()).toEqual(['Fundación']))
+      const pedido = pedidosCatalogo(api).at(-1)
+      expect(pedido?.searchParams.get('categoria')).toBe('Ciencia ficción')
+      expect(pedido?.searchParams.get('search')).toBe('fun')
+      expect(router.state.location.href).toContain(
+        `categoria=${encodeURIComponent('Ciencia ficción')}`,
+      )
+      expect(
+        within(chips).getByRole('button', { name: /^Ciencia ficción/ }),
+      ).toHaveAttribute('aria-pressed', 'true')
+
+      await user.click(within(chips).getByRole('button', { name: /^Todas/ }))
+      await waitFor(() =>
+        expect(router.state.location.search).not.toHaveProperty('categoria'),
+      )
+      expect(router.state.location.search).toMatchObject({ buscar: 'fun' })
+      expect(
+        within(chips).getByRole('button', { name: /^Todas/ }),
+      ).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    it('al abrir una URL compartida conserva la categoría y la marca', async () => {
+      const api = crearApiFake(LIBROS)
+      server.use(...api.handlers)
+      await renderEn(
+        `/catalogo?page=1&pageSize=12&categoria=${encodeURIComponent('Ciencia ficción')}`,
+      )
+
+      await screen.findByRole('heading', { name: 'Dune' })
+      expect(titulosVisibles()).toEqual(['Dune', 'Fundación'])
+      const chips = screen.getByRole('group', { name: 'Categorías' })
+      expect(
+        await within(chips).findByRole('button', { name: /^Ciencia ficción/ }),
+      ).toHaveAttribute('aria-pressed', 'true')
+    })
+
+    it('sin resultados nombra el texto y la categoría y ofrece limpiar los filtros', async () => {
+      const user = userEvent.setup()
+      server.use(...crearApiFake(LIBROS).handlers)
+      const { router } = await renderEn(
+        `/catalogo?page=1&pageSize=12&buscar=zzz&categoria=Novela`,
+      )
+
+      expect(
+        await screen.findByText(
+          'No encontramos libros para «zzz» en la categoría «Novela».',
+        ),
+      ).toBeInTheDocument()
+      await user.click(screen.getByRole('link', { name: 'Limpiar filtros' }))
+
+      await screen.findByRole('heading', { name: 'Dune' })
+      expect(router.state.location.search).toEqual({ page: 1, pageSize: 12 })
+      expect(screen.getByLabelText('Buscar')).toHaveValue('')
+    })
   })
 })

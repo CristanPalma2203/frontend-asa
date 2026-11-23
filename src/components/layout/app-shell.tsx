@@ -169,7 +169,7 @@ function BuscadorGlobal({ className = 'w-[440px]' }: { className?: string }) {
         type="search"
         name="buscar"
         aria-label="Buscar en el catálogo"
-        placeholder="Busca por título, autor o ISBN"
+        placeholder="Busca por título, autor o categoría"
         value={texto}
         onChange={(event) => setTexto(event.target.value)}
         className="border-linea bg-papel text-tinta focus-visible:border-pino-800 focus-visible:shadow-foco h-[46px] w-full rounded-full border pr-[18px] pl-[46px] text-sm transition-[border-color,box-shadow] outline-none"

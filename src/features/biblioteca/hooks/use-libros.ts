@@ -26,30 +26,17 @@ export const muestraHome = {
 } satisfies ListarLibrosParams
 
 export type ResumenHome = {
-  totalTitulos: number
   destacados: Libro[]
-  categorias: string[]
-  conteoCategorias: { categoria: string; cantidad: number; portada: Libro }[]
+  portadasCategorias: { categoria: string; portada: Libro }[]
 }
 
 export function resumirHome(
-  pagina: { items: Libro[]; totalCount: number },
+  pagina: { items: Libro[] },
   maxDestacados = 6,
-  maxCategorias = 6,
 ): ResumenHome {
   const destacados = [...pagina.items]
     .sort((a, b) => Number(b.disponibles > 0) - Number(a.disponibles > 0))
     .slice(0, maxDestacados)
-
-  const conteo = new Map<string, number>()
-  for (const libro of pagina.items) {
-    const categoria = libro.categoria.trim()
-    if (categoria) conteo.set(categoria, (conteo.get(categoria) ?? 0) + 1)
-  }
-  const categorias = [...conteo]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'es'))
-    .slice(0, maxCategorias)
-    .map(([categoria]) => categoria)
 
   const porCategoria = new Map<string, Libro[]>()
   for (const libro of pagina.items) {
@@ -57,22 +44,14 @@ export function resumirHome(
     if (!categoria) continue
     porCategoria.set(categoria, [...(porCategoria.get(categoria) ?? []), libro])
   }
-  const conteoCategorias = [...porCategoria]
-    .flatMap(([categoria, libros]) => {
+  const portadasCategorias = [...porCategoria].flatMap(
+    ([categoria, libros]) => {
       const portada = libros.find((libro) => libro.disponibles > 0) ?? libros[0]
-      return portada ? [{ categoria, cantidad: libros.length, portada }] : []
-    })
-    .sort(
-      (a, b) =>
-        b.cantidad - a.cantidad || a.categoria.localeCompare(b.categoria, 'es'),
-    )
+      return portada ? [{ categoria, portada }] : []
+    },
+  )
 
-  return {
-    totalTitulos: pagina.totalCount,
-    destacados,
-    categorias,
-    conteoCategorias,
-  }
+  return { destacados, portadasCategorias }
 }
 
 export function useResumenHome() {
@@ -106,6 +85,7 @@ export function useGuardarLibro(
       opciones.onSuccess?.()
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.libros.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.categorias.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.resumen.all }),
       ])
     },
@@ -121,6 +101,7 @@ export function useDesactivarLibro(opciones: { onSuccess?: () => void } = {}) {
       opciones.onSuccess?.()
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.libros.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.categorias.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.resumen.all }),
       ])
     },

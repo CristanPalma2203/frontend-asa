@@ -13,10 +13,8 @@ import {
   LibroCard,
   LibroCardFantasma,
 } from '@/features/biblioteca/components/libro-card'
-import {
-  useLibros,
-  useResumenHome,
-} from '@/features/biblioteca/hooks/use-libros'
+import { useCategorias } from '@/features/biblioteca/hooks/use-categorias'
+import { useLibros } from '@/features/biblioteca/hooks/use-libros'
 import type { CatalogoSearch } from '@/features/biblioteca/schemas/catalogo-search.schema'
 import { useMotion } from '@/hooks/use-motion'
 import { cardsIn, lift } from '@/lib/motion'
@@ -41,7 +39,7 @@ export function CatalogoPage() {
     autor: search.autor,
     categoria: search.categoria,
   })
-  const resumen = useResumenHome()
+  const categorias = useCategorias()
 
   function irCon(cambios: Partial<CatalogoSearch>, reemplazar = false) {
     const siguiente: CatalogoSearch = { ...search, ...cambios, page: 1 }
@@ -99,8 +97,7 @@ export function CatalogoPage() {
 
       <section aria-label="Filtros" className="flex flex-col gap-4">
         <ChipsCategorias
-          total={resumen.data?.totalTitulos}
-          categorias={resumen.data?.conteoCategorias ?? []}
+          categorias={categorias.data}
           activa={search.categoria}
           onElegir={(categoria) => irCon({ categoria })}
         />
@@ -166,7 +163,7 @@ export function CatalogoPage() {
           </span>
           <h2 className="mt-2 text-xl">Sin resultados</h2>
           <p className="text-texto-3 max-w-sm text-[15px]">
-            Prueba otro título, autor o categoría.
+            {mensajeSinResultados(search)}
           </p>
           {hayFiltros ? (
             <Link
@@ -232,4 +229,15 @@ export function CatalogoPage() {
       ) : null}
     </main>
   )
+}
+
+function mensajeSinResultados({ buscar, categoria, autor }: CatalogoSearch) {
+  const criterios = [
+    buscar ? `para «${buscar}»` : null,
+    autor ? `de «${autor}»` : null,
+    categoria ? `en la categoría «${categoria}»` : null,
+  ].filter(Boolean)
+  return criterios.length > 0
+    ? `No encontramos libros ${criterios.join(' ')}.`
+    : 'Prueba otro título, autor o categoría.'
 }

@@ -7,6 +7,7 @@ import {
 import { render } from '@testing-library/react'
 
 import { Toaster } from '@/components/ui/sonner'
+import { stringifySearch } from '@/lib/busqueda-url'
 import { routeTree } from '@/routeTree.gen'
 
 import { registrarRouter } from './navegaciones'
@@ -23,6 +24,7 @@ export async function renderEn(
   })
   const router = createRouter({
     routeTree,
+    stringifySearch,
     history: createMemoryHistory({ initialEntries: [path] }),
   })
   registrarRouter(router)

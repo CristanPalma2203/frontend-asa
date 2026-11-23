@@ -11,11 +11,8 @@ import {
   type KeyboardEvent,
 } from 'react'
 
-import {
-  muestraHome,
-  resumirHome,
-} from '@/features/biblioteca/hooks/use-libros'
 import { queryKeys } from '@/features/biblioteca/queryKeys'
+import { listarCategorias } from '@/features/biblioteca/services/categorias.read'
 import {
   listarLibros,
   obtenerLibro as obtenerLibroApi,
@@ -306,14 +303,12 @@ export function LuxiaFab() {
 
   const categorias = useCallback(
     async () =>
-      resumirHome(
+      (
         await queryClient.fetchQuery({
-          queryKey: queryKeys.libros.list(muestraHome),
-          queryFn: () => listarLibros(muestraHome),
-        }),
-        0,
-        Number.POSITIVE_INFINITY,
-      ).categorias,
+          queryKey: queryKeys.categorias.all,
+          queryFn: listarCategorias,
+        })
+      ).map((categoria) => categoria.nombre),
     [queryClient],
   )
 
