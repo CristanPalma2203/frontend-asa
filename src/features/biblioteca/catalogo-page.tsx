@@ -14,6 +14,10 @@ import {
   LibroCardFantasma,
 } from '@/features/biblioteca/components/libro-card'
 import { useCategorias } from '@/features/biblioteca/hooks/use-categorias'
+import {
+  tamanoPaginaPorFilas,
+  useColumnasCatalogo,
+} from '@/features/biblioteca/hooks/use-columnas-catalogo'
 import { useLibros } from '@/features/biblioteca/hooks/use-libros'
 import type { CatalogoSearch } from '@/features/biblioteca/schemas/catalogo-search.schema'
 import { useMotion } from '@/hooks/use-motion'
@@ -21,9 +25,10 @@ import { cardsIn, lift } from '@/lib/motion'
 
 const Route = getRouteApi('/catalogo')
 
-const claseRejillaLibros =
-  'grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-4 sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))] lg:gap-5'
-const claseCeldaLibro = 'w-full max-w-[18rem] justify-self-center'
+const claseZonaLibros =
+  '[--ancho-tarjeta:160px] [--hueco:16px] empty:hidden sm:[--ancho-tarjeta:200px] lg:[--hueco:20px]'
+const claseRejillaLibros = 'flex flex-wrap justify-center gap-(--hueco)'
+const claseCeldaLibro = 'flex w-(--ancho-tarjeta) flex-none'
 
 export function CatalogoPage() {
   const search = Route.useSearch()
@@ -36,13 +41,18 @@ export function CatalogoPage() {
     setTexto(search.buscar ?? '')
   }
 
-  const libros = useLibros({
-    page: search.page,
-    pageSize: search.pageSize,
-    buscar: search.buscar,
-    autor: search.autor,
-    categoria: search.categoria,
-  })
+  const { medirContenedor, medido, columnas } = useColumnasCatalogo()
+  const tamanoPagina = tamanoPaginaPorFilas(search.pageSize, columnas)
+  const libros = useLibros(
+    {
+      page: search.page,
+      pageSize: tamanoPagina,
+      buscar: search.buscar,
+      autor: search.autor,
+      categoria: search.categoria,
+    },
+    { enabled: medido },
+  )
   const categorias = useCategorias()
 
   function irCon(cambios: Partial<CatalogoSearch>, reemplazar = false) {
@@ -146,19 +156,30 @@ export function CatalogoPage() {
         ) : null}
       </section>
 
-      {libros.isPending ? (
-        <ul
-          aria-label="Cargando libros"
-          aria-busy
-          className={claseRejillaLibros}
-        >
-          {Array.from({ length: search.pageSize }, (_, i) => (
-            <li key={i} className={claseCeldaLibro}>
-              <LibroCardFantasma />
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      <div ref={medirContenedor} className={claseZonaLibros}>
+        {libros.isPending ? (
+          <ul
+            aria-label="Cargando libros"
+            aria-busy
+            className={claseRejillaLibros}
+          >
+            {Array.from({ length: tamanoPagina }, (_, i) => (
+              <li key={i} className={claseCeldaLibro}>
+                <LibroCardFantasma />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {libros.isSuccess && items.length > 0 ? (
+          <ul ref={gridRef} className={claseRejillaLibros}>
+            {items.map((libro) => (
+              <li key={libro.idLibro} className={claseCeldaLibro}>
+                <LibroCard libro={libro} />
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </div>
 
       {libros.isError ? (
         <section className="bg-card border-linea shadow-card rounded-xl border p-8">
@@ -193,16 +214,6 @@ export function CatalogoPage() {
             </Link>
           ) : null}
         </section>
-      ) : null}
-
-      {libros.isSuccess && items.length > 0 ? (
-        <ul ref={gridRef} className={claseRejillaLibros}>
-          {items.map((libro) => (
-            <li key={libro.idLibro} className={claseCeldaLibro}>
-              <LibroCard libro={libro} />
-            </li>
-          ))}
-        </ul>
       ) : null}
 
       {libros.isSuccess && totalCount > 0 ? (

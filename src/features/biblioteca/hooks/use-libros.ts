@@ -13,10 +13,14 @@ import {
 } from '@/features/biblioteca/services/libros.read'
 import type { Libro, ListarLibrosParams } from '@/features/biblioteca/types/api'
 
-export function useLibros(params: ListarLibrosParams) {
+export function useLibros(
+  params: ListarLibrosParams,
+  opciones: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: queryKeys.libros.list(params),
     queryFn: () => listarLibros(params),
+    enabled: opciones.enabled,
   })
 }
 

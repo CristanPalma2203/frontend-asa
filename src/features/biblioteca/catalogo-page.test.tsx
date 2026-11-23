@@ -2,7 +2,12 @@ import { act, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { within } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import {
+  columnasPara,
+  tamanoPaginaPorFilas,
+} from '@/features/biblioteca/hooks/use-columnas-catalogo'
 
 import { crearApiFake } from '@/test/api-fake'
 import { renderEn } from '@/test/render'
@@ -383,9 +388,13 @@ describe('catálogo', () => {
       { titulo: 'Cosmos', categoria: 'Ciencia' },
       { titulo: 'Breve historia del tiempo', categoria: 'Ciencia' },
       { titulo: 'El gen egoísta', categoria: 'Ciencia' },
-      ...Array.from({ length: 22 }, (_, i) => ({
-        titulo: `Novela ${String(i + 1).padStart(2, '0')}`,
+      ...Array.from({ length: 7 }, (_, i) => ({
+        titulo: `Novela ${i + 1}`,
         categoria: 'Novela',
+      })),
+      ...Array.from({ length: 15 }, (_, i) => ({
+        titulo: `Ensayo ${String(i + 1).padStart(2, '0')}`,
+        categoria: 'Ensayo',
       })),
     ]
 
@@ -397,38 +406,64 @@ describe('catálogo', () => {
       return lista
     }
 
-    function esperarContrato(lista: HTMLElement, tarjetas: number) {
-      expect(lista).toHaveClass(
-        'grid-cols-[repeat(auto-fit,minmax(150px,1fr))]',
-        'sm:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]',
+    function simularContenedor(ancho: number, tarjeta: number, hueco: number) {
+      const leer = CSSStyleDeclaration.prototype.getPropertyValue
+      vi.spyOn(
+        CSSStyleDeclaration.prototype,
+        'getPropertyValue',
+      ).mockImplementation(function (
+        this: CSSStyleDeclaration,
+        propiedad: string,
+      ) {
+        if (propiedad === '--ancho-tarjeta') return `${tarjeta}px`
+        if (propiedad === '--hueco') return `${hueco}px`
+        return leer.call(this, propiedad)
+      })
+      vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockImplementation(
+        function (this: HTMLElement) {
+          return this.className.includes('--ancho-tarjeta') ? ancho : 0
+        },
       )
-      expect(lista.className).not.toMatch(/auto-fill|grid-cols-2/)
-      const celdas = within(lista).getAllByRole('listitem')
-      expect(celdas).toHaveLength(tarjetas)
-      for (const celda of celdas)
-        expect(celda).toHaveClass(
-          'w-full',
-          'max-w-[18rem]',
-          'justify-self-center',
-        )
     }
 
+    afterEach(() => {
+      vi.restoreAllMocks()
+    })
+
     it.each([
-      ['Todas', '', 26, 'Novela 22'],
+      ['Todas', '', 12, 'Breve historia del tiempo'],
       ['Liderazgo', '&categoria=Liderazgo', 1, 'Liderar con propósito'],
       ['Ciencia', '&categoria=Ciencia', 3, 'El gen egoísta'],
+      ['Novela', '&categoria=Novela', 7, 'Novela 7'],
     ])(
-      'con %s las columnas se ajustan al ancho y las tarjetas no se estiran',
-      async (_nombre, filtro, cantidad, ultimo) => {
+      'con %s las tarjetas tienen ancho fijo y se centran con flex-wrap',
+      async (_nombre, filtro, cantidad, visible) => {
         server.use(...crearApiFake(CATALOGO_26).handlers)
-        await renderEn(`/catalogo?page=1&pageSize=30${filtro}`)
-        await screen.findByRole('heading', { name: ultimo })
+        await renderEn(`/catalogo?page=1&pageSize=12${filtro}`)
+        await screen.findByRole('heading', { name: visible })
 
-        esperarContrato(rejilla(), cantidad)
+        const lista = rejilla()
+        expect(lista).toHaveClass(
+          'flex',
+          'flex-wrap',
+          'justify-center',
+          'gap-(--hueco)',
+        )
+        expect(lista.className).not.toMatch(/grid|auto-fi/)
+        expect(lista.parentElement).toHaveClass(
+          '[--ancho-tarjeta:160px]',
+          'sm:[--ancho-tarjeta:200px]',
+          '[--hueco:16px]',
+          'lg:[--hueco:20px]',
+        )
+        const celdas = within(lista).getAllByRole('listitem')
+        expect(celdas).toHaveLength(cantidad)
+        for (const celda of celdas)
+          expect(celda).toHaveClass('w-(--ancho-tarjeta)', 'flex-none')
       },
     )
 
-    it('los huecos de carga usan la misma cuadrícula y el mismo tamaño de celda', async () => {
+    it('los huecos de carga usan la misma distribución y el mismo ancho de tarjeta', async () => {
       let soltar: () => void = () => {}
       server.use(
         http.get('*/api/libros', async () => {
@@ -457,6 +492,45 @@ describe('catálogo', () => {
       expect(within(lista).getAllByRole('listitem')[0]?.className).toBe(
         celdaCarga,
       )
+    })
+
+    it.each([
+      [375, 343, 160, 16, 2, 12],
+      [768, 720, 200, 16, 3, 12],
+      [1024, 712, 200, 20, 3, 12],
+      [1280, 952, 200, 20, 4, 12],
+      [1440, 1112, 200, 20, 5, 15],
+      [1920, 1592, 200, 20, 7, 14],
+    ])(
+      'a %i px (contenedor de %i px) caben las columnas reales y la página llena filas completas',
+      (_viewport, ancho, tarjeta, hueco, columnas, pagina) => {
+        expect(columnasPara(ancho, tarjeta, hueco)).toBe(columnas)
+        expect(tamanoPaginaPorFilas(12, columnas)).toBe(pagina)
+        expect(pagina % columnas).toBe(0)
+      },
+    )
+
+    it('respeta el máximo de 50 del backend', () => {
+      expect(tamanoPaginaPorFilas(48, 7)).toBe(49)
+      expect(tamanoPaginaPorFilas(50, 7)).toBe(49)
+      expect(tamanoPaginaPorFilas(12, null)).toBe(12)
+    })
+
+    it('pide a la API un múltiplo de las columnas medidas en el contenedor', async () => {
+      simularContenedor(1592, 200, 20)
+      const api = crearApiFake(CATALOGO_26)
+      server.use(...api.handlers)
+      await renderEn('/catalogo?page=1&pageSize=12')
+
+      await screen.findByRole('heading', { name: 'Cosmos' })
+      const tamanos = api
+        .pedidos('/api/libros')
+        .filter((url) => !url.searchParams.has('categoria'))
+        .map((url) => url.searchParams.get('pageSize'))
+      expect(tamanos).toContain('14')
+      expect(tamanos).not.toContain('12')
+      expect(within(rejilla()).getAllByRole('listitem')).toHaveLength(14)
+      expect(screen.getByText(/página 1 de 2/)).toBeInTheDocument()
     })
 
     it('una búsqueda sin resultados no deja una cuadrícula vacía', async () => {
